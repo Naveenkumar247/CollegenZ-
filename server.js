@@ -59,24 +59,43 @@ const upload = multer({ storage });
 // ----- User Schema -----
 const userSchema = new mongoose.Schema({
   name: { type: String, required: true },
-  age: Number,
-  phone: String,
+  age: { type: Number, default: null },
+  phone: { type: String, default: null },
   email: { type: String, required: true, unique: true },
-  password: String,
-  dream: { type: String, enum: ["Doctor", "Engineering", "Lawyer", "Entertainment & Arts", "Developer"] },
+  password: { type: String, default: null },
+
+  dream: {
+    type: String,
+    enum: ["Doctor", "Engineering", "Lawyer", "Entertainment & Arts", "Developer"],
+    default: null,
+  },
+
   googleUser: { type: Boolean, default: false },
-  picture: String,
+  picture: { type: String, default: null },
   createdAt: { type: Date, default: Date.now },
+
+  // 👇 NEW: Posts user has liked
+  likedPosts: [{ type: mongoose.Schema.Types.ObjectId, ref: "Users", default: [] }],
+
+  // 👇 Already existing savedPosts, just improved for clarity
   savedPosts: [{
     postId: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
     data: String,
     imageurl: String,
     event_date: Date,
-    createdAt: Date,
+    createdAt: { type: Date, default: Date.now },
     userEmail: String
-  }]
+  }],
+
+  // 👇 Optional: track total likes/saves for profile analytics
+  totalLikes: { type: Number, default: 0 },
+  totalSaves: { type: Number, default: 0 },
 });
+
+// Create Model
 const genz = mongoose.model("logins", userSchema);
+
+
 
 // ----- Post Schema -----
 const postSchema = new mongoose.Schema({
@@ -555,12 +574,16 @@ passport.use(
         const email = profile.emails[0].value.toLowerCase();
         let user = await genz.findOne({ email });
 
+         // 🆕 If no user, create with default structure
         if (!user) {
           user = await genz.create({
             name: profile.displayName,
             email,
-            password: null, // since it's Google login
+            password: null,
+            googleUser: true,
             picture: profile.photos?.[0]?.value || null,
+            likedPosts: [],
+            savedPosts: [],
           });
         }
 
