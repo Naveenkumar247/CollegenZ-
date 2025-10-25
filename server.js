@@ -548,7 +548,7 @@ passport.use(
     {
       clientID: process.env.GOOGLE_CLIENT_ID,          // from .env
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,  // from .env
-      callbackURL: "http://localhost:3000/auth/google/callback", // can also be set in .env if you want
+      callbackURL: process.env.GOOGLE_CALLBACK_URL, // can also be set in .env if you want
     },
     async (accessToken, refreshToken, profile, done) => {
       try {
