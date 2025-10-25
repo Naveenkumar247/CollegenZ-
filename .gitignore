@@ -1,6 +1,5 @@
 node_modules/
 config/collegenz-firebase-adminsdk.json
 .env
-data2.js
 
 .env
