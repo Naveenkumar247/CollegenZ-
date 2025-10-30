@@ -616,7 +616,7 @@ passport.use(
       // ✅ Automatically switch callback based on environment
       callbackURL:
         process.env.NODE_ENV === "production"
-          ? "https://collegenzwebsite.onrender.com/auth/google/callback"
+          ? "https://collegenz.site/auth/google/callback"
           : "http://localhost:3000/auth/google/callback",
     },
     async (accessToken, refreshToken, profile, done) => {
