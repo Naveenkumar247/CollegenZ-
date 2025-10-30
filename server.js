@@ -235,7 +235,9 @@ app.get("/sitemap.xml",(req,res) => {
 app.get("/robots.txt",(req,res) => {
     res.sendFile(path.join(__dirname, "robots.txt"));
 });
-
+app.get("/post/:postId",(req,res) => {
+    res.sendFile(path.join(__dirname, "share.html"));
+});
 
 // =======================
 // Traditional Signup
