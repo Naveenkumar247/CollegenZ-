@@ -214,9 +214,6 @@ app.get("/signin", (req, res) => {
 app.get("/login", (req, res) => {
     res.sendFile(path.join(__dirname, "login.html"));
 });
-app.get("/submit",(req,res) => {
-    res.sendFile(path.join(__dirname, "form.html"));
-});
 app.get("/upload",(req,res) => {
     res.sendFile(path.join(__dirname, "upload.html"));
 });
