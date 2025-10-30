@@ -4,12 +4,77 @@
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8168910937798143"
      crossorigin="anonymous"></script>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- ✅ Makes it mobile responsive -->
   <title>Events Calendar</title>
   <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
   <style>
-    body { font-family: Arial, sans-serif; margin: 20px; }
-    #calendar { max-width: 900px; margin: 0 auto; }
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      padding: 0;
+      background-color: #fff;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 2em;
+      margin-bottom: 10px;
+    }
+
+    p a {
+      display: inline-block;
+      margin-bottom: 20px;
+      color: #0073e6;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    p a:hover {
+      text-decoration: underline;
+    }
+
+    #calendar {
+      max-width: 900px;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    /* ✅ Responsive adjustments */
+    @media (max-width: 768px) {
+      body {
+        margin: 10px;
+      }
+
+      h1 {
+        font-size: 1.5em;
+      }
+
+      #calendar {
+        max-width: 100%;
+        box-shadow: none;
+        border-radius: 5px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      h1 {
+        font-size: 1.3em;
+      }
+
+      p a {
+        font-size: 0.9em;
+      }
+
+      #calendar {
+        font-size: 0.85em;
+        padding: 5px;
+        overflow-x: auto; /* ✅ Allows horizontal scroll if needed */
+      }
+    }
   </style>
 </head>
 <body>
@@ -19,15 +84,20 @@
 
   <script>
     document.addEventListener("DOMContentLoaded", async () => {
-      const res = await fetch("/api/events");
-      const events = await res.json();
+      try {
+        const res = await fetch("/api/events");
+        const events = await res.json();
 
-      const calendarEl = document.getElementById("calendar");
-      const calendar = new FullCalendar.Calendar(calendarEl, {
-        initialView: "dayGridMonth",
-        events: events
-      });
-      calendar.render();
+        const calendarEl = document.getElementById("calendar");
+        const calendar = new FullCalendar.Calendar(calendarEl, {
+          initialView: window.innerWidth < 768 ? "listMonth" : "dayGridMonth", // ✅ Mobile shows list view
+          events: events,
+          height: "auto"
+        });
+        calendar.render();
+      } catch (error) {
+        console.error("Failed to load events:", error);
+      }
     });
   </script>
 </body>

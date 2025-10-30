@@ -4,10 +4,84 @@
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8168910937798143"
      crossorigin="anonymous"></script>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- ✅ Responsive scaling -->
   <title>Upload Post</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <style>
+    body {
+      background-color: #fff;
+      font-family: Arial, sans-serif;
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    form {
+      background: #fff;
+      padding: 25px;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    #preview img {
+      width: 100px;
+      height: 100px;
+      object-fit: cover;
+      border-radius: 8px;
+    }
+
+    /* ✅ Mobile-friendly adjustments */
+    @media (max-width: 768px) {
+      body {
+        margin: 10px;
+      }
+
+      form {
+        padding: 20px;
+        box-shadow: none;
+      }
+
+      h2 {
+        font-size: 1.6em;
+        margin-bottom: 20px;
+      }
+
+      #preview img {
+        width: 80px;
+        height: 80px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      form {
+        padding: 15px;
+      }
+
+      h2 {
+        font-size: 1.4em;
+      }
+
+      .btn {
+        width: 100%; /* ✅ Full width button on small screens */
+      }
+
+      #preview {
+        justify-content: center;
+      }
+
+      #preview img {
+        width: 70px;
+        height: 70px;
+      }
+    }
+  </style>
 </head>
-<body class="container mt-5">
+<body class="container mt-4">
 
   <h2>Upload a Post</h2>
 
@@ -15,7 +89,7 @@
     <!-- Post Title -->
     <div class="mb-3">
       <label class="form-label">Title</label>
-      <input type="text" name="data" class="form-control" required>
+      <input type="text" name="data" class="form-control" placeholder="Enter post title" required>
     </div>
 
     <!-- Multiple Image Upload -->
@@ -34,7 +108,7 @@
     <button type="submit" class="btn" style="background-color:#228B22; color:white;">Post</button>
   </form>
 
-  <!-- Image Preview Script -->
+  <!-- ✅ Image Preview Script -->
   <script>
     const input = document.querySelector('input[name="images"]');
     const preview = document.getElementById('preview');
@@ -46,10 +120,6 @@
         reader.onload = e => {
           const img = document.createElement('img');
           img.src = e.target.result;
-          img.style.width = '100px';
-          img.style.height = '100px';
-          img.style.objectFit = 'cover';
-          img.style.borderRadius = '8px';
           preview.appendChild(img);
         };
         reader.readAsDataURL(file);

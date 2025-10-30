@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shared Post | Collegenz</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #fafafa;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    .post {
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 0 10px #ccc;
+      padding: 20px;
+      max-width: 500px;
+    }
+    img {
+      width: 100%;
+      border-radius: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div id="post-container" class="post">
+    <h2 id="post-title">Loading...</h2>
+    <img id="post-image" src="" alt="Post Image" />
+    <p id="post-desc"></p>
+  </div>
+
+  <script>
+    const postId = window.location.pathname.split("/").pop();
+    fetch(`/api/post/${postId}`)
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById("post-title").innerText = data.title;
+        document.getElementById("post-image").src = data.imageurl;
+        document.getElementById("post-desc").innerText = data.description;
+      })
+      .catch(() => {
+        document.getElementById("post-container").innerHTML = "<p>Post not found.</p>";
+      });
+  </script>
+</body>
+</html>
