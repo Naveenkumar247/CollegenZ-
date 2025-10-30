@@ -235,9 +235,12 @@ app.get("/sitemap.xml",(req,res) => {
 app.get("/robots.txt",(req,res) => {
     res.sendFile(path.join(__dirname, "robots.txt"));
 });
-app.get("/post/:postId",(req,res) => {
-    res.sendFile(path.join(__dirname, "share.html"));
+app.get("/post/postId",(req,res) => {
+    res.sendFile(path.join(__dirname, "resend.html"));
 });
+
+
+
 
 // =======================
 // Traditional Signup
@@ -706,45 +709,8 @@ app.get("/share-script.js", (req, res) => {
   `);
 });
 
-/*app.get("/share/:postId", (req, res) => {
-  const postId = req.params.postId;
-  const postUrl = `http://collegenz.site/post/${postId}`;
 
-  res.setHeader("Content-Type", "text/html"); // ✅ ensures browser renders HTML
-
-  res.send(`
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <title>Share Post | Collegenz</title>
-        <meta charset="utf-8" />
-        <style>
-          body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            margin-top: 100px;
-          }
-          a {
-            color: #007bff;
-            text-decoration: none;
-            font-weight: bold;
-          }
-          a:hover {
-            text-decoration: underline;
-          }
-        </style>
-      </head>
-      <body>
-        <h3>Check out this post on Collegenz! 🌱</h3>
-        <p>
-          <a href="${postUrl}" target="_blank">${postUrl}</a>
-        </p>
-      </body>
-    </html>
-  `);
-});*/
-
-app.get("/share/:postId", async (req, res) => {
+/*app.get("/post/:postId", async (req, res) => {
   try {
     const post = await Post.findById(req.params.postId);
     if (!post) {
@@ -842,7 +808,21 @@ app.get("/share/:postId", async (req, res) => {
     console.error("Error loading shared post:", err);
     res.status(500).send("<h3>Server error while loading post.</h3>");
   }
+});*/
+
+app.get("/post/:postId", async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.postId);
+    if (!post) return res.status(404).send("Post not found");
+
+    res.sendFile(path.join(__dirname, "resend.html"));
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Server error");
+  }
 });
+
+
 
 // API route to fetch post data
 app.get("/api/post/:postId", async (req, res) => {
