@@ -96,14 +96,18 @@ const storage = multer.diskStorage({
 // ----- User Schema -----
 const userSchema = new mongoose.Schema({
   name: { type: String, required: true },
+  username: { type: String, required: true },
   age: { type: Number, default: null },
   phone: { type: String, default: null },
   email: { type: String, required: true, unique: true },
   password: { type: String, default: null },
 
+  dob: { type: String, default: null }, // 👈 Date of Birth added
+  college: { type: String, default: null },
+  bio: { type: String, default: null },
+
   dream: {
     type: String,
-    enum: ["Doctor", "Engineering", "Lawyer", "Entertainment & Arts", "Developer"],
     default: null,
   },
 
@@ -111,20 +115,22 @@ const userSchema = new mongoose.Schema({
   picture: { type: String, default: null },
   createdAt: { type: Date, default: Date.now },
 
-  // 👇 NEW: Posts user has liked
-  likedPosts: [{ type: mongoose.Schema.Types.ObjectId, ref: "Users", default: [] }],
+  // 👇 Posts user has liked
+  likedPosts: [{ type: mongoose.Schema.Types.ObjectId, ref: "Posts", default: [] }],
 
-  // 👇 Already existing savedPosts, just improved for clarity
-  savedPosts: [{
-    postId: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
-    data: String,
-    imageurl: [{ type: String }],
-    event_date: Date,
-    createdAt: { type: Date, default: Date.now },
-    userEmail: String
-  }],
+  // 👇 Saved posts
+  savedPosts: [
+    {
+      postId: { type: mongoose.Schema.Types.ObjectId, ref: "Posts" },
+      data: String,
+      imageurl: [{ type: String }],
+      event_date: Date,
+      createdAt: { type: Date, default: Date.now },
+      userEmail: String,
+    },
+  ],
 
-  // 👇 Optional: track total likes/saves for profile analytics
+  // 👇 Optional analytics fields
   totalLikes: { type: Number, default: 0 },
   totalSaves: { type: Number, default: 0 },
 });
@@ -136,6 +142,7 @@ const genz = mongoose.model("logins", userSchema);
 
 // ----- Post Schema -----
 const postSchema = new mongoose.Schema({
+  username:{type:String,default:null},
   data: String,
   imageurl: [String],
   createdAt: { type: Date, default: Date.now },
@@ -162,10 +169,16 @@ function requireLogin(req, res, next) {
 }
 
 
+
 router.post("/submit", upload.array("images", 10), async (req, res) => {
   const { data, event_date } = req.body;
-  const userEmail = res.locals.currentUser?.email || null; // ✅ from logged-in user
 
+  // ✅ Get user details from session (if logged in)
+  const currentUser = res.locals.currentUser || null;
+  const userEmail = currentUser?.email || null;
+  const username = currentUser?.username || null; // 👈 optional for now
+
+  // ✅ Validate minimum data
   if (!data || !userEmail) {
     return res.send("<h3>No data or user info received</h3>");
   }
@@ -177,15 +190,16 @@ router.post("/submit", upload.array("images", 10), async (req, res) => {
     if (req.files && req.files.length > 0) {
       for (const file of req.files) {
         const result = await cloudinary.uploader.upload(file.path);
-        imageurls.push(result.secure_url); // Store Cloudinary URL
-        fs.unlinkSync(file.path); // Delete local temp file
+        imageurls.push(result.secure_url);
+        fs.unlinkSync(file.path); // delete local temp file
       }
     }
 
-    // ✅ Save post with Cloudinary image URLs
+    // ✅ Create new post (username is optional)
     const newPost = new Post({
+      username: username || null, // 👈 keep space for future use
       data,
-      imageurl: imageurls, // ✅ store array of Cloudinary URLs
+      imageurl: imageurls,
       event_date,
       userEmail,
     });
@@ -223,9 +237,6 @@ app.get("/calender",(req,res) => {
 app.get("/roadmap",(req,res) => {
     res.sendFile(path.join(__dirname, "roadmap.html"));
 });
-app.get("/profile",(req,res) => {
-    res.sendFile(path.join(__dirname, "profile.html"));
-});
 app.get("/sitemap.xml",(req,res) => {
     res.sendFile(path.join(__dirname, "sitemap.xml"));
 });
@@ -235,7 +246,6 @@ app.get("/robots.txt",(req,res) => {
 app.get("/post/postId",(req,res) => {
     res.sendFile(path.join(__dirname, "resend.html"));
 });
-
 
 
 
@@ -256,6 +266,7 @@ app.post("/signin", async (req, res) => {
 
     const newUser = new genz({
       name,
+      username,
       age,
       phone,
       email: lowerEmail,
@@ -293,6 +304,7 @@ app.get("/auth/google/callback",
         user = new genz({
           name: req.user.name,
            email: req.user.email,
+          username:null,
           password: null,
           age: null,
           phone: null,
@@ -320,6 +332,7 @@ const SessionSchema = new mongoose.Schema({
   name: { type: String, required: true },
   userId: { type: mongoose.Schema.Types.ObjectId, ref: "logins", required: true },
   email: { type: String, required: true },
+  username: { type: String, required: true },
   sessionId: { type: String, required: true },
   createdAt: { type: Date, default: Date.now },
   expiresAt: { type: Date }
@@ -598,6 +611,8 @@ passport.use(
 );
 
 
+
+
 // Passport serialization
 passport.serializeUser((user, done) => done(null, user.id));
 passport.deserializeUser(async (id, done) => {
@@ -614,8 +629,6 @@ passport.use(
     {
       clientID: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-
-      // ✅ Automatically switch callback based on environment
       callbackURL:
         process.env.NODE_ENV === "production"
           ? "https://collegenz.site/auth/google/callback"
@@ -624,24 +637,42 @@ passport.use(
     async (accessToken, refreshToken, profile, done) => {
       try {
         const email = profile.emails[0].value.toLowerCase();
-
         let user = await genz.findOne({ email });
 
-        // 🆕 Create user if not found (for first-time Google login)
         if (!user) {
+          // 🧠 Generate a clean, unique username
+          const baseName =
+            profile.displayName?.replace(/\s+/g, "").toLowerCase() ||
+            email.split("@")[0];
+          const randomNum = Math.floor(Math.random() * 10000);
+          const username = `${baseName}${randomNum}`;
+
+          // 🆕 Create user for first-time Google login
           user = await genz.create({
             name: profile.displayName,
             email,
+            username, // ✅ always included
             password: null,
             googleUser: true,
             picture: profile.photos?.[0]?.value || null,
             likedPosts: [],
             savedPosts: [],
+            dream: "Other", // ✅ default fallback
           });
         } else {
-          // 🔄 Ensure picture and name stay updated
+          // 🔄 Update picture/name and auto-update username if missing
           user.picture = profile.photos?.[0]?.value || user.picture;
           user.name = profile.displayName || user.name;
+
+          // 🧩 Future-proof: regenerate username if it's missing or null
+          if (!user.username) {
+            const baseName =
+              profile.displayName?.replace(/\s+/g, "").toLowerCase() ||
+              email.split("@")[0];
+            const randomNum = Math.floor(Math.random() * 10000);
+            user.username = `${baseName}${randomNum}`;
+          }
+
           await user.save();
         }
 
@@ -653,6 +684,8 @@ passport.use(
     }
   )
 );
+
+
 
 // Routes
 router.post("/login", passport.authenticate("local"), (req, res) => {
@@ -707,120 +740,6 @@ app.get("/share-script.js", (req, res) => {
 });
 
 
-/*app.get("/post/:postId", async (req, res) => {
-  try {
-    const post = await Post.findById(req.params.postId);
-    if (!post) {
-      return res.status(404).send("<h3>Post not found</h3>");
-    }
-
-    // ✅ Detect environment
-    const domain = process.env.DOMAIN || "http://localhost:3000";
-    const postUrl = `${domain}/post/${post._id}`;
-
-    // ✅ Handle single or multiple Cloudinary images
-    let carouselHTML = "";
-    if (Array.isArray(post.imageurl) && post.imageurl.length > 1) {
-      carouselHTML = `
-        <div id="carousel-${post._id}" class="carousel slide" data-bs-ride="carousel">
-          <div class="carousel-inner">
-            ${post.imageurl
-              .map(
-                (img, i) => `
-                <div class="carousel-item ${i === 0 ? "active" : ""}">
-                  <img src="${img}" class="d-block w-100" style="border-radius:10px;">
-                </div>`
-              )
-              .join("")}
-          </div>
-          <button class="carousel-control-prev" type="button" data-bs-target="#carousel-${post._id}" data-bs-slide="prev">
-            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-          </button>
-          <button class="carousel-control-next" type="button" data-bs-target="#carousel-${post._id}" data-bs-slide="next">
-            <span class="carousel-control-next-icon" aria-hidden="true"></span>
-          </button>
-        </div>`;
-    } else if (post.imageurl && post.imageurl.length > 0) {
-      const img = Array.isArray(post.imageurl) ? post.imageurl[0] : post.imageurl;
-      carouselHTML = `<img src="${img}" class="img-fluid" style="border-radius:10px;">`;
-    }
-
-    // ✅ HTML page for shared post
-    res.setHeader("Content-Type", "text/html");
-    res.send(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>${post.title || "Collegenz Post"}</title>
-          <meta charset="utf-8" />
-          <meta name="viewport" content="width=device-width, initial-scale=1" />
-          <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-          <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-          <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
-          <script src="/share-script.js"></script>
-          <style>
-            body {
-              font-family: Arial, sans-serif;
-              background: #f8f9fa;
-              padding: 20px;
-            }
-            .card {
-              box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-              border: none;
-            }
-            .btn-link {
-              text-decoration: none;
-            }
-            .bi {
-              font-size: 1.4rem;
-            }
-          </style>
-        </head>
-        <body>
-          <div class="card mb-3 p-3 text-center" style="max-width: 700px; margin: 40px auto; border-radius: 15px;">
-            <strong>${post.userEmail || "Unknown User"}</strong>
-            <div class="my-3">${carouselHTML}</div>
-            <p>${post.data || ""}</p>
-
-            <div class="mt-3 d-flex justify-content-center align-items-center gap-4">
-              <button class="btn btn-link btn-sm like-btn" style="color: gray;">
-                <i class="bi bi-heart"></i>
-              </button>
-              <span>${post.likes || 0}</span>
-
-              <button class="btn btn-link btn-sm save-btn" style="color: gray;">
-                <i class="bi bi-bookmark"></i>
-              </button>
-              <span>${post.saves || 0}</span>
-
-              <button class="btn btn-link btn-sm share-btn" data-id="${post._id}" style="color: gray;">
-                <i class="bi bi-share"></i>
-              </button>
-            </div>
-          </div>
-        </body>
-      </html>
-    `);
-  } catch (err) {
-    console.error("Error loading shared post:", err);
-    res.status(500).send("<h3>Server error while loading post.</h3>");
-  }
-});*/
-
-app.get("/post/:postId", async (req, res) => {
-  try {
-    const post = await Post.findById(req.params.postId);
-    if (!post) return res.status(404).send("Post not found");
-
-    res.sendFile(path.join(__dirname, "resend.html"));
-  } catch (err) {
-    console.error(err);
-    res.status(500).send("Server error");
-  }
-});
-
-
-
 // API route to fetch post data
 app.get("/api/post/:postId", async (req, res) => {
   try {
@@ -829,6 +748,143 @@ app.get("/api/post/:postId", async (req, res) => {
     res.json(post);
   } catch (err) {
     console.error("Error fetching post:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+app.set("view engine", "ejs");
+app.set("views", path.join(process.cwd(), "views"));
+
+
+app.get("/profile", async (req, res) => {
+  try {
+    const userId = req.session?.userId;
+    if (!userId) return res.redirect("/login");
+
+    const user = await genz.findById(userId);
+    if (!user) return res.status(404).send("<h3>User not found</h3>");
+
+    res.send(`
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>${user.name}'s Profile</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+        <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+        <style>
+          body {
+            background: #f8f9fa;
+            font-family: 'Poppins', sans-serif;
+          }
+          .profile-card {
+            max-width: 500px;
+            margin: 40px auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            padding: 25px;
+            text-align: center;
+          }
+          img {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #007bff;
+          }
+          .editable {
+            width: 100%;
+            border: none;
+            border-bottom: 1px solid #ccc;
+            background: transparent;
+            text-align: center;
+            font-size: 1rem;
+            margin-bottom: 12px;
+          }
+          .editable:focus {
+            outline: none;
+            border-bottom: 2px solid #007bff;
+          }
+          button {
+            border-radius: 8px;
+            width: 100%;
+          }
+        </style>
+      </head>
+
+      <body>
+        <div class="profile-card">
+          <img src="${user.picture || '/default.png'}" alt="Profile Picture">
+          <h3 class="mt-3">${user.name || 'User'}</h3>
+          <p class="text-muted">${user.email || ''}</p>
+          <input class="editable" id="username" value="${user.username || ''}" placeholder="Username">
+          <input class="editable" id="phone" value="${user.phone || ''}" placeholder="Add phone number">
+          <input class="editable" type="date" id="dob" value="${user.dob || ''}">
+          <input class="editable" id="dream" value="${user.dream || ''}" placeholder="Your dream">
+          <input class="editable" id="college" value="${user.college || ''}" placeholder="Your college">
+          <textarea class="editable" id="bio" rows="3" placeholder="Write something...">${user.bio || ''}</textarea>
+
+          <button class="btn btn-primary mt-3" onclick="saveProfile()">💾 Save Changes</button>
+        </div>
+
+        <script>
+          async function saveProfile() {
+            const data = {
+              username: document.getElementById('username').value,
+              phone: document.getElementById('phone').value,
+              dob: document.getElementById('dob').value,
+              dream: document.getElementById('dream').value,
+              college: document.getElementById('college').value,
+              bio: document.getElementById('bio').value
+            };
+            try {
+              await axios.post('/updateProfile', data);
+              alert('✅ Profile updated successfully!');
+            } catch (err) {
+              console.error(err);
+              alert('❌ Failed to update profile');
+            }
+          }
+        </script>
+      </body>
+      </html>
+    `);
+  } catch (err) {
+    console.error("Error loading profile:", err);
+    res.status(500).send("Server Error");
+  }
+});
+
+
+
+app.post("/updateProfile", async (req, res) => {
+  const userId = req.session?.userId;
+  if (!userId) return res.status(401).json({ error: "Not logged in" });
+
+  try {
+    const { phone, username, dob, dream, college, bio } = req.body;
+
+    // 🔹 Update user details
+    const updatedUser = await genz.findByIdAndUpdate(
+      userId,
+      { phone, username, dob, dream, college, bio },
+      { new: true }
+    );
+
+    // 🔹 Sync username in all posts (old + new)
+    if (username && updatedUser?.email) {
+      const result = await Post.updateMany(
+        { userEmail: updatedUser.email },
+        { username: username }
+      );
+      console.log(`✅ ${result.modifiedCount} posts updated for ${updatedUser.email}`);
+    }
+
+    res.json({ success: true, message: "Profile & posts updated successfully" });
+  } catch (err) {
+    console.error("Profile update error:", err);
     res.status(500).json({ error: "Server error" });
   }
 });
@@ -868,7 +924,37 @@ const isLoggedIn = Boolean(currentUser);                // true if logged in
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  
+    <title>CollegenZ</title>
+
+  <!-- ✅ SEO Meta Tags -->
+  <meta name="description" content="CollegenZ is an AI-powered platform that helps students dis>
+  <meta name="keywords" content="CollegenZ, college platform, student community, AI education,h>
+  <link rel="canonical" href="https://collegenz.site/">
+
+  <!-- ✅ Open Graph (for link previews on WhatsApp, LinkedIn, etc.) -->
+  <meta property="og:title" content="CollegenZ – AI-Powered College Platform">
+  <meta property="og:description" content="Discover and connect with colleges using AI. Explore>
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://collegenz.site/">
+  <meta property="og:image" content="https://collegenz.site/logo.png">
+
+  <!-- ✅ Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="CollegenZ – AI-Powered College Platform">
+  <meta name="twitter:description" content="Explore colleges and hackathons worldwide with Coll>
+  <meta name="twitter:image" content="https://collegenz.site/logo.png">
+
+  <!-- ✅ Schema Markup for Google -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "CollegenZ",
+    "url": "https://collegenz.site/",
+    "logo": "https://collegenz.site/logo.png",
+    "description": "AI-powered platform for students to discover colleges and hackathons global>
+  }
+  </script>
   <style>
 /* === Header === */
 header {
@@ -959,8 +1045,8 @@ header {
 /* === Tablet Size (medium screens) === */
 @media (max-width: 992px) {
   .sidebar img {
-    width: 40px;
-    height: 40px;
+    width: 45px;
+    height: 45px;
   }
 }
 
@@ -991,8 +1077,8 @@ header {
   }
 
   .sidebar img {
-    width: 35px; /* smaller icons for mobile */
-    height: 35px;
+    width: 45px; /* smaller icons for mobile */
+    height: 45px;
   }
 
   header {
@@ -1119,7 +1205,7 @@ posts.forEach((p, index) => {
   // Full Card Layout for Post
   html += `
     <div class="card mb-3 p-3 text-center" style="max-width: 700px; margin: 20px auto; border-radius: 15px;">
-      <strong>${p.userEmail}</strong>
+      <strong>${p.username ? p.username : p.userEmail}</strong>
       <div class="my-3">${carousel}</div>
       <p>${p.data}</p>
       <!-- Like & Save Buttons -->
@@ -1151,7 +1237,7 @@ posts.forEach((p, index) => {
   <!-- Sidebar / Bottom Navigation -->
 <div class="sidebar">
   <div class="icon">
-    <a href="/view"><img src="/uploads/home.png" alt="Home" ></a>
+    <a href="/profile"><img src="/uploads/home.png" alt="Home" ></a>
     <a href="/login"><img src="/uploads/settings.png" alt="Settings" ></a>
     <a href="/upload"><img src="/uploads/add.png" alt="Add" ></a>
     <a href="/calender"><img src="/uploads/calender.png" alt="Calendar" ></a>
