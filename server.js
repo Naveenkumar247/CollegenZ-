@@ -40,6 +40,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static('uploads'));
 app.use('/view', express.static('assets'));
+app.use(express.static("public"));
 
 // ---------- Session Setup ----------
 app.use(session({
@@ -96,16 +97,16 @@ const storage = multer.diskStorage({
 // ----- User Schema -----
 const userSchema = new mongoose.Schema({
   name: { type: String, required: true },
-  username: { type: String, required: true },
+  username: { type: String, default: null},
   age: { type: Number, default: null },
   phone: { type: String, default: null },
   email: { type: String, required: true, unique: true },
   password: { type: String, default: null },
 
   dob: { type: String, default: null }, // 👈 Date of Birth added
-  college: { type: String, default: null },
+  college: { type: String, required:false, default: null },
   bio: { type: String, default: null },
-
+  picture: { type: String, default: null },
   dream: {
     type: String,
     default: null,
@@ -148,6 +149,8 @@ const postSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
   event_date: Date,
   userEmail: String,
+  picture: { type: String, default: null },
+  college: { type: String, required:false, default: null },
   likes: { type: Number, default: 0 },
   likedBy: {
     type: [{ type: mongoose.Schema.Types.ObjectId, ref: "logins" }],
@@ -160,6 +163,7 @@ const postSchema = new mongoose.Schema({
 const Post = mongoose.model("Users", postSchema);
 
 
+
 // POST form handler
 function requireLogin(req, res, next) {
   if (!res.locals.currentUser) {
@@ -167,18 +171,15 @@ function requireLogin(req, res, next) {
   }
   next();
 }
-
-
-
 router.post("/submit", upload.array("images", 10), async (req, res) => {
   const { data, event_date } = req.body;
 
-  // ✅ Get user details from session (if logged in)
   const currentUser = res.locals.currentUser || null;
   const userEmail = currentUser?.email || null;
-  const username = currentUser?.username || null; // 👈 optional for now
+  const username = currentUser?.username || null;
+  const picture = currentUser?.picture || null; // ✅ define picture here
+  const college = currentUser?.college?.trim() || null;
 
-  // ✅ Validate minimum data
   if (!data || !userEmail) {
     return res.send("<h3>No data or user info received</h3>");
   }
@@ -186,22 +187,22 @@ router.post("/submit", upload.array("images", 10), async (req, res) => {
   try {
     let imageurls = [];
 
-    // ✅ Upload each file to Cloudinary
     if (req.files && req.files.length > 0) {
       for (const file of req.files) {
         const result = await cloudinary.uploader.upload(file.path);
         imageurls.push(result.secure_url);
-        fs.unlinkSync(file.path); // delete local temp file
+        fs.unlinkSync(file.path);
       }
     }
 
-    // ✅ Create new post (username is optional)
     const newPost = new Post({
-      username: username || null, // 👈 keep space for future use
+      username: username || null,
       data,
       imageurl: imageurls,
       event_date,
       userEmail,
+      college,
+      picture, // ✅ now defined properly
     });
 
     await newPost.save();
@@ -213,7 +214,6 @@ router.post("/submit", upload.array("images", 10), async (req, res) => {
   }
 });
 
-
 // Routes
 
 
@@ -221,7 +221,7 @@ app.get("/",(req,res) => {
     res.sendFile(path.join(__dirname, "home.html"));
 });
 
-app.get("/signin", (req, res) => {
+app.get("/signup", (req, res) => {
     res.sendFile(path.join(__dirname, "sign.html"));
 });
 
@@ -243,18 +243,20 @@ app.get("/sitemap.xml",(req,res) => {
 app.get("/robots.txt",(req,res) => {
     res.sendFile(path.join(__dirname, "robots.txt"));
 });
-app.get("/post/postId",(req,res) => {
+app.get("/share/postId",(req,res) => {
     res.sendFile(path.join(__dirname, "resend.html"));
 });
-
+app.get("/aboutus",(req,res) => {
+    res.sendFile(path.join(__dirname, "about.html"));
+});
 
 
 // =======================
 // Traditional Signup
 // =======================
-app.post("/signin", async (req, res) => {
+app.post("/signup", async (req, res) => {
   try {
-    const { name, age, phone, email, password, dream } = req.body;
+    const { name, username, age, phone, email, password,college, dream } = req.body;
 
     const lowerEmail = email.toLowerCase();
     const existingUser = await genz.findOne({ email: lowerEmail });
@@ -262,22 +264,22 @@ app.post("/signin", async (req, res) => {
     if (existingUser)
       return res.status(400).json({ message: "User already exists. Try logging in." });
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcryptjs.hash(password, 10);
 
     const newUser = new genz({
       name,
-      username,
+      username:username || null,
       age,
       phone,
       email: lowerEmail,
       password: hashedPassword,
       dream,
-      googleUser: false, // mark as traditional signup
+      college:college || null,
     });
 
     await newUser.save();
 
-    res.json({ message: "Signup successful! You can now log in.", redirect: "/login" });
+    res.redirect("/view");
   } catch (err) {
     console.error("Signup error:", err);
     res.status(500).json({ message: "Server error during signup." });
@@ -293,7 +295,7 @@ app.get("/auth/google-signup", passport.authenticate("google", { scope: ["profil
 
 // Step 2: Google callback
 app.get("/auth/google/callback",
-  passport.authenticate("google", { failureRedirect: "/signin" }),
+  passport.authenticate("google", { failureRedirect: "/signup" }),
   async (req, res) => {
     try {
       // Check if user exists
@@ -306,10 +308,12 @@ app.get("/auth/google/callback",
            email: req.user.email,
           username:null,
           password: null,
+          college:null,
           age: null,
           phone: null,
           dream: null,
           googleUser: true,
+          picture:true,
         });
         await user.save();
       }
@@ -322,7 +326,7 @@ app.get("/auth/google/callback",
       res.redirect("/view"); // redirect to dashboard after Google signup
     } catch (err) {
       console.error("Google signup error:", err);
-      res.redirect("/signin");
+      res.redirect("/signup");
     }
   }
 );
@@ -333,6 +337,7 @@ const SessionSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: "logins", required: true },
   email: { type: String, required: true },
   username: { type: String, required: true },
+  college: {type: String, required: true},
   sessionId: { type: String, required: true },
   createdAt: { type: Date, default: Date.now },
   expiresAt: { type: Date }
@@ -593,37 +598,47 @@ router.get("/calender", async (req, res) => {
 });
 
 
-// Local Strategy
 passport.use(
-  new LocalStrategy({ usernameField: "email" }, async (email, password, done) => {
-    try {
-      const user = await genz.findOne({ email: email.toLowerCase() });
-      if (!user) return done(null, false, { message: "User not found" });
+  new LocalStrategy(
+    { usernameField: "login", passwordField: "password" },
+    async (login, password, done) => {
+      try {
+        let user;
 
-      const isMatch = await bcryptjs.compare(password, user.password);
-      if (!isMatch) return done(null, false, { message: "Incorrect password" });
+        // Check if input looks like an email
+        if (login.includes("@")) {
+          user = await genz.findOne({ email: login.toLowerCase() });
+        } else {
+          user = await genz.findOne({ username: login });
+        }
 
-      return done(null, user);
-    } catch (err) {
-      return done(err);
+        // If user not found
+        if (!user) {
+          return done(null, false, { message: "User not found" });
+        }
+
+        // If no password set (for Google users)
+        if (!user.password) {
+          return done(null, false, { message: "Use Google Sign-In for this account" });
+        }
+
+        // Compare passwords
+        const isMatch = await bcryptjs.compare(password, user.password);
+        if (!isMatch) {
+          return done(null, false, { message: "Incorrect password" });
+        }
+
+        return done(null, user);
+      } catch (err) {
+        return done(err);
+      }
     }
-  })
+  )
 );
 
-
-
-
-// Passport serialization
-passport.serializeUser((user, done) => done(null, user.id));
-passport.deserializeUser(async (id, done) => {
-  try {
-    const user = await genz.findById(id);
-    done(null, user);
-  } catch (err) {
-    done(err, null);
-  }
-});
-
+// =======================
+// 🔹 GOOGLE STRATEGY
+// =======================
 passport.use(
   new GoogleStrategy(
     {
@@ -636,35 +651,34 @@ passport.use(
     },
     async (accessToken, refreshToken, profile, done) => {
       try {
-        const email = profile.emails[0].value.toLowerCase();
+        const email = profile.emails?.[0]?.value?.toLowerCase();
         let user = await genz.findOne({ email });
 
         if (!user) {
-          // 🧠 Generate a clean, unique username
           const baseName =
             profile.displayName?.replace(/\s+/g, "").toLowerCase() ||
             email.split("@")[0];
           const randomNum = Math.floor(Math.random() * 10000);
           const username = `${baseName}${randomNum}`;
 
-          // 🆕 Create user for first-time Google login
+          // 🆕 Create new user for first-time Google login
           user = await genz.create({
             name: profile.displayName,
             email,
-            username, // ✅ always included
+            username,
             password: null,
             googleUser: true,
-            picture: profile.photos?.[0]?.value || null,
+            college:null,
+            picture: profile.photos?.[0]?.value || null, // ✅ stores profile photo
             likedPosts: [],
             savedPosts: [],
-            dream: "Other", // ✅ default fallback
+            dream: "Other",
           });
         } else {
-          // 🔄 Update picture/name and auto-update username if missing
+          // 🔁 Update existing Google user info
           user.picture = profile.photos?.[0]?.value || user.picture;
           user.name = profile.displayName || user.name;
 
-          // 🧩 Future-proof: regenerate username if it's missing or null
           if (!user.username) {
             const baseName =
               profile.displayName?.replace(/\s+/g, "").toLowerCase() ||
@@ -685,23 +699,63 @@ passport.use(
   )
 );
 
+// =======================
+// 🔹 SERIALIZATION
+// =======================
+passport.serializeUser((user, done) => done(null, user.id));
+
+passport.deserializeUser(async (id, done) => {
+  try {
+    const user = await genz.findById(id);
+    done(null, user);
+  } catch (err) {
+    done(err, null);
+  }
+});
 
 
 // Routes
-router.post("/login", passport.authenticate("local"), (req, res) => {
+/*router.post("/login", passport.authenticate("local"), (req, res) => {
   res.json({ success: true, redirectUrl: "/view" });
+});*/
+
+router.post("/login", (req, res, next) => {
+  passport.authenticate("local", (err, user, info) => {
+    if (err) return next(err);
+    if (!user) return res.status(400).json({ success: false, message: info?.message || "Invalid credentials" });
+
+    req.logIn(user, (err) => {
+      if (err) return next(err);
+
+      // ✅ Session established here
+      req.session.userId = user._id;
+      return res.json({ success: true, redirectUrl: "/view" });
+    });
+  })(req, res, next);
 });
 
 router.get("/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
 
+/*router.get(
+  "/auth/google/callback",
+  passport.authenticate("google", { failureRedirect: "/signup" }),
+  (req, res) => {
+    res.redirect("/view");
+  }
+);*/
+
 router.get(
   "/auth/google/callback",
-  passport.authenticate("google", { failureRedirect: "/signin" }),
+  passport.authenticate("google", { failureRedirect: "/signup" }),
   (req, res) => {
+    req.session.userId = req.user._id; // ✅ store userId in session for profile access
     res.redirect("/view");
   }
 );
 
+// ----------------------
+// Share Script
+// ----------------------
 app.get("/share-script.js", (req, res) => {
   res.setHeader("Content-Type", "application/javascript");
   res.send(`
@@ -710,7 +764,7 @@ app.get("/share-script.js", (req, res) => {
       if (!btn) return;
 
       const postId = btn.getAttribute("data-id");
-      const postUrl = "https://collegenz.site" + "/post/" + postId;
+      const postUrl = "https://collegenz.site/share/" + postId;
       const shareText = "Check out this post on Collegenz! 🌱 " + postUrl;
 
       if (navigator.share) {
@@ -740,7 +794,9 @@ app.get("/share-script.js", (req, res) => {
 });
 
 
-// API route to fetch post data
+// ----------------------
+// API: Fetch Post Data
+// ----------------------
 app.get("/api/post/:postId", async (req, res) => {
   try {
     const post = await Post.findById(req.params.postId);
@@ -752,8 +808,34 @@ app.get("/api/post/:postId", async (req, res) => {
   }
 });
 
-app.set("view engine", "ejs");
-app.set("views", path.join(process.cwd(), "views"));
+
+// ----------------------
+// Share Page (HTML)
+// ----------------------
+app.get("/share/:postId", (req, res) => {
+  res.sendFile(path.join(process.cwd(), "resend.html"));
+});
+
+app.delete("/deletepost/:id", async (req, res) => {
+  try {
+    const postId = req.params.id;
+
+    // Delete post by ID
+    const deletedPost = await Post.findByIdAndDelete(postId);
+
+    if (!deletedPost) {
+      console.log("❌ Post not found:", postId);
+      return res.status(404).json({ message: "Post not found" });
+    }
+
+    console.log("✅ Post deleted:", postId);
+    res.status(200).json({ message: "Post deleted successfully" });
+
+  } catch (error) {
+    console.error("❌ Error deleting post:", error);
+    res.status(500).json({ message: "Server error while deleting post" });
+  }
+});
 
 
 app.get("/profile", async (req, res) => {
@@ -768,80 +850,228 @@ app.get("/profile", async (req, res) => {
       <!DOCTYPE html>
       <html lang="en">
       <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>${user.name}'s Profile</title>
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
         <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
         <style>
           body {
             background: #f8f9fa;
             font-family: 'Poppins', sans-serif;
           }
-          .profile-card {
-            max-width: 500px;
-            margin: 40px auto;
+          .profile-container {
+            max-width: 600px;
+            margin: 60px auto;
             background: white;
+            padding: 30px;
             border-radius: 20px;
             box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            padding: 25px;
-            text-align: center;
           }
-          img {
-            width: 120px;
-            height: 120px;
+          .profile-img {
+            width: 130px;
+            height: 130px;
             border-radius: 50%;
             object-fit: cover;
-            border: 3px solid #007bff;
+            border: 3px solid #228B22;
+            cursor: pointer;
           }
-          .editable {
-            width: 100%;
-            border: none;
-            border-bottom: 1px solid #ccc;
-            background: transparent;
-            text-align: center;
-            font-size: 1rem;
-            margin-bottom: 12px;
+          .form-control {
+            border-radius: 10px;
           }
-          .editable:focus {
-            outline: none;
-            border-bottom: 2px solid #007bff;
+          .btn-save {
+            background: #228B22;
+            color: white;
+            font-weight: 600;
+            border-radius: 10px;
           }
-          button {
-            border-radius: 8px;
-            width: 100%;
+          .btn-save:hover {
+            background: #1b6f1b;
           }
+          .upload-label {
+            cursor: pointer;
+            color: #007bff;
+            text-decoration: underline;
+            font-size: 0.9rem;
+          }
+      
+/* === Sidebar (Default: Desktop layout) === */
+.sidebar {
+  width: 60px;
+  background: #f1f1f1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 0;
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100vh;
+  z-index: 2000;
+  transition: all 0.3s ease-in-out;
+  box-shadow: -2px 0 8px rgba(0,0,0,0.1);
+}
+
+.sidebar .icon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.2rem;
+  margin-top: 2rem;
+}
+
+.sidebar img {
+  width: 45px;
+  height: 45px;
+  transition: transform 0.2s ease;
+}
+
+/* Slight zoom effect on hover */
+.sidebar img:hover {
+  transform: scale(1.1);
+}
+/* === Tablet Size (medium screens) === */
+@media (max-width: 992px) {
+  .sidebar img {
+    width: 45px;
+    height: 45px;
+  }
+}
+
+/* === Mobile Layout: Sidebar becomes bottom nav === */
+@media (max-width: 768px) {
+  .sidebar {
+    width: 100%;
+    height: 55px; /* slightly smaller bottom nav */
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    bottom: 0;
+    top: auto;
+    right: 0;
+    left: 0;
+    background: #f1f1f1;
+    border-top: 1px solid #ddd;
+    box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
+  }
+
+  .sidebar .icon {
+    flex-direction: row;
+    justify-content: space-around;
+    width: 100%;
+    gap: 2rem; /* more spacing between icons */
+    margin-top: 0;
+    padding: 0 0.5rem; /* side padding */
+  }
+
+  .sidebar img {
+    width: 45px; /* smaller icons for mobile */
+    height: 45px;
+  }
+
+  header {
+    margin-right: 0;
+    margin-bottom: 65px; /* space for bottom nav */
+    padding: 0.8rem 1rem; /* slightly smaller header*/
+  }
+}
+
+/* === Extra Small Screens (very small phones) === */
+@media (max-width: 480px) {
+  .sidebar .icon {
+    flex-wrap: wrap; /* allow icons to wrap if too many */
+  }
+
+  .sidebar img {
+    width: 24px;
+    height: 24px;
+  }
+}
+   @media (max-width: 576px) {
+    main h2 {
+      font-size: 1.4rem;
+    }
+    main p {
+      font-size: 0.9rem;
+    }
+    main .btn {
+      width: 100%;
+    }
+  }
+
+
+
         </style>
       </head>
 
       <body>
-        <div class="profile-card">
-          <img src="${user.picture || '/default.png'}" alt="Profile Picture">
-          <h3 class="mt-3">${user.name || 'User'}</h3>
-          <p class="text-muted">${user.email || ''}</p>
-          <input class="editable" id="username" value="${user.username || ''}" placeholder="Username">
-          <input class="editable" id="phone" value="${user.phone || ''}" placeholder="Add phone number">
-          <input class="editable" type="date" id="dob" value="${user.dob || ''}">
-          <input class="editable" id="dream" value="${user.dream || ''}" placeholder="Your dream">
-          <input class="editable" id="college" value="${user.college || ''}" placeholder="Your college">
-          <textarea class="editable" id="bio" rows="3" placeholder="Write something...">${user.bio || ''}</textarea>
+        <div class="profile-container text-center">
+          <form id="profileForm" enctype="multipart/form-data">
+            <div class="mb-3">
+              <img id="previewImage" class="profile-img" src="${user.picture || '/profilepic.jpg'}" alt="" />
+              <br>
+              <label class="upload-label mt-2">
+                Change Photo
+                <input type="file" id="picture" name="picture" accept="image/" style="display:none" onchange="previewProfile(event)">
+              </label>
+            </div>
 
-          <button class="btn btn-primary mt-3" onclick="saveProfile()">💾 Save Changes</button>
+            <h4 class="mt-3 mb-1">${user.name || "User"}</h4>
+            <p class="text-muted mb-4">${user.email || ""}</p>
+
+            <div class="row g-3">
+              <div class="col-md-6">
+                <input class="form-control" id="username" name="username" value="${user.username || ''}" placeholder="Username">
+              </div>
+              <div class="col-md-6">
+                <input class="form-control" id="phone" name="phone" value="${user.phone || ''}" placeholder="Phone">
+              </div>
+              <div class="col-md-6">
+                <input class="form-control" type="date" id="dob" name="dob" value="${user.dob || ''}">
+              </div>
+              <div class="col-md-6">
+                <input class="form-control" id="college" name="college" value="${user.college || ''}" placeholder="College">
+              </div>
+              <div class="col-12">
+                <input class="form-control" id="dream" name="dream" value="${user.dream || ''}" placeholder="Your dream">
+              </div>
+              <div class="col-12">
+                <textarea class="form-control" id="bio" name="bio" rows="3" placeholder="Write something...">${user.bio || ''}</textarea>
+              </div>
+            </div>
+
+            <button type="button" class="btn btn-save mt-4 w-100" onclick="saveProfile()">💾 Save Changes</button>
+          </form>
+        </div>
+
+        <div class="sidebar">
+          <div class="icon">
+            <a href="/view"><img src="/uploads/home.png" alt="Home"></a>
+            <a href="/profile"><img src="/uploads/settings.png" alt="Settings"></a>
+            <a href="/upload"><img src="/uploads/add.png" alt="Add"></a>
+            <a href="/calender"><img src="/uploads/calender.png" alt="Calendar"></a>
+          </div>
         </div>
 
         <script>
+          function previewProfile(event) {
+            const reader = new FileReader();
+            reader.onload = function(){
+              document.getElementById('previewImage').src = reader.result;
+            }
+            reader.readAsDataURL(event.target.files[0]);
+          }
+
           async function saveProfile() {
-            const data = {
-              username: document.getElementById('username').value,
-              phone: document.getElementById('phone').value,
-              dob: document.getElementById('dob').value,
-              dream: document.getElementById('dream').value,
-              college: document.getElementById('college').value,
-              bio: document.getElementById('bio').value
-            };
+            const formData = new FormData(document.getElementById('profileForm'));
+
             try {
-              await axios.post('/updateProfile', data);
-              alert('✅ Profile updated successfully!');
+              const res = await axios.post('/updateProfile', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+              });
+              alert('✅ ' + res.data.message);
             } catch (err) {
               console.error(err);
               alert('❌ Failed to update profile');
@@ -858,28 +1088,42 @@ app.get("/profile", async (req, res) => {
 });
 
 
-
-app.post("/updateProfile", async (req, res) => {
+app.post("/updateProfile", upload.single("picture"), async (req, res) => {
   const userId = req.session?.userId;
   if (!userId) return res.status(401).json({ error: "Not logged in" });
 
   try {
     const { phone, username, dob, dream, college, bio } = req.body;
+    let pictureUrl = null;
 
-    // 🔹 Update user details
-    const updatedUser = await genz.findByIdAndUpdate(
-      userId,
-      { phone, username, dob, dream, college, bio },
-      { new: true }
-    );
+    // 🔹 Upload to Cloudinary only if a file is selected
+    if (req.file) {
+      try {
+        const result = await cloudinary.uploader.upload(req.file.path);
+        pictureUrl = result.secure_url;
+        fs.unlinkSync(req.file.path); // delete temp file
+      } catch (err) {
+        console.error("Cloudinary upload error:", err);
+      }
+    }
 
-    // 🔹 Sync username in all posts (old + new)
-    if (username && updatedUser?.email) {
-      const result = await Post.updateMany(
+    // 🔹 Prepare update object
+    const updateFields = { phone, username, dob, dream, college, bio };
+    if (pictureUrl) updateFields.picture = pictureUrl;
+
+    // 🔹 Update user
+    const updatedUser = await genz.findByIdAndUpdate(userId, updateFields, { new: true });
+
+    // 🔹 Sync username + college + picture in all posts
+    if (updatedUser?.email) {
+      await Post.updateMany(
         { userEmail: updatedUser.email },
-        { username: username }
+        {
+          username: updatedUser.username,
+          college: updatedUser.college,
+          picture: updatedUser.picture,
+        }
       );
-      console.log(`✅ ${result.modifiedCount} posts updated for ${updatedUser.email}`);
     }
 
     res.json({ success: true, message: "Profile & posts updated successfully" });
@@ -901,7 +1145,7 @@ app.get("/dashboard", (req, res) => {
 // Logout
 app.get("/logout", (req, res) => {
     req.session.destroy(() => {
-        res.send("Logged out");
+        res.redirect("/view");
     });
 });
 
@@ -912,6 +1156,7 @@ router.get("/view", async (req, res) => {
 
    
 // ✅ Detect current login status
+const currentUserEmail = req.session.user ? req.session.user.email : null;
 const currentUser = res.locals.currentUser ?? null;     // User info if logged in
 const loginSession = res.locals.loginSession ?? null;   // Session info if logged in
 const isLoggedIn = Boolean(currentUser);                // true if logged in
@@ -958,7 +1203,7 @@ const isLoggedIn = Boolean(currentUser);                // true if logged in
   <style>
 /* === Header === */
 header {
-  background-color: #228B22;
+  background: linear-gradient(135deg, #228B22, #006400);
   color: white;
   padding: 1rem 1.2rem;
   display: flex;
@@ -970,7 +1215,15 @@ header {
   margin-right: 60px; /* space for desktop sidebar */
   box-shadow: 0 2px 6px rgba(0,0,0,0.1);
 }
+.logo-link {
+  color: white;
+  text-decoration: none;
+  transition: 0.3s;
+}
 
+.logo-link:hover {
+  opacity: 0.8;
+}
 /* === Sidebar (Default: Desktop layout) === */
 .sidebar {
   width: 60px;
@@ -984,7 +1237,7 @@ header {
   top: 0;
   right: 0;
   height: 100vh;
-  z-index: 1000;
+  z-index: 2000;
   transition: all 0.3s ease-in-out;
   box-shadow: -2px 0 8px rgba(0,0,0,0.1);
 }
@@ -1111,14 +1364,201 @@ header {
     }
   }
 
+/* Hamburger icon */
+.hamburger {
+  font-size: 28px;
+  cursor: pointer;
+  color: white;
+  display: block;
+}
+
+/* Slide-in Navbar */
+.slide-nav {
+  position: fixed;
+  top: 0;
+  right: -260px; /* hidden initially */
+  width: 240px;
+  height: 100vh;
+  background-color: #ffffff;
+  box-shadow: -2px 0 10px rgba(0, 0, 0, 0.15);
+  border-left: 1px solid #ddd;
+  display: flex;
+  flex-direction: column;
+  padding-top: 70px;
+  transition: right 0.35s ease-in-out;
+  z-index: 800;
+}
+
+.slide-nav a {
+  padding: 14px 24px;
+  text-decoration: none;
+  color: #228B22;
+  font-weight: 600;
+  border-bottom: 1px solid #f0f0f0;
+  transition: background 0.3s;
+}
+
+.slide-nav a:hover {
+  background-color: #f6f6f6;
+}
+
+/* Active state (visible) */
+.slide-nav.active {
+  right: 0;
+}
+
+/* Overlay for mobile */
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.15); /* ✏️ make it lighter */
+  display: none;
+  z-index: 700; /* ✏️ lower than navbar */
+}
+
+.overlay.active {
+  display: block;
+}
+
+/* Optional: Hide hamburger on large desktop if not needed */
+@media (min-width: 992px) {
+  .hamburger {
+    display: block;
+  }
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column; /* Stack vertically */
+  align-items: center;    /* Center horizontally */
+  text-align: center;     /* Center the text */
+  padding: 10px 0;
+  margin-bottom: 10px;
+}
+
+.user-info .profile-pic {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;         /* Circle shape */
+  border: 2px solid #228B22;  /* Green border */
+  object-fit: cover;          /* Fit the image */
+  margin-bottom: 10px;        /* Space below image */
+}
+
+.user-info h3 {
+  margin: 4px 0;
+  font-size: 18px;
+  color: #228B22;
+}
+
+.user-info p {
+  font-size: 14px;
+  color: #666;
+  margin: 0;
+}
+.profile-pic {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;      /* makes it circular */
+  object-fit: cover;       /* ensures it fits perfectly */
+}
+
+.postuser-info {
+  display: flex;
+  align-items: flex-start; /* aligns everything to the left */
+  text-align: left;        /* ensures text aligns left */
+  padding: 10px 0;
+  margin-bottom: 20px;
+  gap: 8px;                /* creates gap between profile and username */
+}
+
+.postuser-info div {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.postuser-info .postprofile-pic {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.postuser-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.user-details {
+  display: flex;
+  flex-direction: column; /* ensures username & college are stacked */
+  line-height: 1.2;
+}
+
+.user-details strong {
+  font-size: 1rem;
+  color: #000;
+  margin-bottom: 2px; /* adds small space above college name */
+}
+
+.user-details p {
+  font-size: 0.85rem;
+  color: gray;
+  margin: 0;
+}
+
+.post-caption {
+  font-size: 0.95rem;
+  line-height: 1.4;
+  color: #222;
+  white-space: pre-wrap;
+}
+
+.see-more-btn {
+  color: #007bff;
+  cursor: pointer;
+  font-weight: 500;
+  border: none;
+  background: none;
+}
+
 </style>
 </head>
 
 <body>
   <header>
-  <h1 class="m-0">CollegenZ</h1>
-  <input type="text" class="form-control w-25" placeholder="Search...">
+    <h1 class="m-0">
+    <a href="/aboutus" class="logo-link">CollegenZ</a>
+  </h1>
+  <!-- Hamburger Menu Icon -->
+  <div class="hamburger" id="hamburger">&#9776;</div>
 </header>
+
+<!-- Right Slide Navbar -->
+<nav id="slideNav" class="slide-nav" onmouseleave="closeNav()">
+  <!-- User info container (will be filled by JS) -->
+    <div class="user-info">
+  <img src=${isLoggedIn ? currentUser.picture : ""||"/uploads/profilepic.jpg"} alt="Profile" class="profile-pic">
+  <div class="details">
+    <h3>${isLoggedIn ? currentUser.name : ""}</h3>
+    <p>${isLoggedIn ? currentUser.email : ""}</p>
+  </div>
+</div>
+
+  <hr>
+
+  <a href="/login">Log In</a>
+  <a href="/logout">Log Out</a>
+</nav>
+
+<!-- Overlay for mobile -->
+<div class="overlay" id="overlay" onclick="closeNav()"></div>
+
 
   <main class="d-flex" style="margin-top: 50px;">
     <div class="container me-auto">
@@ -1128,15 +1568,17 @@ header {
           <h2>Welcome ${isLoggedIn ? currentUser.name : ""}</h2>
           <p>${isLoggedIn ? "Welcome back! Explore new posts and connect with others." : "Represent your college with us"}</p>
           ${isLoggedIn ? `
-            <a href="/upload" class="btn btn-success">Create Post</a>
+            <a href="/upload" class="btn" style="background: #228B22;color:white;">Create Post</a>
           ` : `
-            <a href="/login" class="btn btn-primary">Join Now</a>
+            <a href="/login" class="btn" style="background: #228B22;color:white;">Join Now</a>
           `}
         </div>
-        <div style="font-size: 2rem;">👤➕</div>
+        <div style="font-size: 2rem;"></div>
       </div>
 
-      <hr>`;
+      <hr>
+
+`;
 
     // 🔹 Display all posts
 posts.forEach((p, index) => {
@@ -1204,10 +1646,35 @@ posts.forEach((p, index) => {
 
   // Full Card Layout for Post
   html += `
-    <div class="card mb-3 p-3 text-center" style="max-width: 700px; margin: 20px auto; border-radius: 15px;">
-      <strong>${p.username ? p.username : p.userEmail}</strong>
-      <div class="my-3">${carousel}</div>
-      <p>${p.data}</p>
+
+       <div class="card mb-3 p-3 text-center" style="max-width: 700px; margin: 20px auto; border-radius: 15px;">
+    <div class="postuser-info">
+      
+        <img src="${p.picture || '/uploads/profilepic.jpg'}" class="postprofile-pic">
+        <div class="user-details">
+          <strong>${p.username ? p.username : p.userEmail}</strong>
+          <p class="mb-0">${p.college ? p.college : p.name}</p>
+        </div>
+      
+      <!-- Three Dots Menu (only for the post owner) -->
+      ${currentUser.email === p.userEmail ? `
+        <div class="dropdown">
+          <button class="btn btn-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="bi bi-three-dots-vertical"></i>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li><button class="dropdown-item delete-post-btn" data-id="${p._id}">🗑 Delete Post</button></li>
+          </ul>
+        </div>
+      ` : ""}
+    </div>
+
+      <p class="post-caption" id="caption-${p._id}">
+  ${p.data.length > 100 
+    ? `${p.data.slice(0, 100)}<span class="dots">...</span><span class="more-text" style="display:none;">${p.data.slice(100)}</span> <button class="see-more-btn btn btn-link p-0" data-id="${p._id}">See more</button>` 
+    : p.data}
+</p>
+
       <!-- Like & Save Buttons -->
       <div class="mt-3 d-flex justify-content-center align-items-center gap-4">
         <button class="btn btn-link btn-sm like-btn" data-id="${p._id}" style="color: gray; font-size: 1.2rem;" ${!isLoggedIn ? "disabled" : ""}>
@@ -1237,16 +1704,54 @@ posts.forEach((p, index) => {
   <!-- Sidebar / Bottom Navigation -->
 <div class="sidebar">
   <div class="icon">
-    <a href="/profile"><img src="/uploads/home.png" alt="Home" ></a>
-    <a href="/login"><img src="/uploads/settings.png" alt="Settings" ></a>
+    <a href="/view"><img src="/uploads/home.png" alt="Home" ></a>
+    <a href="/profile"><img src="/uploads/settings.png" alt="Settings" ></a>
     <a href="/upload"><img src="/uploads/add.png" alt="Add" ></a>
     <a href="/calender"><img src="/uploads/calender.png" alt="Calendar" ></a>
   </div>
 </div>
+  
+<script>
+const hamburger = document.getElementById("hamburger");
+const slideNav = document.getElementById("slideNav");
+const overlay = document.getElementById("overlay");
+
+function openNav() {
+  slideNav.classList.add("active");
+  overlay.classList.add("active");
+}
+
+function closeNav() {
+  slideNav.classList.remove("active");
+  overlay.classList.remove("active");
+}
+
+// Toggle navbar on hamburger click
+hamburger.addEventListener("click", () => {
+  if (slideNav.classList.contains("active")) {
+    closeNav();
+  } else {
+    openNav();
+  }
+});
+
+// Optional: Close navbar when pressing ESC key
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") closeNav();
+});
+</script>
+
+
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script src="/share-script.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/script.js"></script>
   <script>
+
+    
+
     const currentUserId = "${isLoggedIn ? currentUser._id : ""}";
+    const currentUserEmail = req.session.user ? req.session.user.email : null;
 
     document.addEventListener("click", async function(e) {
       // ✅ Like button

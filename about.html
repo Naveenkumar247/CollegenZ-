@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>About | Terms | Contact - Collegenz</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "Poppins", Arial, sans-serif;
+      background: #f8fafc;
+      color: #0f172a;
+      line-height: 1.6;
+    }
+
+    header {
+      background: linear-gradient(135deg, #228B22, #006400);
+      color: white;
+      padding: 20px;
+      text-align: center;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    header h1 {
+      font-size: 26px;
+      margin-bottom: 8px;
+    }
+
+    nav {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-top: 10px;
+    }
+
+    nav a {
+      color: #fff;
+      text-decoration: none;
+      font-weight: 500;
+      transition: opacity 0.3s;
+    }
+
+    nav a:hover {
+      opacity: 0.8;
+      text-decoration: underline;
+    }
+
+    main {
+      max-width: 900px;
+      margin: 30px auto;
+      padding: 20px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.05);
+    }
+
+    section {
+      margin-bottom: 40px;
+    }
+
+    section h2 {
+      font-size: 22px;
+      margin-bottom: 12px;
+      color:#228B22 ;
+      border-left: 5px solid #228B22;
+      padding-left: 10px;
+    }
+
+    p {
+      margin-bottom: 12px;
+    }
+
+    /* Contact section form */
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    input, textarea {
+      padding: 10px 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      font-size: 15px;
+      width: 100%;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 100px;
+    }
+
+    button {
+      background: linear-gradient(135deg, #228B22, #006400);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 16px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    button:hover {
+      opacity: 0.9;
+      transform: translateY(-1px);
+    }
+
+    footer {
+      background: linear-gradient(135deg, #228B22, #006400);
+      color: #cbd5e1;
+      text-align: center;
+      padding: 15px;
+      font-size: 14px;
+      margin-top: 40px;
+    }
+
+    @media (max-width: 600px) {
+      nav {
+        flex-wrap: wrap;
+      }
+      main {
+        margin: 15px;
+        padding: 15px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Collegenz</h1>
+    <nav>
+      <a href="#about">About Us</a>
+      <a href="#terms">Terms & Conditions</a>
+      <a href="#contact">Contact Us</a>
+    </nav>
+  </header>
+
+  <main>
+    <!-- ABOUT US -->
+    <section id="about">
+      <h2>About Us</h2>
+      <p>
+        Welcome to <strong>Collegenz</strong> — a student-driven platform built to connect learners,
+        opportunities, and ideas. Our goal is to make college communities smarter by sharing
+        information, internships, and creative projects through a single hub.
+      </p>
+      <p>
+        We believe in empowering students through collaboration and digital innovation. Collegenz is
+        constantly evolving to bring you better networking, verified opportunities, and a creative
+        space to showcase your talents.
+      </p>
+    </section>
+
+    <!-- TERMS AND CONDITIONS -->
+    <section id="terms">
+      <h2>Terms & Conditions</h2>
+      <p>
+        By using our website and services, you agree to the following terms:
+      </p>
+      <ul>
+        <li>All information shared on Collegenz must be accurate and respectful.</li>
+        <li>Users are responsible for maintaining the privacy of their login credentials.</li>
+        <li>Collegenz is not liable for third-party links or external content shared by users.</li>
+        <li>We reserve the right to update or modify these terms without prior notice.</li>
+      </ul>
+      <p>
+        Continued use of our website constitutes acceptance of any updates to these terms.
+      </p>
+    </section>
+
+    <!-- CONTACT US -->
+    <section id="contact">
+      <h2>Contact Us</h2>
+      <p>Have questions, feedback, or partnership ideas? We’d love to hear from you!</p>
+      <form>
+        <input type="text" placeholder="Your Name" required />
+        <input type="email" placeholder="Your Email" required />
+        <textarea placeholder="Your Message..." required></textarea>
+        <button type="submit">Send Message</button>
+      </form>
+    </section>
+  </main>
+
+  <footer>
+    &copy; 2025 Collegenz. All rights reserved.
+  </footer>
+</body>
+</html>

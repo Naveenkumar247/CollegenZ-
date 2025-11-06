@@ -65,6 +65,116 @@
     a:hover {
       background: #007700;
     }
+
+
+
+
+
+    /* === Sidebar (Default: Desktop layout) === */
+.sidebar {
+  width: 60px;
+  background: #f1f1f1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 0;
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100vh;
+  z-index: 2000;
+  transition: all 0.3s ease-in-out;
+  box-shadow: -2px 0 8px rgba(0,0,0,0.1);
+}
+
+.sidebar .icon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.2rem;
+  margin-top: 2rem;
+}
+
+.sidebar img {
+  width: 45px;
+  height: 45px;
+  transition: transform 0.2s ease;
+}
+
+/* Slight zoom effect on hover */
+.sidebar img:hover {
+  transform: scale(1.1);
+}
+/* === Tablet Size (medium screens) === */
+@media (max-width: 992px) {
+  .sidebar img {
+    width: 45px;
+    height: 45px;
+  }
+}
+
+/* === Mobile Layout: Sidebar becomes bottom nav === */
+@media (max-width: 768px) {
+  .sidebar {
+    width: 100%;
+    height: 55px; /* slightly smaller bottom nav */
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    bottom: 0;
+    top: auto;
+    right: 0;
+    left: 0;
+    background: #f1f1f1;
+    border-top: 1px solid #ddd;
+    box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
+  }
+
+  .sidebar .icon {
+    flex-direction: row;
+    justify-content: space-around;
+    width: 100%;
+    gap: 2rem; /* more spacing between icons */
+    margin-top: 0;
+    padding: 0 0.5rem; /* side padding */
+  }
+
+  .sidebar img {
+    width: 45px; /* smaller icons for mobile */
+    height: 45px;
+  }
+
+  header {
+    margin-right: 0;
+    margin-bottom: 65px; /* space for bottom nav */
+    padding: 0.8rem 1rem; /* slightly smaller header*/
+  }
+}
+
+/* === Extra Small Screens (very small phones) === */
+@media (max-width: 480px) {
+  .sidebar .icon {
+    flex-wrap: wrap; /* allow icons to wrap if too many */
+  }
+
+  .sidebar img {
+    width: 24px;
+    height: 24px;
+  }
+}
+   @media (max-width: 576px) {
+    main h2 {
+      font-size: 1.4rem;
+    }
+    main p {
+      font-size: 0.9rem;
+    }
+    main .btn {
+      width: 100%;
+    }
+  }
+
   </style>
 </head>
 
@@ -77,5 +187,15 @@
     <p><span class="label">Bio:</span> {{bio}}</p>
     <a href="/edit-profile">Edit Profile</a>
   </div>
+    <!-- Sidebar -->
+  <!-- Sidebar / Bottom Navigation -->
+<div class="sidebar">
+  <div class="icon">
+    <a href="/profile"><img src="/uploads/home.png" alt="Home" ></a>
+    <a href="/login"><img src="/uploads/settings.png" alt="Settings" ></a>
+    <a href="/upload"><img src="/uploads/add.png" alt="Add" ></a>
+    <a href="/calender"><img src="/uploads/calender.png" alt="Calendar" ></a>
+  </div>
+</div>
 </body>
 </html>
