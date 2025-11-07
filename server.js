@@ -42,6 +42,9 @@ app.use('/uploads', express.static('uploads'));
 app.use('/view', express.static('assets'));
 app.use(express.static("public"));
 
+
+
+
 // ---------- Session Setup ----------
 app.use(session({
   secret: process.env.SESSION_SECRET,
@@ -1156,7 +1159,7 @@ router.get("/view", async (req, res) => {
 
    
 // ✅ Detect current login status
-const currentUserEmail = req.session.user ? req.session.user.email : null;
+
 const currentUser = res.locals.currentUser ?? null;     // User info if logged in
 const loginSession = res.locals.loginSession ?? null;   // Session info if logged in
 const isLoggedIn = Boolean(currentUser);                // true if logged in
@@ -1430,6 +1433,7 @@ header {
   }
 }
 
+
 .user-info {
   display: flex;
   flex-direction: column; /* Stack vertically */
@@ -1527,11 +1531,18 @@ header {
   background: none;
 }
 
+
 </style>
+</head>
+ 
+
+
+
+
 </head>
 
 <body>
-  <header>
+    <header>
     <h1 class="m-0">
     <a href="/aboutus" class="logo-link">CollegenZ</a>
   </h1>
@@ -1559,7 +1570,6 @@ header {
 <!-- Overlay for mobile -->
 <div class="overlay" id="overlay" onclick="closeNav()"></div>
 
-
   <main class="d-flex" style="margin-top: 50px;">
     <div class="container me-auto">
       <!-- Join With Us Section -->
@@ -1568,17 +1578,15 @@ header {
           <h2>Welcome ${isLoggedIn ? currentUser.name : ""}</h2>
           <p>${isLoggedIn ? "Welcome back! Explore new posts and connect with others." : "Represent your college with us"}</p>
           ${isLoggedIn ? `
-            <a href="/upload" class="btn" style="background: #228B22;color:white;">Create Post</a>
+            <a href="/upload" class="btn btn-success">Create Post</a>
           ` : `
-            <a href="/login" class="btn" style="background: #228B22;color:white;">Join Now</a>
+            <a href="/login" class="btn btn-primary">Join Now</a>
           `}
         </div>
         <div style="font-size: 2rem;"></div>
       </div>
 
-      <hr>
-
-`;
+      <hr>`;
 
     // 🔹 Display all posts
 posts.forEach((p, index) => {
@@ -1644,57 +1652,60 @@ posts.forEach((p, index) => {
     </div>
   `;
 
-  // Full Card Layout for Post
-  html += `
 
-       <div class="card mb-3 p-3 text-center" style="max-width: 700px; margin: 20px auto; border-radius: 15px;">
+ 
+
+  // Full Card Layout for Post
+html += `
+  <div class="card mb-3 p-3 text-center" 
+       style="max-width: 700px; margin: 20px auto; border-radius: 15px;">
+
     <div class="postuser-info">
-      
-        <img src="${p.picture || '/uploads/profilepic.jpg'}" class="postprofile-pic">
-        <div class="user-details">
-          <strong>${p.username ? p.username : p.userEmail}</strong>
-          <p class="mb-0">${p.college ? p.college : p.name}</p>
-        </div>
-      
-      <!-- Three Dots Menu (only for the post owner) -->
-      ${currentUser.email === p.userEmail ? `
-        <div class="dropdown">
-          <button class="btn btn-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-            <i class="bi bi-three-dots-vertical"></i>
-          </button>
-          <ul class="dropdown-menu dropdown-menu-end">
-            <li><button class="dropdown-item delete-post-btn" data-id="${p._id}">🗑 Delete Post</button></li>
-          </ul>
-        </div>
-      ` : ""}
+      <img src="${p.picture || '/uploads/profilepic.jpg'}" class="postprofile-pic">
+      <div class="user-details">
+        <strong>${p.username ? p.username : p.userEmail}</strong>
+        <p class="mb-0">${p.college ? p.college : p.name}</p>
+      </div>
     </div>
 
-      <p class="post-caption" id="caption-${p._id}">
+   
+
+
+
+
+    <!-- Post Images -->
+    <div class="my-3">${carousel}</div>
+
+    <!-- Post Caption -->
+    <p class="post-caption" id="caption-${p._id}">
   ${p.data.length > 100 
     ? `${p.data.slice(0, 100)}<span class="dots">...</span><span class="more-text" style="display:none;">${p.data.slice(100)}</span> <button class="see-more-btn btn btn-link p-0" data-id="${p._id}">See more</button>` 
     : p.data}
 </p>
 
-      <!-- Like & Save Buttons -->
-      <div class="mt-3 d-flex justify-content-center align-items-center gap-4">
-        <button class="btn btn-link btn-sm like-btn" data-id="${p._id}" style="color: gray; font-size: 1.2rem;" ${!isLoggedIn ? "disabled" : ""}>
-          <i class="bi bi-heart"></i>
-        </button>
-        <span class="like-count" id="like-count-${p._id}">${p.likes || 0}</span>
+    <!-- Like, Save & Share Buttons -->
+    <div class="mt-3 d-flex justify-content-center align-items-center gap-4">
+      <button class="btn btn-link btn-sm like-btn" data-id="${p._id}" style="color: gray; font-size: 1.2rem;" ${!isLoggedIn ? "disabled" : ""}>
+        <i class="bi bi-heart"></i>
+      </button>
+      <span class="like-count" id="like-count-${p._id}">${p.likes || 0}</span>
 
-        <button class="btn btn-link btn-sm save-btn" data-id="${p._id}" style="color: gray; font-size: 1.2rem;" ${!isLoggedIn ? "disabled" : ""}>
-          <i class="bi bi-bookmark"></i>
-        </button>
-        <span class="save-count" id="save-count-${p._id}">${p.saves || 0}</span>
+      <button class="btn btn-link btn-sm save-btn" data-id="${p._id}" style="color: gray; font-size: 1.2rem;" ${!isLoggedIn ? "disabled" : ""}>
+        <i class="bi bi-bookmark"></i>
+      </button>
+      <span class="save-count" id="save-count-${p._id}">${p.saves || 0}</span>
 
-         <!-- ✅ Share Button -->
+      <!-- ✅ Share Button -->
       <button class="btn btn-link btn-sm share-btn" data-id="${p._id}" style="color: gray; font-size: 1.2rem;">
         <i class="bi bi-share"></i>
       </button>
-      </div>
     </div>
-  `;
+
+  </div>
+`;
 });
+    
+
     // 🔹 Sidebar & Scripts
     html += `
     </div>
@@ -1826,9 +1837,9 @@ document.addEventListener("keydown", (e) => {
   }
 });
 
-
 // Connect the router
 app.use("/", router);
+
 
 // Start the server
 app.listen(3000, () => {
