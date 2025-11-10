@@ -1534,7 +1534,7 @@ header {
 
 .post-options {
   position: absolute;
-  top: 25px;
+  top: 35px;
   right: 10px;
 }
 
@@ -1699,7 +1699,7 @@ posts.forEach((p, index) => {
         <span class="save-count" id="save-count-${p._id}">${p.saves || 0}</span>
 
         <button class="btn btn-link btn-sm share-btn" data-id="${p._id}" style="color: gray; font-size: 1.2rem;">
-          <i class="bi bi-share"></i>
+ll0          <i class="bi bi-share"></i>
         </button>
       </div>
     </div>
