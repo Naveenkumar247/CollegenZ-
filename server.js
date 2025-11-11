@@ -1177,13 +1177,13 @@ const isLoggedIn = Boolean(currentUser);                // true if logged in
     <title>CollegenZ</title>
 
   <!-- ✅ SEO Meta Tags -->
-  <meta name="description" content="CollegenZ is an AI-powered platform that helps students dis>
-  <meta name="keywords" content="CollegenZ, college platform, student community, AI education,h>
+  <meta name="description" content="CollegenZ is an AI-powered platform that helps students connects easily">
+  <meta name="keywords" content="CollegenZ, college platform, student community, AI education,internship,education,events,hackathon,course,startup">
   <link rel="canonical" href="https://collegenz.site/">
 
   <!-- ✅ Open Graph (for link previews on WhatsApp, LinkedIn, etc.) -->
   <meta property="og:title" content="CollegenZ – AI-Powered College Platform">
-  <meta property="og:description" content="Discover and connect with colleges using AI. Explore>
+  <meta property="og:description" content="Discover and connect with colleges using AI. Explore the world of knowledge and growth">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://collegenz.site/">
   <meta property="og:image" content="https://collegenz.site/logo.png">
@@ -1191,7 +1191,7 @@ const isLoggedIn = Boolean(currentUser);                // true if logged in
   <!-- ✅ Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="CollegenZ – AI-Powered College Platform">
-  <meta name="twitter:description" content="Explore colleges and hackathons worldwide with Coll>
+  <meta name="twitter:description" content="Explore colleges and hackathons worldwide with Collegenz">
   <meta name="twitter:image" content="https://collegenz.site/logo.png">
 
   <!-- ✅ Schema Markup for Google -->
