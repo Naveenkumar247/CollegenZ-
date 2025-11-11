@@ -1202,7 +1202,7 @@ const isLoggedIn = Boolean(currentUser);                // true if logged in
     "name": "CollegenZ",
     "url": "https://collegenz.site/",
     "logo": "https://collegenz.site/logo.png",
-    "description": "AI-powered platform for students to discover colleges and hackathons global>
+    "description": "AI-powered platform for students to discover colleges and hackathons globally">
   }
   </script>
   <style>
@@ -1670,7 +1670,7 @@ posts.forEach((p, index) => {
           <li><button class="dropdown-item delete-post-btn" data-id="${p._id}">🗑 Delete Post</button></li>
         </ul>
       </div>
-    ` : ""}
+    ` : " "}
       
     </div>
 
@@ -1795,7 +1795,7 @@ document.addEventListener("keydown", (e) => {
       }
 
       
-
+    
       // ✅ Save button
       if (e.target.closest(".save-btn")) {
         if (!currentUserId) return alert("Please login to save posts!");
