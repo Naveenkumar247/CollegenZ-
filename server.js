@@ -1202,7 +1202,7 @@ const isLoggedIn = Boolean(currentUser);                // true if logged in
     "name": "CollegenZ",
     "url": "https://collegenz.site/",
     "logo": "https://collegenz.site/logo.png",
-    "description": "AI-powered platform for students to discover colleges and hackathons globally">
+    "description": "AI-powered platform for students to discover colleges and hackathons globally"
   }
   </script>
   <style>
