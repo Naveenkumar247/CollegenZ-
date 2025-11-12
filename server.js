@@ -39,7 +39,7 @@ mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopol
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static('uploads'));
-app.use('/view', express.static('assets'));
+app.use('/', express.static('assets'));
 app.use(express.static("public"));
 
 
@@ -210,7 +210,7 @@ router.post("/submit", upload.array("images", 10), async (req, res) => {
 
     await newPost.save();
     console.log("✔ Post with Cloudinary images saved successfully!");
-    res.redirect("/view");
+    res.redirect("/");
   } catch (err) {
     console.error("✘ Save failed:", err.message);
     res.status(500).send("Error saving to database");
@@ -282,7 +282,7 @@ app.post("/signup", async (req, res) => {
 
     await newUser.save();
 
-    res.redirect("/view");
+    res.redirect("/");
   } catch (err) {
     console.error("Signup error:", err);
     res.status(500).json({ message: "Server error during signup." });
@@ -326,7 +326,7 @@ app.get("/auth/google/callback",
       req.session.username = user.name;
       req.session.email = user.email;
 
-      res.redirect("/view"); // redirect to dashboard after Google signup
+      res.redirect("/"); // redirect to dashboard after Google signup
     } catch (err) {
       console.error("Google signup error:", err);
       res.redirect("/signup");
@@ -649,7 +649,7 @@ passport.use(
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
       callbackURL:
         process.env.NODE_ENV === "production"
-          ? "https://collegenz.site/auth/google/callback"
+          ? "https://collegenz.in/auth/google/callback"
           : "http://localhost:3000/auth/google/callback",
     },
     async (accessToken, refreshToken, profile, done) => {
@@ -732,7 +732,7 @@ router.post("/login", (req, res, next) => {
 
       // ✅ Session established here
       req.session.userId = user._id;
-      return res.json({ success: true, redirectUrl: "/view" });
+      return res.json({ success: true, redirectUrl: "/" });
     });
   })(req, res, next);
 });
@@ -752,7 +752,7 @@ router.get(
   passport.authenticate("google", { failureRedirect: "/signup" }),
   (req, res) => {
     req.session.userId = req.user._id; // ✅ store userId in session for profile access
-    res.redirect("/view");
+    res.redirect("/");
   }
 );
 
@@ -767,7 +767,7 @@ app.get("/share-script.js", (req, res) => {
       if (!btn) return;
 
       const postId = btn.getAttribute("data-id");
-      const postUrl = "https://collegenz.site/share/" + postId;
+      const postUrl = "https://collegenz.in/share/" + postId;
       const shareText = "Check out this post on Collegenz! 🌱 " + postUrl;
 
       if (navigator.share) {
@@ -1150,7 +1150,7 @@ app.get("/dashboard", (req, res) => {
 // Logout
 app.get("/logout", (req, res) => {
     req.session.destroy(() => {
-        res.redirect("/view");
+        res.redirect("/");
     });
 });
 
@@ -1170,29 +1170,29 @@ const isLoggedIn = Boolean(currentUser);                // true if logged in
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>CollegeZ</title>
+  <title>CollegenZ</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <title>CollegenZ</title>
+  
 
   <!-- ✅ SEO Meta Tags -->
   <meta name="description" content="CollegenZ is an AI-powered platform that helps students connects easily">
   <meta name="keywords" content="CollegenZ, college platform, student community, AI education,internship,education,events,hackathon,course,startup">
-  <link rel="canonical" href="https://collegenz.site/">
+  <link rel="canonical" href="https://collegenz.in/">
 
   <!-- ✅ Open Graph (for link previews on WhatsApp, LinkedIn, etc.) -->
   <meta property="og:title" content="CollegenZ – AI-Powered College Platform">
   <meta property="og:description" content="Discover and connect with colleges using AI. Explore the world of knowledge and growth">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="https://collegenz.site/">
-  <meta property="og:image" content="https://collegenz.site/logo.png">
+  <meta property="og:url" content="https://collegenz.in/">
+  <meta property="og:image" content="https://collegenz.in/logo.png">
 
   <!-- ✅ Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="CollegenZ – AI-Powered College Platform">
   <meta name="twitter:description" content="Explore colleges and hackathons worldwide with Collegenz">
-  <meta name="twitter:image" content="https://collegenz.site/logo.png">
+  <meta name="twitter:image" content="https://collegenz.in/logo.png">
 
   <!-- ✅ Schema Markup for Google -->
   <script type="application/ld+json">
@@ -1200,8 +1200,8 @@ const isLoggedIn = Boolean(currentUser);                // true if logged in
     "@context": "https://schema.org",
     "@type": "Organization",
     "name": "CollegenZ",
-    "url": "https://collegenz.site/",
-    "logo": "https://collegenz.site/logo.png",
+    "url": "https://collegenz.in/",
+    "logo": "https://collegenz.in/logo.png",
     "description": "AI-powered platform for students to discover colleges and hackathons globally"
   }
   </script>
