@@ -220,7 +220,7 @@ router.post("/submit", upload.array("images", 10), async (req, res) => {
 // Routes
 
 
-app.get("/",(req,res) => {
+app.get("/home",(req,res) => {
     res.sendFile(path.join(__dirname, "home.html"));
 });
 
@@ -1155,7 +1155,7 @@ app.get("/logout", (req, res) => {
 });
 
 // VIEW: all data route
-router.get("/view", async (req, res) => {
+router.get("/", async (req, res) => {
   try {
     const posts = await Post.find().sort({ createdAt: -1 });
 
