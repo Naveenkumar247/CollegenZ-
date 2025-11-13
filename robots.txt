@@ -1,3 +1,26 @@
+# ================================
+# CollegenZ.in - Robots.txt
+# SEO-optimized for fast crawling
+# ================================
+
 User-agent: *
+# Allow all public pages
 Allow: /
+
+# Disallow system folders (optional, safe to keep)
+Disallow: /admin/
+Disallow: /tmp/
+Disallow: /node_modules/
+Disallow: /uploads/private/
+Disallow: /*?*sessionid=
+Disallow: /*?*utm_*
+
+# Crawl delay (optional): prevent server overload on shared hosting
+Crawl-delay: 10
+
+# Sitemap locations
 Sitemap: https://collegenz.in/sitemap.xml
+
+# Extra sitemaps if you have separate ones
+# Sitemap: https://collegenz.in/blog-sitemap.xml
+# Sitemap: https://collegenz.in/news-sitemap.xml
