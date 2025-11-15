@@ -117,9 +117,25 @@
         <input type="email" name="email" class="form-control" placeholder="Email" required />
       </div>
       <div class="position-relative">
-        <i class="bi bi-lock input-icon"></i>
-        <input type="password" name="password" class="form-control" placeholder="Password" minlength="6" required />
-      </div>
+  <i class="bi bi-lock input-icon"></i>
+  <input 
+    type="password" 
+    name="password" 
+    id="passwordInput" 
+    class="form-control" 
+    placeholder="Password" 
+    minlength="6" 
+    required 
+  />
+
+  <!-- Eye Icon -->
+  <i 
+    class="bi bi-eye-slash" 
+    id="togglePassword" 
+    style="position:absolute; right:10px; top:50%; transform:translateY(-50%); cursor:pointer;">
+  </i>
+</div>
+
       <button type="submit" class="btn btn-custom w-100 text-white mt-2">SIGN UP</button>
     </form>
 
@@ -160,6 +176,18 @@
         alert("Server error. Please try again later.");
       }
     });
+  
+  const togglePassword = document.getElementById("togglePassword");
+  const passwordInput = document.getElementById("passwordInput");
+
+  togglePassword.addEventListener("click", () => {
+    const type = passwordInput.type === "password" ? "text" : "password";
+    passwordInput.type = type;
+
+    // Toggle Icon
+    togglePassword.classList.toggle("bi-eye");
+    togglePassword.classList.toggle("bi-eye-slash");
+  });
 
     // Google Signup
     document.getElementById("googleSignupBtn").addEventListener("click", () => {

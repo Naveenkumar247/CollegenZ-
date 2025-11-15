@@ -1053,7 +1053,7 @@ app.get("/profile", async (req, res) => {
 
         <div class="sidebar">
           <div class="icon">
-            <a href="/view"><img src="/uploads/home.png" alt="Home"></a>
+            <a href="/"><img src="/uploads/home.png" alt="Home"></a>
             <a href="/profile"><img src="/uploads/settings.png" alt="Settings"></a>
             <a href="/upload"><img src="/uploads/add.png" alt="Add"></a>
             <a href="/calender"><img src="/uploads/calender.png" alt="Calendar"></a>
@@ -1722,7 +1722,7 @@ posts.forEach((p, index) => {
   <!-- Sidebar / Bottom Navigation -->
 <div class="sidebar">
   <div class="icon">
-    <a href="/view"><img src="/uploads/home.png" alt="Home" ></a>
+    <a href="/"><img src="/uploads/home.png" alt="Home" ></a>
 
     <a href="/profile"><img src="/uploads/settings.png" alt="Settings" ></a>
     <a href="/upload"><img src="/uploads/add.png" alt="Add" ></a>

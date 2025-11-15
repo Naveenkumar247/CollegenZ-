@@ -124,9 +124,24 @@
         <input type="text" name="login" class="form-control" placeholder="Email or Username" required />
       </div>
       <div class="position-relative">
-        <i class="bi bi-lock input-icon"></i>
-        <input type="password" name="password" class="form-control" placeholder="Password" required />
-      </div>
+  <i class="bi bi-lock input-icon"></i>
+  <input 
+    type="password" 
+    name="password" 
+    id="passwordInput" 
+    class="form-control" 
+    placeholder="Password" 
+    minlength="6" 
+    required 
+  />
+
+  <!-- Eye Icon -->
+  <i 
+    class="bi bi-eye-slash" 
+    id="togglePassword" 
+    style="position:absolute; right:10px; top:50%; transform:translateY(-50%); cursor:pointer;">
+  </i>
+</div>
       <button type="submit" class="btn btn-custom w-100">Login</button>
     </form>
 
@@ -159,6 +174,18 @@
         alert(data.message || "Login failed");
       }
     });
+   
+  const togglePassword = document.getElementById("togglePassword");
+  const passwordInput = document.getElementById("passwordInput");
+
+  togglePassword.addEventListener("click", () => {
+    const type = passwordInput.type === "password" ? "text" : "password";
+    passwordInput.type = type;
+
+    // Toggle Icon
+    togglePassword.classList.toggle("bi-eye");
+    togglePassword.classList.toggle("bi-eye-slash");
+  });
 
     // Google login (Passport.js redirect)
     document.getElementById("googleSignInDiv").addEventListener("click", () => {
