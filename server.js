@@ -118,7 +118,13 @@ const userSchema = new mongoose.Schema({
   googleUser: { type: Boolean, default: false },
   picture: { type: String, default: null },
   createdAt: { type: Date, default: Date.now },
+  followers: [
+  { type: mongoose.Schema.Types.ObjectId, ref: "logins" }
+  ],
 
+  following: [
+  { type: mongoose.Schema.Types.ObjectId, ref: "logins" }
+  ],
   // 👇 Posts user has liked
   likedPosts: [{ type: mongoose.Schema.Types.ObjectId, ref: "Posts", default: [] }],
 
@@ -1138,6 +1144,43 @@ app.post("/updateProfile", upload.single("picture"), async (req, res) => {
   }
 });
 
+app.post("/follow/:id", async (req, res) => {
+  try {
+    if (!req.session.user) {
+      return res.status(401).json({ error: "Not logged in" });
+    }
+
+    const userId = req.session.user._id;
+    const targetId = req.params.id;
+
+    if (userId === targetId) {
+      return res.json({ error: "You cannot follow yourself" });
+    }
+
+    const user = await genz.findById(userId);
+    const target = await genz.findById(targetId);
+
+    const already = user.following.includes(targetId);
+
+    if (already) {
+      user.following.pull(targetId);
+      target.followers.pull(userId);
+      await user.save();
+      await target.save();
+      return res.json({ status: "unfollowed" });
+    } else {
+      user.following.push(targetId);
+      target.followers.push(userId);
+      await user.save();
+      await target.save();
+      return res.json({ status: "followed" });
+    }
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Server Error" });
+  }
+});
 
 // Protected Route
 app.get("/dashboard", (req, res) => {
@@ -1676,7 +1719,22 @@ posts.forEach((p, index) => {
         </ul>
       </div>
     ` : " "}
-      
+      ${isCurrentUser ? `
+  <div class="dropdown post-options">
+    <button class="btn btn-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+      <i class="bi bi-three-dots-vertical"></i>
+    </button>
+    <ul class="dropdown-menu dropdown-menu-end">
+      <li><button class="dropdown-item delete-post-btn" data-id="${p._id}">🗑 Delete Post</button></li>
+    </ul>
+  </div>
+` : `
+  <!-- Follow Button -->
+  <button class="btn btn-sm btn-primary follow-btn"
+          data-target="${p._id}">
+    ${p.isFollowing ? "Following" : "Follow"}
+  </button>
+`}
     </div>
 
 
@@ -1767,7 +1825,6 @@ document.addEventListener("keydown", (e) => {
   <script src="/script.js"></script>
   <script>
 
-    
 
     const currentUserId = "${isLoggedIn ? currentUser._id : ""}";
     const currentUserEmail = "${isLoggedIn ? currentUser.email : ""}";

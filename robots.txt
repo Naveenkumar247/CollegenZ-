@@ -15,9 +15,6 @@ Disallow: /uploads/private/
 Disallow: /*?*sessionid=
 Disallow: /*?*utm_*
 
-# Crawl delay (optional): prevent server overload on shared hosting
-Crawl-delay: 10
-
 # Sitemap locations
 Sitemap: https://collegenz.in/sitemap.xml
 

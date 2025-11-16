@@ -42,3 +42,22 @@ document.addEventListener("click", (e) => {
     }
   }
 });
+
+document.addEventListener("click", async function (e) {
+  if (e.target.classList.contains("follow-btn")) {
+    const targetId = e.target.dataset.target;
+
+    const res = await fetch(`/follow/${targetId}`, {
+      method: "POST",
+      credentials: "include"   // ← IMPORTANT
+    });
+
+    const data = await res.json();
+
+    if (data.status === "followed") {
+      e.target.innerText = "Following";
+    } else if (data.status === "unfollowed") {
+      e.target.innerText = "Follow";
+    }
+  }
+});
