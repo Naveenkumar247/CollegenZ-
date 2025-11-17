@@ -44,20 +44,17 @@ document.addEventListener("click", (e) => {
 });
 
 document.addEventListener("click", async function (e) {
-  if (e.target.classList.contains("follow-btn")) {
-    const targetId = e.target.dataset.target;
+  const btn = e.target.closest(".follow-btn");
+  if (!btn) return;
 
-    const res = await fetch(`/follow/${targetId}`, {
-      method: "POST",
-      credentials: "include"   // ← IMPORTANT
-    });
+  const targetId = btn.dataset.target;
 
-    const data = await res.json();
+  const res = await fetch(`/follow/${targetId}`, {
+    method: "POST",
+    credentials: "include"
+  });
 
-    if (data.status === "followed") {
-      e.target.innerText = "Following";
-    } else if (data.status === "unfollowed") {
-      e.target.innerText = "Follow";
-    }
-  }
+  const data = await res.json();
+
+  btn.innerText = (data.status === "followed") ? "Following" : "Follow";
 });

@@ -1160,25 +1160,31 @@ app.post("/follow/:id", async (req, res) => {
     const user = await genz.findById(userId);
     const target = await genz.findById(targetId);
 
-    const already = user.following.includes(targetId);
+    const already = user.following
+      .map(id => id.toString())
+      .includes(targetId);
 
     if (already) {
+      // UNFOLLOW
       user.following.pull(targetId);
       target.followers.pull(userId);
       await user.save();
       await target.save();
+
       return res.json({ status: "unfollowed" });
     } else {
+      // FOLLOW
       user.following.push(targetId);
       target.followers.push(userId);
       await user.save();
       await target.save();
+
       return res.json({ status: "followed" });
     }
 
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Server Error" });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: "Server Error" });
   }
 });
 
@@ -1485,9 +1491,9 @@ header {
 
 .user-info {
   display: flex;
-  flex-direction: column; /* Stack vertically */
-  align-items: center;    /* Center horizontally */
-  text-align: center;     /* Center the text */
+  flex-direction: column;
+  align-items: center;    
+  text-align: center;     
   padding: 10px 0;
   margin-bottom: 10px;
 }
@@ -1519,20 +1525,6 @@ header {
   object-fit: cover;       /* ensures it fits perfectly */
 }
 
-.postuser-info {
-  display: flex;
-  align-items: flex-start; /* aligns everything to the left */
-  text-align: left;        /* ensures text aligns left */
-  padding: 10px 0;
-  margin-bottom: 20px;
-  gap: 8px;                /* creates gap between profile and username */
-}
-
-.postuser-info div {
-  display: flex;
-  flex-direction: column;
-  line-height: 1.2;
-}
 
 .postuser-info .postprofile-pic {
   width: 40px;
@@ -1541,28 +1533,32 @@ header {
   object-fit: cover;
 }
 
-.postuser-info {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
 .user-details {
   display: flex;
-  flex-direction: column; /* ensures username & college are stacked */
-  line-height: 1.2;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start !important;
+  text-align: left !important;
 }
 
 .user-details strong {
   font-size: 1rem;
   color: #000;
-  margin-bottom: 2px; /* adds small space above college name */
+  margin:0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 150px;
 }
 
 .user-details p {
-  font-size: 0.85rem;
+  font-size: 0.55rem;
   color: gray;
   margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 150px;
 }
 
 .post-caption {
@@ -1581,10 +1577,75 @@ header {
 }
 
 .post-options {
-  position: absolute;
-  top: 25px;
-  right: 10px;
+    margin-left: auto;     /* Pushes dots all the way right */
+    position: relative;
+    top: 0;
+    left: 0;
 }
+
+
+/* Hover (desktop only applies) */
+.follow-btn:hover {
+    background: #0069d9;
+}
+
+
+.follow-btn:active {
+    transform: scale(0.96);     /* Click effect */
+}
+
+.following-btn {
+    background: #e5e5e5;        /* Grey for following */
+    color: #333;
+}
+
+
+.postuser-info {
+    display: flex;
+    align-items: center;
+    justify-content: space-between; 
+    width: 100%;
+    gap: 10px;
+}
+
+.follow-container {
+    display: flex;
+    justify-content: flex-end; /* keep button right inside this div */
+    width: auto;
+    padding-left:50px;              /* auto size */
+}
+
+.postprofile-pic {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.user-details {
+    display: flex;
+    flex-direction: column;
+    margin-left: 8px;
+    flex-grow: 1;        /* username stays left */
+}
+
+.follow-btn {
+    flex-shrink: 0;
+    width: 90px;
+    padding: 6px 12px;
+    font-size: 14px;
+    border-radius: 8px;
+    white-space: nowrap;
+}
+
+@media (max-width: 450px) {
+    .follow-btn {
+        width: 70px;
+        font-size: 12px;
+        padding: 5px 8px;
+    }
+}
+
 
 </style>
 </head>
@@ -1709,16 +1770,7 @@ posts.forEach((p, index) => {
       
       <!-- Three Dots Menu (only for the post owner) -->
       
-            ${isCurrentUser ? `
-      <div class="dropdown post-options">
-        <button class="btn btn-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-          <i class="bi bi-three-dots-vertical"></i>
-        </button>
-        <ul class="dropdown-menu dropdown-menu-end">
-          <li><button class="dropdown-item delete-post-btn" data-id="${p._id}">🗑 Delete Post</button></li>
-        </ul>
-      </div>
-    ` : " "}
+      
       ${isCurrentUser ? `
   <div class="dropdown post-options">
     <button class="btn btn-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -1730,10 +1782,12 @@ posts.forEach((p, index) => {
   </div>
 ` : `
   <!-- Follow Button -->
+<div class="follow-container">
   <button class="btn btn-sm btn-primary follow-btn"
           data-target="${p._id}">
     ${p.isFollowing ? "Following" : "Follow"}
   </button>
+</div>
 `}
     </div>
 
