@@ -116,7 +116,6 @@ const userSchema = new mongoose.Schema({
   },
 
   googleUser: { type: Boolean, default: false },
-  picture: { type: String, default: null },
   createdAt: { type: Date, default: Date.now },
   followers: [
   { type: mongoose.Schema.Types.ObjectId, ref: "logins" }
@@ -153,6 +152,7 @@ const genz = mongoose.model("logins", userSchema);
 // ----- Post Schema -----
 const postSchema = new mongoose.Schema({
   username:{type:String,default:null},
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: "logins", required: true },
   data: String,
   imageurl: [String],
   createdAt: { type: Date, default: Date.now },
@@ -167,7 +167,11 @@ const postSchema = new mongoose.Schema({
     set: arr => [...new Set(arr.map(id => id.toString()))]
   },
   saves: { type: Number, default: 0 },
-  savedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: "logins" }]
+  savedBy: {
+    type: [{ type: mongoose.Schema.Types.ObjectId, ref: "logins" }],
+    default: [],
+    set: arr => [...new Set(arr.map(id => id.toString()))]
+  }
 });
 const Post = mongoose.model("Users", postSchema);
 
@@ -184,6 +188,7 @@ router.post("/submit", upload.array("images", 10), async (req, res) => {
   const { data, event_date } = req.body;
 
   const currentUser = res.locals.currentUser || null;
+  const userId = req.session.userId || null;
   const userEmail = currentUser?.email || null;
   const username = currentUser?.username || null;
   const picture = currentUser?.picture || null; // ✅ define picture here
@@ -205,6 +210,7 @@ router.post("/submit", upload.array("images", 10), async (req, res) => {
     }
 
     const newPost = new Post({
+      userId,
       username: username || null,
       data,
       imageurl: imageurls,
@@ -259,34 +265,50 @@ app.get("/aboutus",(req,res) => {
     res.sendFile(path.join(__dirname, "about.html"));
 });
 
-
 // =======================
 // Traditional Signup
 // =======================
 app.post("/signup", async (req, res) => {
   try {
-    const { name, username, age, phone, email, password,college, dream } = req.body;
+    const { name, username, age, phone, email, password, college, dream } = req.body;
 
     const lowerEmail = email.toLowerCase();
     const existingUser = await genz.findOne({ email: lowerEmail });
 
-    if (existingUser)
+    if (existingUser) {
       return res.status(400).json({ message: "User already exists. Try logging in." });
+    }
 
     const hashedPassword = await bcryptjs.hash(password, 10);
 
     const newUser = new genz({
       name,
-      username:username || null,
+      username: username || null,
       age,
       phone,
       email: lowerEmail,
       password: hashedPassword,
       dream,
-      college:college || null,
+      college: college || null,
     });
 
     await newUser.save();
+
+    // Store session
+    req.session.userId = newUser._id;
+    req.session.username = newUser.name;
+    req.session.email = newUser.email;
+
+    // Create session doc
+    await Session.create({
+      name: newUser.name,
+      username: newUser.username || "",
+      college: newUser.college || "",
+      email: newUser.email,
+      userId: newUser._id,        // ✔ correct user id stored
+      sessionId: req.sessionID,
+      expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24) // 24 hrs
+    });
 
     res.redirect("/");
   } catch (err) {
@@ -307,46 +329,89 @@ app.get("/auth/google/callback",
   passport.authenticate("google", { failureRedirect: "/signup" }),
   async (req, res) => {
     try {
-      // Check if user exists
       let user = await genz.findOne({ email: req.user.email });
 
-      // If not, create a new user with optional fields
+      // If user does not exist → create new one
       if (!user) {
         user = new genz({
           name: req.user.name,
-           email: req.user.email,
-          username:null,
+          email: req.user.email,
+          username: null,
           password: null,
-          college:null,
+          college: null,
           age: null,
           phone: null,
           dream: null,
           googleUser: true,
-          picture:true,
+          picture: true,
         });
+
         await user.save();
       }
 
-      // Store session
+      // Store express-session
       req.session.userId = user._id;
       req.session.username = user.name;
       req.session.email = user.email;
 
-      res.redirect("/"); // redirect to dashboard after Google signup
+      // Create session record
+      await Session.create({
+        name: user.name,
+        username: user.username || "",
+        college: user.college || "",
+        email: user.email,
+        userId: user._id,        // ✔ correct
+        sessionId: req.sessionID,
+        createdAt: new Date(),
+        expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24)
+      });
+
+      res.redirect("/");
     } catch (err) {
       console.error("Google signup error:", err);
       res.redirect("/signup");
     }
   }
 );
+  
+// =======================
+// Create Session (Reusable route)
+// =======================
+app.post("/create-session", async (req, res) => {
+  try {
+    const user = await genz.findById(req.session.userId);
 
-	
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const sessionData = await Session.create({
+      name: user.name,
+      username: user.username || "",
+      college: user.college || "",
+      email: user.email,
+      userId: user._id,
+      sessionId: req.sessionID,
+      createdAt: new Date(),
+      expiresAt: new Date(Date.now() + 86400000) // 24 hours
+    });
+
+    res.json({ message: "Session created", session: sessionData });
+  } catch (err) {
+    console.error("Session creation error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 const SessionSchema = new mongoose.Schema({
   name: { type: String, required: true },
   userId: { type: mongoose.Schema.Types.ObjectId, ref: "logins", required: true },
   email: { type: String, required: true },
-  username: { type: String, required: true },
-  college: {type: String, required: true},
+
+  // ❌ required: true  →  ✅ optional
+  username: { type: String, default: null },
+  college: { type: String, default: null },
+
   sessionId: { type: String, required: true },
   createdAt: { type: Date, default: Date.now },
   expiresAt: { type: Date }
@@ -673,6 +738,7 @@ passport.use(
           // 🆕 Create new user for first-time Google login
           user = await genz.create({
             name: profile.displayName,
+            userId,
             email,
             username,
             password: null,
@@ -729,16 +795,40 @@ passport.deserializeUser(async (id, done) => {
 });*/
 
 router.post("/login", (req, res, next) => {
-  passport.authenticate("local", (err, user, info) => {
+  passport.authenticate("local", async (err, user, info) => {
     if (err) return next(err);
-    if (!user) return res.status(400).json({ success: false, message: info?.message || "Invalid credentials" });
+    if (!user)
+      return res.status(400).json({
+        success: false,
+        message: info?.message || "Invalid credentials",
+      });
 
-    req.logIn(user, (err) => {
+    req.logIn(user, async (err) => {
       if (err) return next(err);
 
-      // ✅ Session established here
-      req.session.userId = user._id;
-      return res.json({ success: true, redirectUrl: "/" });
+      try {
+        // Store session in express-session
+        req.session.userId = user._id;
+        req.session.username = user.name;
+        req.session.email = user.email;
+
+        // Store in session collection
+        await Session.create({
+          name: user.name,
+          username: user.username || "",
+          college: user.college || "",
+          email: user.email,
+          userId: user._id,           // ✔ correct userId reference
+          sessionId: req.sessionID,   // express-session ID
+          createdAt: new Date(),
+          expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
+        });
+
+        return res.json({ success: true, redirectUrl: "/" });
+      } catch (err) {
+        console.error("Login session save error:", err);
+        return res.status(500).json({ success: false, message: "Server error" });
+      }
     });
   })(req, res, next);
 });
@@ -846,7 +936,7 @@ app.delete("/deletepost/:id", async (req, res) => {
   }
 });
 
-
+ 
 app.get("/profile", async (req, res) => {
   try {
     const userId = req.session?.userId;
@@ -856,7 +946,8 @@ app.get("/profile", async (req, res) => {
     if (!user) return res.status(404).send("<h3>User not found</h3>");
 
     res.send(`
-      <!DOCTYPE html>
+  
+           <!DOCTYPE html>
       <html lang="en">
       <head>
         <meta charset="UTF-8" />
@@ -904,6 +995,46 @@ app.get("/profile", async (req, res) => {
             text-decoration: underline;
             font-size: 0.9rem;
           }
+
+    /* Edit button */
+    .btn-edit,
+    .btn-save {
+      background: #228B22;
+      color: white;
+      font-weight: 600;
+      border-radius: 10px;
+      padding: 12px;
+      width: 100%;
+      border: none;
+      cursor: pointer;
+      margin-top: 15px;
+    }
+
+    .btn-edit:hover,
+    .btn-save:hover {
+      background: #1b6f1b;
+    }
+
+    /* Edit section sliding */
+    #editSection {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.4s ease;
+      margin-top: 20px;
+    }
+
+    .edit-input {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid #ddd;
+      background: #fafafa;
+      font-size: 15px;
+    }
+
+    .edit-group {
+      margin-bottom: 15px;
+    }
       
 /* === Sidebar (Default: Desktop layout) === */
 .sidebar {
@@ -1032,28 +1163,46 @@ app.get("/profile", async (req, res) => {
             <h4 class="mt-3 mb-1">${user.name || "User"}</h4>
             <p class="text-muted mb-4">${user.email || ""}</p>
 
-            <div class="row g-3">
-              <div class="col-md-6">
-                <input class="form-control" id="username" name="username" value="${user.username || ''}" placeholder="Username">
-              </div>
-              <div class="col-md-6">
-                <input class="form-control" id="phone" name="phone" value="${user.phone || ''}" placeholder="Phone">
-              </div>
-              <div class="col-md-6">
-                <input class="form-control" type="date" id="dob" name="dob" value="${user.dob || ''}">
-              </div>
-              <div class="col-md-6">
-                <input class="form-control" id="college" name="college" value="${user.college || ''}" placeholder="College">
-              </div>
-              <div class="col-12">
-                <input class="form-control" id="dream" name="dream" value="${user.dream || ''}" placeholder="Your dream">
-              </div>
-              <div class="col-12">
-                <textarea class="form-control" id="bio" name="bio" rows="3" placeholder="Write something...">${user.bio || ''}</textarea>
-              </div>
-            </div>
+            
+      <!-- Edit Button -->
+      <button type="button" class="btn-edit" onclick="toggleEdit()">✏️ Edit Profile</button>
 
-            <button type="button" class="btn btn-save mt-4 w-100" onclick="saveProfile()">💾 Save Changes</button>
+      <!-- EDIT SECTION (Hidden initially) -->
+      <div id="editSection">
+
+        <div class="edit-group">
+          <input class="edit-input" id="username" name="username" 
+                 value="${user.username || ''}" placeholder="Username">
+        </div>
+
+        <div class="edit-group">
+          <input class="edit-input" id="phone" name="phone"
+                 value="${user.phone || ''}" placeholder="Phone">
+        </div>
+
+        <div class="edit-group">
+          <input class="edit-input" type="date" id="dob" name="dob"
+                 value="${user.dob || ''}">
+        </div>
+
+        <div class="edit-group">
+          <input class="edit-input" id="college" name="college"
+                 value="${user.college || ''}" placeholder="College">
+        </div>
+
+        <div class="edit-group">
+          <input class="edit-input" id="dream" name="dream"
+                 value="${user.dream || ''}" placeholder="Your dream">
+        </div>
+
+        <div class="edit-group">
+          <textarea class="edit-input" id="bio" name="bio" rows="3"
+                    placeholder="Write something...">${user.bio || ''}</textarea>
+        </div>
+
+        <button type="button" class="btn-save" onclick="saveProfile()">💾 Save Changes</button>
+
+      </div>
           </form>
         </div>
 
@@ -1067,30 +1216,44 @@ app.get("/profile", async (req, res) => {
         </div>
 
         <script>
-          function previewProfile(event) {
-            const reader = new FileReader();
-            reader.onload = function(){
-              document.getElementById('previewImage').src = reader.result;
-            }
-            reader.readAsDataURL(event.target.files[0]);
-          }
+         
+            function previewProfile(event) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        document.getElementById('previewImage').src = reader.result;
+      };
+      reader.readAsDataURL(event.target.files[0]);
+    }
 
-          async function saveProfile() {
-            const formData = new FormData(document.getElementById('profileForm'));
+    function toggleEdit() {
+      const section = document.getElementById('editSection');
 
-            try {
-              const res = await axios.post('/updateProfile', formData, {
-                headers: { 'Content-Type': 'multipart/form-data' }
-              });
-              alert('✅ ' + res.data.message);
-            } catch (err) {
-              console.error(err);
-              alert('❌ Failed to update profile');
-            }
-          }
+      if (section.style.maxHeight && section.style.maxHeight !== "0px") {
+        section.style.maxHeight = "0px";
+      } else {
+        section.style.maxHeight = section.scrollHeight + "px";
+      }
+    }
+
+    async function saveProfile() {
+      const formData = new FormData(document.getElementById('profileForm'));
+
+      try {
+        const res = await axios.post('/updateProfile', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        alert('✅ ' + res.data.message);
+      } catch (err) {
+        console.error(err);
+        alert('❌ Failed to update profile');
+      }
+    }
+          
         </script>
       </body>
       </html>
+ 
+       
     `);
   } catch (err) {
     console.error("Error loading profile:", err);
@@ -1144,14 +1307,18 @@ app.post("/updateProfile", upload.single("picture"), async (req, res) => {
   }
 });
 
-app.post("/follow/:id", async (req, res) => {
+app.post("/follow/:targetId", async (req, res) => {
   try {
-    if (!req.session.user) {
+    if (!req.session.userId) {
       return res.status(401).json({ error: "Not logged in" });
     }
 
-    const userId = req.session.user._id;
-    const targetId = req.params.id;
+    const userId = req.session.userId;
+    const targetId = req.params.targetId;
+
+    if (!targetId || targetId === "undefined") {
+      return res.status(400).json({ error: "Invalid target user ID" });
+    }
 
     if (userId === targetId) {
       return res.json({ error: "You cannot follow yourself" });
@@ -1160,31 +1327,28 @@ app.post("/follow/:id", async (req, res) => {
     const user = await genz.findById(userId);
     const target = await genz.findById(targetId);
 
-    const already = user.following
-      .map(id => id.toString())
-      .includes(targetId);
-
-    if (already) {
-      // UNFOLLOW
-      user.following.pull(targetId);
-      target.followers.pull(userId);
-      await user.save();
-      await target.save();
-
-      return res.json({ status: "unfollowed" });
-    } else {
-      // FOLLOW
-      user.following.push(targetId);
-      target.followers.push(userId);
-      await user.save();
-      await target.save();
-
-      return res.json({ status: "followed" });
+    if (!target) {
+      return res.status(404).json({ error: "User not found" });
     }
 
+    const isFollowing = user.following.includes(targetId);
+
+    if (isFollowing) {
+      user.following.pull(targetId);
+      target.followers.pull(userId);
+    } else {
+      user.following.push(targetId);
+      target.followers.push(userId);
+    }
+
+    await user.save();
+    await target.save();
+
+    return res.json({ status: isFollowing ? "unfollowed" : "followed" });
+
   } catch (err) {
-    console.error(err);
-    return res.status(500).json({ error: "Server Error" });
+    console.error("FOLLOW ERROR:", err);
+    return res.status(500).json({ error: "Server error" });
   }
 });
 
@@ -1212,6 +1376,7 @@ router.get("/", async (req, res) => {
 // ✅ Detect current login status
 
 const currentUser = res.locals.currentUser ?? null;     // User info if logged in
+const currentUserId = currentUser ? currentUser._id.toString() : null;
 const loginSession = res.locals.loginSession ?? null;   // Session info if logged in
 const isLoggedIn = Boolean(currentUser);                // true if logged in
     let html = `
@@ -1784,7 +1949,7 @@ posts.forEach((p, index) => {
   <!-- Follow Button -->
 <div class="follow-container">
   <button class="btn btn-sm btn-primary follow-btn"
-          data-target="${p._id}">
+          data-target="${p.userId}" data-current="${currentUserId}" >
     ${p.isFollowing ? "Following" : "Follow"}
   </button>
 </div>

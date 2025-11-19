@@ -43,18 +43,26 @@ document.addEventListener("click", (e) => {
   }
 });
 
+
 document.addEventListener("click", async function (e) {
   const btn = e.target.closest(".follow-btn");
   if (!btn) return;
 
   const targetId = btn.dataset.target;
+  const currentUserId = btn.dataset.current;
 
-  const res = await fetch(`/follow/${targetId}`, {
-    method: "POST",
-    credentials: "include"
-  });
+  try {
+    const res = await fetch("/follow/" + targetId, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ userId: currentUserId })
+    });
 
-  const data = await res.json();
+    const data = await res.json();
+    btn.innerText = data.status === "followed" ? "Following" : "Follow";
 
-  btn.innerText = (data.status === "followed") ? "Following" : "Follow";
+  } catch (err) {
+    console.error(err);
+  }
 });
