@@ -1396,7 +1396,7 @@ const isLoggedIn = Boolean(currentUser);                // true if logged in
 <link rel="manifest" href="/site.webmanifest">
 
   <!-- ✅ SEO Meta Tags -->
-  <meta name="description" content="CollegenZ is an AI-powered platform that helps students connects easily">
+  <meta name="description" content="CollegenZ is an AI-powered platform that helps students connects easily around tge world">
   <meta name="keywords" content="CollegenZ, college platform, student community, AI education,internship,education,events,hackathon,course,startup">
   <link rel="canonical" href="https://collegenz.in/">
 
