@@ -139,6 +139,11 @@ const userSchema = new mongoose.Schema({
     },
   ],
 
+  // 👇 Number of posts created by the user
+  postCount: { type: Number, default: 0 },
+
+  // 👇 Rank (temporary random, future algorithm will update)
+  rank: { type: Number, default: () => Math.floor(Math.random() * 10000) },
   // 👇 Optional analytics fields
   totalLikes: { type: Number, default: 0 },
   totalSaves: { type: Number, default: 0 },
@@ -168,6 +173,13 @@ const postSchema = new mongoose.Schema({
   },
   saves: { type: Number, default: 0 },
   savedBy: {
+    type: [{ type: mongoose.Schema.Types.ObjectId, ref: "logins" }],
+    default: [],
+    set: arr => [...new Set(arr.map(id => id.toString()))]
+  },
+    // --- Shares (NEW) ---
+  shares: { type: Number, default: 0 },
+  sharedBy: {
     type: [{ type: mongoose.Schema.Types.ObjectId, ref: "logins" }],
     default: [],
     set: arr => [...new Set(arr.map(id => id.toString()))]
@@ -221,6 +233,8 @@ router.post("/submit", upload.array("images", 10), async (req, res) => {
     });
 
     await newPost.save();
+    await genz.findByIdAndUpdate(userId, { $inc: { postCount: 1 }});
+
     console.log("✔ Post with Cloudinary images saved successfully!");
     res.redirect("/");
   } catch (err) {
@@ -574,6 +588,38 @@ app.post("/posts/:id/save", async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });    
+
+app.post("/posts/:id/share", async (req, res) => {
+  try {
+    const { userId } = req.body;
+    const postId = req.params.id;
+
+    const post = await Post.findById(postId);
+    if (!post) return res.status(404).json({ error: "Post not found" });
+
+    const alreadyShared = post.sharedBy.some(id => id.toString() === userId);
+
+    if (alreadyShared) {
+      // Unshare
+      post.sharedBy = post.sharedBy.filter(id => id.toString() !== userId);
+      post.shares = Math.max(0, post.shares - 1);
+    } else {
+      // Share
+      post.sharedBy.push(userId);
+      post.shares += 1;
+    }
+
+    await post.save();
+
+    res.json({
+      shared: !alreadyShared,
+      shares: post.shares
+    });
+
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 const transporter = nodemailer.createTransport({
   host: "smtp.zoho.in", // ✅ Use this for India data center
@@ -1141,7 +1187,15 @@ app.get("/profile", async (req, res) => {
     }
   }
 
+     .follow-stats h6 {
+  font-weight: 600;
+  font-size: 1rem;
+}
 
+.follow-stats small {
+  font-size: 0.75rem;
+  color: #777;
+}
 
         </style>
       </head>
@@ -1162,6 +1216,18 @@ app.get("/profile", async (req, res) => {
 
             <h4 class="mt-3 mb-1">${user.name || "User"}</h4>
             <p class="text-muted mb-4">${user.email || ""}</p>
+
+        <div class="follow-stats d-flex justify-content-center gap-4 mb-3">
+  <div class="text-center">
+    <h6 class="m-0">${user.followers?.length || 0}</h6>
+    <small class="text-muted">Followers</small>
+  </div>
+
+  <div class="text-center">
+    <h6 class="m-0">${user.following?.length || 0}</h6>
+    <small class="text-muted">Following</small>
+  </div>
+</div>
 
             
       <!-- Edit Button -->
@@ -1389,14 +1455,12 @@ const isLoggedIn = Boolean(currentUser);                // true if logged in
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
-<link rel="icon" type="image/x-icon" href="/favicon.ico">
-<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-<link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<link rel="manifest" href="/site.webmanifest">
+  <link rel="icon" type="image/png" href="/favicon-32x32.png" sizes="32x32" />
+<link rel="icon" type="image/png" href="/favicon-16x16.png" sizes="16x16" />
+<link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />  
 
   <!-- ✅ SEO Meta Tags -->
-  <meta name="description" content="CollegenZ is an AI-powered platform that helps students connects easily around tge world">
+  <meta name="description" content="CollegenZ is an AI-powered platform that helps students connects easily around the world">
   <meta name="keywords" content="CollegenZ, college platform, student community, AI education,internship,education,events,hackathon,course,startup">
   <link rel="canonical" href="https://collegenz.in/">
 
@@ -1948,7 +2012,7 @@ posts.forEach((p, index) => {
 ` : `
   <!-- Follow Button -->
 <div class="follow-container">
-  <button class="btn btn-sm btn-primary follow-btn"
+  <button class="btn btn-sm btn-success follow-btn"
           data-target="${p.userId}" data-current="${currentUserId}" >
     ${p.isFollowing ? "Following" : "Follow"}
   </button>
@@ -1983,6 +2047,7 @@ posts.forEach((p, index) => {
         <button class="btn btn-link btn-sm share-btn" data-id="${p._id}" style="color: gray; font-size: 1.2rem;">
           <i class="bi bi-share"></i>
         </button>
+        <span class="share-count" id="share-count-${p._id}">${p.shares || 0}</span>
       </div>
     </div>
   `;
@@ -2086,7 +2151,7 @@ document.addEventListener("keydown", (e) => {
         const icon = btn.querySelector("i");
         const countEl = document.getElementById("save-count-" + postId);
 
-        const res = await fetch("/save/" + postId, {
+        const res = await fetch("/posts/" + postId + "/save", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ userId: currentUserId })
@@ -2106,6 +2171,33 @@ document.addEventListener("keydown", (e) => {
           countEl.textContent = data.saves;
         }
       }
+
+       // ✅ Share button
+if (e.target.closest(".share-btn")) {
+  if (!currentUserId) return alert("Please login to share posts!");
+
+  const btn = e.target.closest(".share-btn");
+  const postId = btn.getAttribute("data-id");
+  const icon = btn.querySelector("i");
+  const countEl = document.getElementById("share-count-" + postId);
+
+  const res = await fetch("/posts/" + postId + "/share", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ userId: currentUserId })
+  });
+
+  const data = await res.json();
+
+  if (data.shared) {
+    icon.style.color = "#228B22";
+  } else {
+    icon.style.color = "gray";
+  }
+
+  countEl.textContent = data.shares;
+}       
+
     });
 
 </script>
