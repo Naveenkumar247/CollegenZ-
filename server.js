@@ -1671,6 +1671,34 @@ app.get("/logout", (req, res) => {
     });
 });
 
+//Bit blocking disable
+app.use((req, res, next) => {
+  const ua = req.headers["user-agent"] || "";
+
+  // Allow Googlebot
+  if (ua.includes("Googlebot")) return next();
+
+  // Allow universal crawlers
+  if (ua.match(/bot|crawl|spider|slurp|bing/i)) return next();
+
+  next();
+});
+
+app.use((req, res, next) => {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  next();
+});
+
+app.get("/robots.txt", (req, res) => {
+  res.type("text/plain");
+  res.send(`User-agent: *
+Allow: /
+
+Sitemap: https://collegenz.in/sitemap.xml`);
+});
+
+
+
 // VIEW: all data route
 router.get("/", async (req, res) => {
   try {
