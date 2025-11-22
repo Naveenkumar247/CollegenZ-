@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://www.collegenz.in/sitemap.xml
+Host: https://www.collegenz.in

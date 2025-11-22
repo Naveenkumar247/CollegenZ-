@@ -12,6 +12,7 @@
     body {
       background-color: #fff;
       font-family: Arial, sans-serif;
+       padding-bottom: 80px;
     }
 
     h2 {
@@ -195,6 +196,17 @@
   <h2>Upload a Post</h2>
 
   <form action="/submit" method="POST" enctype="multipart/form-data">
+
+    <!-- Select Post Type -->
+    <div class="mb-3">
+      <label class="form-label">Post Type</label>
+      <select name="post_type" id="postType" class="form-control" required>
+        <option value="">Select Post Type</option>
+        <option value="general">General Post</option>
+        <option value="event">Event Post</option>
+      </select>
+    </div>
+
     <!-- Post Title -->
     <div class="mb-3">
       <label class="form-label">Title</label>
@@ -208,26 +220,41 @@
       <div id="preview" class="mt-3 d-flex flex-wrap gap-2"></div>
     </div>
 
-    <!-- Event Date -->
-    <div class="mb-3">
+    <!-- EVENT ONLY: Event Date -->
+    <div class="mb-3 eventField" style="display:none;">
       <label class="form-label">Event Date</label>
-      <input type="date" name="event_date" class="form-control" required>
+      <input type="date" name="event_date" class="form-control eventFieldInput" disabled>
+    </div>
+
+    <!-- EVENT ONLY: Location -->
+    <div class="mb-3 eventField" style="display:none;">
+      <label class="form-label">Event Location</label>
+      <input type="text" name="event_location" class="form-control" placeholder="Enter event location">
+    </div>
+
+    <!-- GENERAL ONLY: Category -->
+    <div class="mb-3 generalField" style="display:none;">
+      <label class="form-label">Category</label>
+      <input type="text" name="category" class="form-control" placeholder="General category (optional)">
     </div>
 
     <button type="submit" class="btn" style="background-color:#228B22; color:white;">Post</button>
   </form>
-    <!-- Sidebar -->
-  <!-- Sidebar / Bottom Navigation -->
-<div class="sidebar">
-  <div class="icon">
-    <a href="/"><img src="/uploads/home.png" alt="Home" ></a>
-    <a href="/profile"><img src="/uploads/settings.png" alt="Settings" ></a>
-    <a href="/upload"><img src="/uploads/add.png" alt="Add" ></a>
-    <a href="/calender"><img src="/uploads/calender.png" alt="Calendar" ></a>
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="icon">
+      <a href="/"><img src="/uploads/home.png" alt="Home"></a>
+      <a href="/profile"><img src="/uploads/settings.png" alt="Settings"></a>
+      <a href="/upload"><img src="/uploads/add.png" alt="Add"></a>
+      <a href="/calender"><img src="/uploads/calender.png" alt="Calendar"></a>
+    </div>
   </div>
-</div>
-  <!-- ✅ Image Preview Script -->
+
+  <!-- Image Preview Script -->
+   <!-- JS -->
   <script>
+    // ---- IMAGE PREVIEW ----
     const input = document.querySelector('input[name="images"]');
     const preview = document.getElementById('preview');
 
@@ -242,6 +269,30 @@
         };
         reader.readAsDataURL(file);
       });
+    });
+
+    // ---- SHOW/HIDE FIELDS BASED ON POST TYPE ----
+    const postType = document.getElementById('postType');
+    const eventFields = document.querySelectorAll('.eventField');
+    const generalFields = document.querySelectorAll('.generalField');
+    const eventInput = document.querySelector('input[name="event_date"]');
+
+    postType.addEventListener('change', () => {
+      if (postType.value === "event") {
+        // Show event inputs
+        eventFields.forEach(el => el.style.display = "block");
+        eventInput.disabled = false;
+
+        // Hide general-only inputs (if any)
+        generalFields.forEach(el => el.style.display = "block");
+      }
+
+      else if (postType.value === "general") {
+        // Hide + disable event inputs
+        eventFields.forEach(el => el.style.display = "none");
+        eventInput.disabled = true;
+        eventInput.value = ""; // prevent empty value from sending
+      }
     });
   </script>
 

@@ -109,12 +109,11 @@ const userSchema = new mongoose.Schema({
   dob: { type: String, default: null }, // 👈 Date of Birth added
   college: { type: String, required:false, default: null },
   bio: { type: String, default: null },
-  picture: { type: String, default: null },
+  picture: { type: String, default:"https://collegenz.in/uploads/profilepic.jpg" },
   dream: {
     type: String,
     default: null,
   },
-
   googleUser: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now },
   followers: [
@@ -155,7 +154,7 @@ const genz = mongoose.model("logins", userSchema);
 
 
 // ----- Post Schema -----
-const postSchema = new mongoose.Schema({
+/*const postSchema = new mongoose.Schema({
   username:{type:String,default:null},
   userId: { type: mongoose.Schema.Types.ObjectId, ref: "logins", required: true },
   data: String,
@@ -184,7 +183,50 @@ const postSchema = new mongoose.Schema({
     default: [],
     set: arr => [...new Set(arr.map(id => id.toString()))]
   }
+});*/
+
+
+const postSchema = new mongoose.Schema({
+  postType: {
+    type: String,
+    enum: ["event", "general"],
+    default: "general"
+  },
+
+  username: { type: String, default: null },
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: "logins", required: true },
+  data: String,
+  imageurl: [String],
+  createdAt: { type: Date, default: Date.now },
+
+  // Event-only fields (optional)
+  event_date: { type: Date, default: null },
+  saves: { type: Number, default: 0 },
+  savedBy: {
+    type: [{ type: mongoose.Schema.Types.ObjectId, ref: "logins" }],
+    default: [],
+    set: arr => [...new Set(arr.map(id => id.toString()))]
+  },
+
+  // Common fields
+  userEmail: String,
+  picture: { type: String, default: null },
+  college: { type: String, default: null },
+  likes: { type: Number, default: 0 },
+  likedBy: {
+    type: [{ type: mongoose.Schema.Types.ObjectId, ref: "logins" }],
+    default: [],
+    set: arr => [...new Set(arr.map(id => id.toString()))]
+  },
+
+  shares: { type: Number, default: 0 },
+  sharedBy: {
+    type: [{ type: mongoose.Schema.Types.ObjectId, ref: "logins" }],
+    default: [],
+    set: arr => [...new Set(arr.map(id => id.toString()))]
+  }
 });
+
 const Post = mongoose.model("Users", postSchema);
 
 
@@ -196,6 +238,139 @@ function requireLogin(req, res, next) {
   }
   next();
 }
+
+router.post("/submit", upload.array("images", 10), async (req, res) => {
+  try {
+    const { data, event_date, event_location, category, post_type } = req.body;
+
+    if (!data || !post_type) {
+      return res.send("<h3>Missing fields</h3>");
+    }
+
+    const currentUser = res.locals.currentUser;
+    if (!currentUser) {
+      return res.send("<h3>User not logged in</h3>");
+    }
+
+    const userId = currentUser._id;
+    const userEmail = currentUser.email;
+    const username = currentUser.username || null;
+    const picture = currentUser.picture || null;
+    const college = currentUser.college?.trim() || null;
+
+    // Upload images
+    let imageurls = [];
+    if (req.files?.length > 0) {
+      for (const file of req.files) {
+        const result = await cloudinary.uploader.upload(file.path);
+        imageurls.push(result.secure_url);
+        fs.unlinkSync(file.path);
+      }
+    }
+
+    // Build post
+    const postData = {
+      postType: post_type,   // <-- FIXED
+      userId,
+      username,
+      userEmail,
+      picture,
+      college,
+      data,
+      imageurl: imageurls
+    };
+
+    // If event post, add event fields
+    if (post_type === "event") {
+      postData.event_date = event_date || null;
+      postData.event_location = event_location || null;
+    }
+
+    const newPost = new Post(postData);
+    await newPost.save();
+
+    await genz.findByIdAndUpdate(userId, { $inc: { postCount: 1 } });
+
+    console.log("✔ Post saved successfully!", post_type === "event" ? "(EVENT POST)" : "(GENERAL POST)");
+
+    res.redirect("/");
+  } catch (err) {
+    console.error("✘ Save failed:", err);
+    res.status(500).send("Error saving to database");
+  }
+});
+
+
+/*router.post("/submit", upload.array("images", 10), async (req, res) => {
+    
+    const { data, event_date, event_location, category, post_type } = req.body;
+  const postType = post_type;
+
+  if (!data || !postType) {
+    return res.send("<h3>Missing fields</h3>");
+  }
+
+    const currentUser = res.locals.currentUser || null;
+    const userId = req.session.userId || null;
+
+    if (!data || !currentUser) {
+        return res.send("<h3>No data or user info received</h3>");
+    }
+
+    const userEmail = currentUser.email;
+    const username = currentUser.username || null;
+    const picture = currentUser.picture || null;
+    const college = currentUser.college?.trim() || null;
+
+    try {
+        let imageurls = [];
+
+        // Upload images
+        if (req.files && req.files.length > 0) {
+            for (const file of req.files) {
+                const result = await cloudinary.uploader.upload(file.path);
+                imageurls.push(result.secure_url);
+                fs.unlinkSync(file.path);
+            }
+        }
+
+        // Detect post type
+        const isEventPost = event_date && event_date.trim() !== "";
+
+        // Build post object
+        const postData = {
+            postType: req.body.post_type,
+            userId,
+            username,
+            data,
+            imageurl: imageurls,
+            userEmail,
+            college,
+            picture
+        };
+
+        // Add only if event post
+        if (isEventPost) {
+            postData.event_date = event_date;
+        }
+
+        const newPost = new Post(postData);
+
+        // Save post
+        await newPost.save();
+
+        // Update user's post count
+        await genz.findByIdAndUpdate(userId, { $inc: { postCount: 1 } });
+
+        console.log("✔ Post saved successfully!", isEventPost ? "(EVENT POST)" : "(GENERAL POST)");
+        res.redirect("/");
+
+    } catch (err) {
+        console.error("✘ Save failed:", err.message);
+        res.status(500).send("Error saving to database");
+    }
+});
+
 router.post("/submit", upload.array("images", 10), async (req, res) => {
   const { data, event_date } = req.body;
 
@@ -241,7 +416,9 @@ router.post("/submit", upload.array("images", 10), async (req, res) => {
     console.error("✘ Save failed:", err.message);
     res.status(500).send("Error saving to database");
   }
-});
+});*/
+
+
 
 // Routes
 
@@ -299,6 +476,7 @@ app.post("/signup", async (req, res) => {
       name,
       username: username || null,
       age,
+      picture,
       phone,
       email: lowerEmail,
       password: hashedPassword,
@@ -433,7 +611,7 @@ const SessionSchema = new mongoose.Schema({
 
 const Session = mongoose.model("Session", SessionSchema);
 
-router.post("/save/:id", async (req, res) => {
+/*router.post("/save/:id", async (req, res) => {
   try {
     const postId = req.params.id;
     const userId = req.session.userId; // must be set at login
@@ -483,8 +661,63 @@ router.post("/save/:id", async (req, res) => {
     console.error("❌ Save failed:", err.message);
     res.status(500).json({ success: false, message: "Server error" });
   }
-  });
+  });*/
 
+router.post("/save/:id", async (req, res) => {
+  try {
+    const postId = req.params.id;
+    const userId = req.session.userId;
+
+    if (!userId) {
+      return res.status(401).json({ success: false, message: "Please log in first." });
+    }
+
+    // Fetch post
+    const foundPost = await Post.findById(postId);
+    if (!foundPost) {
+      return res.status(404).json({ success: false, message: "Post not found." });
+    }
+
+    // ❌ Block saving for general posts
+    if (!foundPost.userId || !foundPost.username || !foundPost.userEmail) {
+      return res.json({
+        success: false,
+        message: "Saving is disabled for General Posts."
+      });
+    }
+
+    // Fetch user
+    const user = await genz.findById(userId);
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found." });
+    }
+
+    // Prevent duplicates
+    const alreadySaved = user.savedPosts.some(
+      (p) => p.postId.toString() === foundPost._id.toString()
+    );
+    if (alreadySaved) {
+      return res.json({ success: false, message: "Already saved." });
+    }
+
+    // Save post
+    user.savedPosts.push({
+      postId: foundPost._id,
+      data: foundPost.data,
+      imageurl: foundPost.imageurl,
+      event_date: foundPost.event_date,
+      createdAt: foundPost.createdAt,
+      userEmail: foundPost.userEmail
+    });
+
+    await user.save();
+
+    res.json({ success: true, message: "Post saved successfully!" });
+  } catch (err) {
+    console.error("❌ Save failed:", err.message);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
 
 // Routes
 //app.use("/auth", authRoutes);
@@ -1379,21 +1612,13 @@ app.post("/follow/:targetId", async (req, res) => {
       return res.status(401).json({ error: "Not logged in" });
     }
 
-    const userId = req.session.userId;
+    const currentUserId = req.session.userId;
     const targetId = req.params.targetId;
 
-    if (!targetId || targetId === "undefined") {
-      return res.status(400).json({ error: "Invalid target user ID" });
-    }
-
-    if (userId === targetId) {
-      return res.json({ error: "You cannot follow yourself" });
-    }
-
-    const user = await genz.findById(userId);
+    const user = await genz.findById(currentUserId);
     const target = await genz.findById(targetId);
 
-    if (!target) {
+    if (!user || !target) {
       return res.status(404).json({ error: "User not found" });
     }
 
@@ -1401,21 +1626,34 @@ app.post("/follow/:targetId", async (req, res) => {
 
     if (isFollowing) {
       user.following.pull(targetId);
-      target.followers.pull(userId);
+      target.followers.pull(currentUserId);
     } else {
       user.following.push(targetId);
-      target.followers.push(userId);
+      target.followers.push(currentUserId);
     }
 
     await user.save();
     await target.save();
 
-    return res.json({ status: isFollowing ? "unfollowed" : "followed" });
+    res.json({ following: !isFollowing });
 
   } catch (err) {
     console.error("FOLLOW ERROR:", err);
-    return res.status(500).json({ error: "Server error" });
+    res.status(500).json({ error: "Server error" });
   }
+});
+
+app.get("/follow-status/:targetId", async (req, res) => {
+  if (!req.session.userId) {
+    return res.json({ following: false });
+  }
+
+  const currentUser = await genz.findById(req.session.userId);
+  const targetId = req.params.targetId;
+
+  const following = currentUser.following.includes(targetId);
+
+  res.json({ following });
 });
 
 // Protected Route
@@ -1445,6 +1683,17 @@ const currentUser = res.locals.currentUser ?? null;     // User info if logged i
 const currentUserId = currentUser ? currentUser._id.toString() : null;
 const loginSession = res.locals.loginSession ?? null;   // Session info if logged in
 const isLoggedIn = Boolean(currentUser);                // true if logged in
+const updatedPosts = posts.map((p) => {
+  return {
+    ...p.toObject(),
+    isFollowing: currentUser
+      ? currentUser.following.map(id => id.toString()).includes(p.userId?.toString())
+      : false
+  };
+});
+console.log("POST USER IDs:", posts.map(p => p.userId));
+
+
     let html = `
 <!DOCTYPE html>
 <html lang="en">
@@ -1489,6 +1738,10 @@ const isLoggedIn = Boolean(currentUser);                // true if logged in
   }
   </script>
   <style>
+body {
+  padding-bottom: 80px; /* adjust based on navbar height */
+}
+
 /* === Header === */
 header {
   background: linear-gradient(135deg, #228B22, #006400);
@@ -1858,7 +2111,7 @@ header {
     flex-grow: 1;        /* username stays left */
 }
 
-.follow-btn {
+ button.follow-btn {
     flex-shrink: 0;
     width: 90px;
     padding: 6px 12px;
@@ -1868,13 +2121,26 @@ header {
 }
 
 @media (max-width: 450px) {
-    .follow-btn {
+    button.follow-btn {
         width: 70px;
         font-size: 12px;
         padding: 5px 8px;
     }
 }
 
+.event-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background-color: #228B22; /* green */
+  color: white;            /* text + star are white */
+  padding: 3px 10px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  border-radius: 14px;     /* smooth round */
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  letter-spacing: 0.3px;
+}
 
 </style>
 </head>
@@ -1954,6 +2220,14 @@ posts.forEach((p, index) => {
     carouselItems += `
       <div class="carousel-item ${i === 0 ? "active" : ""}">
         <div class="position-relative">
+
+
+          ${p.postType === "event" ? `
+  <div class="event-badge">
+    Event ★
+  </div>
+` : ""}
+
           <img src="${img}" class="d-block mx-auto img-fluid"
           style="border-radius:10px; width:100%; height:auto; max-height:600px; object-fit:contain; background:#f8f9fa;" alt="Post image">
 
@@ -2011,12 +2285,10 @@ posts.forEach((p, index) => {
   </div>
 ` : `
   <!-- Follow Button -->
-<div class="follow-container">
-  <button class="btn btn-sm btn-success follow-btn"
-          data-target="${p.userId}" data-current="${currentUserId}" >
-    ${p.isFollowing ? "Following" : "Follow"}
-  </button>
-</div>
+<button class="follow-btn btn btn-success btn-sm"
+        data-target="${p.userId}">
+    Follow
+</button>
 `}
     </div>
 
@@ -2039,10 +2311,18 @@ posts.forEach((p, index) => {
         </button>
         <span class="like-count" id="like-count-${p._id}">${p.likes || 0}</span>
 
-        <button class="btn btn-link btn-sm save-btn" data-id="${p._id}" style="color: gray; font-size: 1.2rem;" ${!isLoggedIn ? "disabled" : ""}>
-          <i class="bi bi-bookmark"></i>
-        </button>
-        <span class="save-count" id="save-count-${p._id}">${p.saves || 0}</span>
+        <button 
+  class="btn btn-link btn-sm save-btn" 
+  data-id="${p._id}"
+  style="color: gray; font-size: 1.2rem;"
+  ${!isLoggedIn || !p.userId ? "disabled" : ""}
+>
+  <i class="bi bi-bookmark"></i>
+</button>
+
+<span class="save-count" id="save-count-${p._id}">
+  ${p.saves || 0}
+</span>
 
         <button class="btn btn-link btn-sm share-btn" data-id="${p._id}" style="color: gray; font-size: 1.2rem;">
           <i class="bi bi-share"></i>

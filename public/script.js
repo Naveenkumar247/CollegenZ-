@@ -44,25 +44,46 @@ document.addEventListener("click", (e) => {
 });
 
 
-document.addEventListener("click", async function (e) {
-  const btn = e.target.closest(".follow-btn");
-  if (!btn) return;
+document.addEventListener("DOMContentLoaded", async () => {
+    const followButtons = document.querySelectorAll(".follow-btn");
 
-  const targetId = btn.dataset.target;
-  const currentUserId = btn.dataset.current;
+    followButtons.forEach(async (btn) => {
+        const targetId = btn.dataset.target;
 
-  try {
-    const res = await fetch("/follow/" + targetId, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({ userId: currentUserId })
+        const res = await fetch(`/follow-status/${targetId}`);
+        const data = await res.json();
+
+        if (data.following) {
+            btn.textContent = "Following";
+            btn.classList.remove("btn-primary");
+            btn.classList.add("btn-success");
+        } else {
+            btn.textContent = "Follow";
+            btn.classList.remove("btn-success");
+            btn.classList.add("btn-primary");
+        }
     });
+});
 
+
+
+document.addEventListener("click", async (e) => {
+    const btn = e.target.closest(".follow-btn");
+    if (!btn) return;
+
+    const targetId = btn.dataset.target;
+
+    const res = await fetch(`/follow/${targetId}`, { method: "POST" });
     const data = await res.json();
-    btn.innerText = data.status === "followed" ? "Following" : "Follow";
 
-  } catch (err) {
-    console.error(err);
-  }
+    // Update UI immediately
+    if (data.following) {
+        btn.textContent = "Following";
+        btn.classList.add("btn-success");
+        btn.classList.remove("btn-primary");
+    } else {
+        btn.textContent = "Follow";
+        btn.classList.add("btn-primary");
+        btn.classList.remove("btn-success");
+    }
 });
