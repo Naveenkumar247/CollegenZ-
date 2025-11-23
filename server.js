@@ -2140,6 +2140,7 @@ header {
 }
 
  button.follow-btn {
+    
     flex-shrink: 0;
     width: 90px;
     padding: 6px 12px;
