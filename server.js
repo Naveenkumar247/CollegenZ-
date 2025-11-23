@@ -2139,14 +2139,25 @@ header {
     flex-grow: 1;        /* username stays left */
 }
 
- button.follow-btn {
-    
-    flex-shrink: 0;
+.follow-btn {
     width: 90px;
     padding: 6px 12px;
     font-size: 14px;
     border-radius: 8px;
     white-space: nowrap;
+    border: 1px solid #228B22;
+    cursor: pointer;
+    transition: 0.2s;
+    
+    /* Default (not following) */
+    background: #228B22;
+    color: white;
+}
+
+/* After following */
+.following {
+    background: white;
+    color: #228B22;
 }
 
 @media (max-width: 450px) {
@@ -2314,7 +2325,7 @@ posts.forEach((p, index) => {
   </div>
 ` : `
   <!-- Follow Button -->
-<button class="follow-btn btn btn-success btn-sm"
+<button class="follow-btn"
         data-target="${p.userId}">
     Follow
 </button>

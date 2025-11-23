@@ -65,8 +65,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
 });
 
-
-
 document.addEventListener("click", async (e) => {
     const btn = e.target.closest(".follow-btn");
     if (!btn) return;
@@ -76,14 +74,12 @@ document.addEventListener("click", async (e) => {
     const res = await fetch(`/follow/${targetId}`, { method: "POST" });
     const data = await res.json();
 
-    // Update UI immediately
     if (data.following) {
         btn.textContent = "Following";
-        btn.classList.add("btn-success");
-        btn.classList.remove("btn-primary");
+        btn.classList.add("following");
     } else {
         btn.textContent = "Follow";
-        btn.classList.add("btn-primary");
-        btn.classList.remove("btn-success");
+        btn.classList.remove("following");
     }
 });
+
