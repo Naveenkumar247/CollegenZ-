@@ -128,7 +128,7 @@
               </div>
                   <p class="post-caption" id="caption-${p._id}">
   ${p.data.length > 100
-    ? `${p.data.slice(0, 100)}<span class="dots">...</span><span class="more-text" style="display:none;">${p.data.slice(100)}</span> <button class="see>
+    ? `${p.data.slice(0, 100)}<span class="dots">...</span><span class="more-text" style="display:none;">${p.data.slice(100)}</span> <button class="see-more-btn btn btn-link p-0" data-id="${p._id}">See more</button>`
     : p.data}
 </p>
    
@@ -196,6 +196,5 @@
           document.body.innerHTML = "<h3>Error loading post</h3>";
         });
     </script>
-    <script src="/script.js"></script>
   </body>
 </html>
