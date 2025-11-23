@@ -1017,7 +1017,6 @@ passport.use(
           // 🆕 Create new user for first-time Google login
           user = await genz.create({
             name: profile.displayName,
-            userId,
             email,
             username,
             password: null,
