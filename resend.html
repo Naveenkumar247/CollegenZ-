@@ -126,7 +126,12 @@
               <div class="carousel-inner">
                 ${carouselItems}
               </div>
-
+                  <p class="post-caption" id="caption-${p._id}">
+  ${p.data.length > 100
+    ? `${p.data.slice(0, 100)}<span class="dots">...</span><span class="more-text" style="display:none;">${p.data.slice(100)}</span> <button class="see>
+    : p.data}
+</p>
+   
               ${
                 images.length > 1
                   ? `
