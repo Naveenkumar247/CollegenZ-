@@ -1456,7 +1456,6 @@ app.get("/profile", async (req, res) => {
 
       <!-- EDIT SECTION (Hidden initially) -->
       <div id="editSection">
-
         <div class="edit-group">
           <input class="edit-input" id="username" name="username" 
                  value="${user.username || ''}" placeholder="Username">
