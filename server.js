@@ -915,7 +915,7 @@ router.get("/api/events", async (req, res) => {
     start: p.event_date.toISOString().split("T")[0], // only date part
     allDay: true,                                   // no time shown
     color: "#228B22",
-    url: "/view"
+    url: "/"
   }));
 
     res.json(events);
@@ -1750,7 +1750,12 @@ console.log("POST USER IDs:", posts.map(p => p.userId));
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
-  <link rel="icon" type="image/x-icon" href="/favicon.ico?v=2">
+  <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="shortcut icon" href="/favicon.ico" />
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+<meta name="apple-mobile-web-app-title" content="CollegenZ" />
+<link rel="manifest" href="/site.webmanifest" />
 
   <!-- ✅ SEO Meta Tags -->
   <meta name="description" content="CollegenZ is an AI-powered platform that helps students connects easily around the world">
