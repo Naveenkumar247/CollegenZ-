@@ -1750,9 +1750,7 @@ console.log("POST USER IDs:", posts.map(p => p.userId));
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
-  <link rel="icon" type="image/png" href="/favicon-32x32.png" sizes="32x32" />
-<link rel="icon" type="image/png" href="/favicon-16x16.png" sizes="16x16" />
-<link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />  
+  <link rel="icon" type="image/x-icon" href="/favicon.ico?v=2">
 
   <!-- ✅ SEO Meta Tags -->
   <meta name="description" content="CollegenZ is an AI-powered platform that helps students connects easily around the world">
