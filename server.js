@@ -58,17 +58,15 @@ app.use(session({
 }));
 
 
-
-// ✅ Upload image to Cloudinary
 app.post("/upload", upload.single("image"), async (req, res) => {
   try {
-    // Upload image to Cloudinary
-    const result = await cloudinary.uploader.upload(req.file.path);
-    
-    // Delete local file after upload
+    const result = await cloudinary.uploader.upload(req.file.path, {
+      folder: "users",
+      flags: "no_index"   // Prevent Google from indexing images
+    });
+
     fs.unlinkSync(req.file.path);
 
-    // Send URL back to client (to store in MongoDB)
     res.json({
       success: true,
       imageUrl: result.secure_url,
@@ -78,7 +76,6 @@ app.post("/upload", upload.single("image"), async (req, res) => {
     res.status(500).json({ success: false, message: "Upload failed" });
   }
 });
-
 
 
 // ---------- Passport Setup ----------
@@ -1750,7 +1747,9 @@ console.log("POST USER IDs:", posts.map(p => p.userId));
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
-  <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
+
+<link rel="icon" type="image/png" href="/favicon.png" sizes="32x32" />
+<link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
 <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 <link rel="shortcut icon" href="/favicon.ico" />
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
@@ -1758,7 +1757,7 @@ console.log("POST USER IDs:", posts.map(p => p.userId));
 <link rel="manifest" href="/site.webmanifest" />
 
   <!-- ✅ SEO Meta Tags -->
-  <meta name="description" content="CollegenZ is an AI-powered platform that helps students connects easily around the world">
+  <meta name="description" content="CollegenZ is an AI-powered student platform that simplifies the college search process, helping learners connect, explore courses, compare institutions, and unlock opportunities across the globe.">
   <meta name="keywords" content="CollegenZ, college platform, student community, AI education,internship,education,events,hackathon,course,startup">
   <link rel="canonical" href="https://collegenz.in/">
 
