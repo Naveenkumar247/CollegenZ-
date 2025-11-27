@@ -1761,30 +1761,93 @@ console.log("POST USER IDs:", posts.map(p => p.userId));
   <meta name="keywords" content="CollegenZ, college platform, student community, AI education,internship,education,events,hackathon,course,startup">
   <link rel="canonical" href="https://collegenz.in/">
 
-  <!-- ✅ Open Graph (for link previews on WhatsApp, LinkedIn, etc.) -->
+
+  <!-- Open Graph -->
   <meta property="og:title" content="CollegenZ – AI-Powered College Platform">
-  <meta property="og:description" content="Discover and connect with colleges using AI. Explore the world of knowledge and growth">
+  <meta property="og:description" content="Discover colleges, events, hackathons and opportunities powered by AI.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://collegenz.in/">
   <meta property="og:image" content="https://collegenz.in/logo.png">
 
-  <!-- ✅ Twitter Card -->
+  <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="CollegenZ – AI-Powered College Platform">
-  <meta name="twitter:description" content="Explore colleges and hackathons worldwide with Collegenz">
+  <meta name="twitter:description" content="Explore colleges, hackathons, events and opportunities with CollegenZ.">
   <meta name="twitter:image" content="https://collegenz.in/logo.png">
 
-  <!-- ✅ Schema Markup for Google -->
+  <!-- ✅ Organization Schema (Required for Logo in Google Search) -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@type": "Organization",
     "name": "CollegenZ",
-    "url": "https://collegenz.in/",
-    "logo": "https://collegenz.in/logo.png",
-    "description": "AI-powered platform for students to discover colleges and hackathons globally"
+    "url": "https://collegenz.in",
+    "logo": "https://collegenz.in/collegenzlogo.png",
+    "sameAs": [
+      "https://www.instagram.com/collegenz_in",
+      "https://www.linkedin.com/company/collegenz"
+    ],
+    "description": "AI-powered platform for students to explore colleges, events, courses and hackathons."
   }
   </script>
+
+  <!-- ✅ Sitelinks SearchBox (Helps Google show search bar under your website) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "url": "https://collegenz.in/",
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": "https://collegenz.in/search?q={search_term}",
+      "query-input": "required name=search_term"
+    }
+  }
+  </script>
+
+  <!-- ✅ FAQ Schema (Rich Result Booster) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "What is CollegenZ?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "CollegenZ is an AI-powered platform helping students explore colleges, events, hackathons, courses and opportunities worldwide."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Is CollegenZ free to use?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes, CollegenZ is completely free for students."
+        }
+      }
+    ]
+  }
+  </script>
+
+  <!-- Optional: Breadcrumb Schema (Google likes this) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "https://collegenz.in/"
+      }
+    ]
+  }
+  </script>
+
+
   <style>
 body {
   padding-bottom: 80px; /* adjust based on navbar height */
