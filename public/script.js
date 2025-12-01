@@ -24,24 +24,22 @@ document.addEventListener("click", async (e) => {
 });
 
 
-document.addEventListener("click", (e) => {
-  if (e.target.classList.contains("see-more-btn")) {
-    const postId = e.target.dataset.id;
-    const captionEl = document.getElementById(`caption-${postId}`);
-    const moreText = captionEl.querySelector(".more-text");
-    const dots = captionEl.querySelector(".dots");
+function toggleCaption(id) {
+  const caption = document.getElementById(`caption-${id}`);
+  const dots = caption.querySelector(".dots");
+  const moreText = caption.querySelector(".more-text");
+  const btn = caption.querySelector(".see-more-btn");
 
-    if (moreText.style.display === "none") {
-      moreText.style.display = "inline";
-      dots.style.display = "none";
-      e.target.textContent = "See less";
-    } else {
-      moreText.style.display = "none";
-      dots.style.display = "inline";
-      e.target.textContent = "See more";
-    }
+  if (moreText.style.display === "none") {
+    moreText.style.display = "inline";
+    dots.style.display = "none";
+    btn.innerText = "See Less";
+  } else {
+    moreText.style.display = "none";
+    dots.style.display = "inline";
+    btn.innerText = "See More";
   }
-});
+}
 
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -82,4 +80,18 @@ document.addEventListener("click", async (e) => {
         btn.classList.remove("following");
     }
 });
+
+
+function toggleDetails(id) {
+  const rows = document.querySelectorAll(`.row-${id}`);
+  const btn = document.querySelector(`#details-${id} .view-btn`);
+
+  const expand = rows[0].style.display === "none";
+
+  rows.forEach(r => {
+    r.style.display = expand ? "table-row" : "none";
+  });
+
+  btn.innerText = expand ? "Hide Details" : "View Details";
+}
 

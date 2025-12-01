@@ -189,57 +189,138 @@
     }
   }
 
+.illustration-container {
+  width: 100%;
+  display: flex;
+  justify-content: center;  /* horizontally center */
+  margin-top: 20px;
+}
+
+.illustration-container img.illustration-img {
+  width: 85%;         /* actual size */
+  max-width: 500px;   /* optional for desktop */
+  height: auto;
+  border-radius: 12px;
+}
+
   </style>
 </head>
 <body class="container mt-4">
 
   <h2>Upload a Post</h2>
 
-  <form action="/submit" method="POST" enctype="multipart/form-data">
+<form action="/submit" method="POST" enctype="multipart/form-data">
 
-    <!-- Select Post Type -->
-    <div class="mb-3">
-      <label class="form-label">Post Type</label>
-      <select name="post_type" id="postType" class="form-control" required>
-        <option value="">Select Post Type</option>
-        <option value="general">General Post</option>
-        <option value="event">Event Post</option>
-      </select>
-    </div>
+  <!-- Select Post Type -->
+  <div class="mb-3">
+    <label class="form-label">Post Type</label>
+    <select name="post_type" id="postType" class="form-control" required>
+      <option value="">Select Post Type</option>
+      <option value="general">General Post</option>
+      <option value="event">Event Post</option>
+      <option value="hiring">Hiring Post</option>
+    </select>
+  </div>
 
-    <!-- Post Title -->
-    <div class="mb-3">
-      <label class="form-label">Title</label>
-      <input type="text" name="data" class="form-control" placeholder="Enter post title" required>
-    </div>
+  <!-- SINGLE FIELD USED FOR ALL POST TYPES -->
+<div class="mb-3">
+  <label class="form-label" id="titleLabel">Post Title</label>
+  <input type="text" name="data" class="form-control" id="titleInput"
+    placeholder="Enter event/job title">
+</div>
 
-    <!-- Multiple Image Upload -->
-    <div class="mb-3">
-      <label class="form-label">Upload Images</label>
-      <input type="file" name="images" class="form-control" accept="image/*" multiple>
-      <div id="preview" class="mt-3 d-flex flex-wrap gap-2"></div>
-    </div>
+  <!-- Multiple Image Upload -->
+  <div class="mb-3">
+    <label class="form-label">Upload Images</label>
+    <input type="file" name="images" class="form-control" accept="image/*" multiple>
+    <div id="preview" class="mt-3 d-flex flex-wrap gap-2"></div>
+  </div>
 
-    <!-- EVENT ONLY: Event Date -->
-    <div class="mb-3 eventField" style="display:none;">
-      <label class="form-label">Event Date</label>
-      <input type="date" name="event_date" class="form-control eventFieldInput" disabled>
-    </div>
+    <div class="eventField" style="display:none;">
+    <label class="form-label">Description</label>
+    <textarea name="event_description" class="form-control"></textarea>
+  </div> 
 
-    <!-- EVENT ONLY: Location -->
-    <div class="mb-3 eventField" style="display:none;">
-      <label class="form-label">Event Location</label>
-      <input type="text" name="event_location" class="form-control" placeholder="Enter event location">
-    </div>
+  <div class="eventField" style="display:none;">
+    <label class="form-label">Event Location</label>
+    <input type="text" name="event_location" class="form-control">
+  </div>
 
-    <!-- GENERAL ONLY: Category -->
-    <div class="mb-3 generalField" style="display:none;">
-      <label class="form-label">Category</label>
-      <input type="text" name="category" class="form-control" placeholder="General category (optional)">
-    </div>
+  <div class="eventField" style="display:none;">
+    <label class="form-label">Mode</label>
+    <select name="event_mode" class="form-control">
+      <option>Online</option>
+      <option>Offline</option>
+      <option>Hybrid</option>
+    </select>
+  </div>
 
-    <button type="submit" class="btn" style="background-color:#228B22; color:white;">Post</button>
-  </form>
+  <div class="eventField" style="display:none;">
+    <label class="form-label">Event Date</label>
+    <input type="date" name="event_date" class="form-control">
+  </div>
+
+  <div class="eventField" style="display:none;">
+    <label class="form-label">Event Time</label>
+    <input type="time" name="event_time" class="form-control">
+  </div>
+
+  <div class="eventField" style="display:none;">
+    <label class="form-label">Contact</label>
+    <input type="text" name="event_contact" class="form-control">
+  </div>
+
+  <div class="eventField" style="display:none;">
+    <label class="form-label">Registration Link</label>
+    <input type="url" name="event_link" class="form-control">
+  </div>
+
+
+  <!-- HIRING FIELDS -->
+
+    <div class="hiringField" style="display:none;">
+    <label class="form-label">Description</label>
+    <textarea name="job_description" class="form-control"></textarea>
+  </div>
+
+  <div class="hiringField" style="display:none;">
+    <label class="form-label">Location</label>
+    <input type="text" name="job_location" class="form-control">
+  </div>
+
+  <div class="hiringField" style="display:none;">
+    <label class="form-label">Mode of Work</label>
+    <select name="job_mode" class="form-control">
+      <option>On-site</option>
+      <option>Remote</option>
+      <option>Hybrid</option>
+    </select>
+  </div>
+
+  <div class="hiringField" style="display:none;">
+    <label class="form-label">Contact</label>
+    <input type="text" name="job_contact" class="form-control">
+  </div>
+
+
+  <div class="hiringField" style="display:none;">
+    <label class="form-label">Deadline</label>
+    <input type="date" name="job_deadline" class="form-control">
+  </div>
+
+  <div class="hiringField" style="display:none;">
+    <label class="form-label">Registration Link</label>
+    <input type="url" name="job_link" class="form-control">
+  </div>
+
+  <button type="submit" class="btn" style="background-color:#228B22; color:white;">Post</button>
+</form>
+
+<!-- Illustration Image Section -->
+<div class="illustration-container mt-4">
+  <img src="upload.png" class="illustration-img" alt="Illustration">
+</div>
+
 
   <!-- Sidebar -->
   <div class="sidebar">
@@ -254,47 +335,46 @@
   <!-- Image Preview Script -->
    <!-- JS -->
   <script>
-    // ---- IMAGE PREVIEW ----
-    const input = document.querySelector('input[name="images"]');
-    const preview = document.getElementById('preview');
+  // IMAGE PREVIEW
+  const input = document.querySelector('input[name="images"]');
+  const preview = document.getElementById('preview');
 
-    input.addEventListener('change', () => {
-      preview.innerHTML = '';
-      [...input.files].forEach(file => {
-        const reader = new FileReader();
-        reader.onload = e => {
-          const img = document.createElement('img');
-          img.src = e.target.result;
-          preview.appendChild(img);
-        };
-        reader.readAsDataURL(file);
-      });
+  input.addEventListener('change', () => {
+    preview.innerHTML = '';
+    [...input.files].forEach(file => {
+      const reader = new FileReader();
+      reader.onload = e => {
+        const img = document.createElement('img');
+        img.src = e.target.result;
+        img.style.width = "120px";
+        img.style.height = "120px";
+        preview.appendChild(img);
+      };
+      reader.readAsDataURL(file);
     });
+  });
 
-    // ---- SHOW/HIDE FIELDS BASED ON POST TYPE ----
-    const postType = document.getElementById('postType');
-    const eventFields = document.querySelectorAll('.eventField');
-    const generalFields = document.querySelectorAll('.generalField');
-    const eventInput = document.querySelector('input[name="event_date"]');
+  // SHOW/HIDE FIELDS
+  const postType = document.getElementById('postType');
+  const eventFields = document.querySelectorAll('.eventField');
+  const hiringFields = document.querySelectorAll('.hiringField');
 
-    postType.addEventListener('change', () => {
-      if (postType.value === "event") {
-        // Show event inputs
-        eventFields.forEach(el => el.style.display = "block");
-        eventInput.disabled = false;
+  postType.addEventListener('change', () => {
 
-        // Hide general-only inputs (if any)
-        generalFields.forEach(el => el.style.display = "block");
-      }
+    // Hide everything
+    eventFields.forEach(el => el.style.display = "none");
+    hiringFields.forEach(el => el.style.display = "none");
 
-      else if (postType.value === "general") {
-        // Hide + disable event inputs
-        eventFields.forEach(el => el.style.display = "none");
-        eventInput.disabled = true;
-        eventInput.value = ""; // prevent empty value from sending
-      }
-    });
-  </script>
+    if (postType.value === "event") {
+      eventFields.forEach(el => el.style.display = "block");
+    }
 
+    if (postType.value === "hiring") {
+      hiringFields.forEach(el => el.style.display = "block");
+    }
+
+  });
+
+</script>
 </body>
 </html>

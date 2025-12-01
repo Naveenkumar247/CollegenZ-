@@ -579,11 +579,11 @@ router.post("/save/:id", async (req, res) => {
       return res.status(404).json({ success: false, message: "Post not found." });
     }
 
-    // ❌ Block saving for NON-EVENT posts
-    if (foundPost.postType !== "event") {
+    // ❌ Block saving for general posts
+    if (!foundPost.userId || !foundPost.username || !foundPost.userEmail) {
       return res.json({
         success: false,
-        message: "Only event posts can be saved."
+        message: "Saving is disabled for General Posts."
       });
     }
 
@@ -601,7 +601,7 @@ router.post("/save/:id", async (req, res) => {
       return res.json({ success: false, message: "Already saved." });
     }
 
-    // Save EVENT post
+    // Save post
     user.savedPosts.push({
       postId: foundPost._id,
       data: foundPost.data,
@@ -613,8 +613,7 @@ router.post("/save/:id", async (req, res) => {
 
     await user.save();
 
-    res.json({ success: true, message: "Event saved successfully!" });
-
+    res.json({ success: true, message: "Post saved successfully!" });
   } catch (err) {
     console.error("❌ Save failed:", err.message);
     res.status(500).json({ success: false, message: "Server error" });
@@ -2221,19 +2220,6 @@ header {
   letter-spacing: 0.3px;
 }
 
-.hiring-badge {
-  position: absolute;
-  top: 8px;
-  left: 8px;
-  background-color: #228B22; /* green */
-  color: white;            /* text + star are white */
-  padding: 3px 10px;
-  font-size: 0.65rem;
-  font-weight: 700;
-  border-radius: 14px;     /* smooth round */
-  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-  letter-spacing: 0.3px;
-}
 
 .details-table th {
   width: 120px;
@@ -2255,19 +2241,17 @@ header {
 }
 
 .details-table {
-    margin: 0 !important;
-}
-
-/* Remove border under first row when hidden */
-.details-table tr:first-child td,
-.details-table tr:first-child th {
+    border-top: none !important;
     border-bottom: none !important;
 }
 
-/* When expanded -> restore border */
-.details-expanded tr:first-child td,
-.details-expanded tr:first-child th {
-    border-bottom: 1px solid #dee2e6 !important;
+.details-table tr:last-child td,
+.details-table tr:last-child th {
+    border-bottom: none !important;
+}
+
+.details-table {
+    margin: 0 !important;
 }
 
 .details-table th,
@@ -2364,10 +2348,6 @@ posts.forEach((p, index) => {
   <div class="event-badge">
     Event ★
   </div>
-` : p.postType === "hiring" ? `
-  <div class="hiring-badge">
-    Hiring ★
-  </div>
 ` : ""}
 
           <img src="${img}" class="d-block mx-auto img-fluid"
@@ -2452,7 +2432,7 @@ posts.forEach((p, index) => {
       // --------------------------
       (p.data.length > 100
         ? `${p.data.slice(0, 100)}
-             <span class="dots">...</span>
+            <span class="dots">...</span>
             <span class="more-text" style="display:none;">${p.data.slice(100)}</span>
             <button class="see-more-btn" onclick="toggleCaption('${p._id}')">See More</button>`
         : p.data)
@@ -2470,7 +2450,7 @@ posts.forEach((p, index) => {
   <table class="table details-table">
     <tbody>
       <!-- Always visible -->
-      <tr><td style="text-align:center;">${p.data || "-"}</td></tr>
+      <tr><th>Title</th><td>${p.event_title || "-"}</td></tr>
 
       <!-- Hidden rows -->
       <tr class="hidden-row row-${p._id}" style="display:none;"><th>Date</th><td>${p.event_date || "-"}</td></tr>
@@ -2478,18 +2458,8 @@ posts.forEach((p, index) => {
       <tr class="hidden-row row-${p._id}" style="display:none;"><th>Mode</th><td>${p.event_mode || "-"}</td></tr>
       <tr class="hidden-row row-${p._id}" style="display:none;"><th>Location</th><td>${p.event_location || "-"}</td></tr>
       <tr class="hidden-row row-${p._id}" style="display:none;"><th>Contact</th><td>${p.event_contact || "-"}</td></tr>
-      <tr class="hidden-row row-${p._id}" style="display:none;"><th>Description</th>
- <td> ${
-    p.event_description && p.event_description.length > 100
-      ? `${p.event_description.slice(0, 100)}
-           <span class="dots">...</span>
-           <span class="more-text" style="display:none;">${p.event_description.slice(100)}</span>
-           <button class="see-more-btn" onclick="toggleCaption('${p._id}')">See More</button>`
-      : (p.event_description || "-")
-  }</td>
-</tr>
       <tr class="hidden-row row-${p._id}" style="display:none;"><th>Reg. Link</th><td><a href="${p.event_link}" target="_blank">Open</a></td></tr>
-      
+      <tr class="hidden-row row-${p._id}" style="display:none;"><th>Description</th><td>${p.event_description || "-"}</td></tr>
     </tbody>
   </table>
 
@@ -2510,33 +2480,21 @@ posts.forEach((p, index) => {
       <div class="details-box" id="details-${p._id}">
         <table class="table details-table">
           <tbody>
-            <tr><td>${p.data || "-"}</td></tr>
+            <tr><th>Job Title</th><td>${p.job_title || "-"}</td></tr>
+            <tr><th>Location</th><td>${p.job_location || "-"}</td></tr>
+            <tr><th>Mode</th><td>${p.job_mode || "-"}</td></tr>
             
             <!-- Hidden Rows -->
-            <tr class="hidden-row row-${p._id}" style="display:none;"  ><th>Location</th><td>${p.job_location || "-"}</td></tr>
-            <tr class="hidden-row row-${p._id}" style="display:none;" ><th>Mode</th><td>${p.job_mode || "-"}</td></tr>
             <tr class="hidden-row row-${p._id}" style="display:none;"><th>Contact</th><td>${p.job_contact || "-"}</td></tr>
-            <tr class="hidden-row row-${p._id}" style="display:none;"><th>Description</th>
- <td> ${
-    p.job_description && p.job_description.length > 100
-      ? `${p.job_description.slice(0, 100)}
-           <span class="dots">...</span>
-           <span class="more-text" style="display:none;">${p.job_description.slice(100)}</span>
-           <button class="see-more-btn" onclick="toggleCaption('${p._id}')">See More</button>`
-      : (p.job_description || "-")
-  }</td>
-</tr>
+            <tr class="hidden-row row-${p._id}" style="display:none;"><th>Description</th><td>${p.job_description || "-"}</td></tr>
             <tr class="hidden-row row-${p._id}" style="display:none;"><th>Deadline</th><td>${p.job_deadline || "-"}</td></tr>
             <tr class="hidden-row row-${p._id}" style="display:none;"><th>Apply Link</th><td><a href="${p.job_link}" target="_blank">Apply</a></td></tr>
           </tbody>
         </table>
 
-        <!-- This MUST be outside the table -->
-        <div class="view-btn-container">
-           <button class="view-btn" onclick="toggleDetails('${p._id}')">View Details</button>
-        </div>        
-
-
+        <div class="card mb-3 px-3 pt-2 pb-1 text-center">
+          <button class="view-btn" onclick="toggleDetails('${p._id}')">View Details</button>
+        </div>
       </div>
       `
   }
