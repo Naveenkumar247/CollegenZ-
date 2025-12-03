@@ -1,0 +1,14 @@
+.social-links img,
+.popup-social img {
+  width: 30px;
+  height: 30px;
+  object-fit: cover;
+  border-radius: 50%;
+  margin: 0 6px;
+}
+
+/* Fix underline on anchor tags */
+.social-links a,
+.popup-social a {
+  text-decoration: none !important;
+}

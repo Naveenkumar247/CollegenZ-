@@ -95,3 +95,98 @@ function toggleDetails(id) {
   btn.innerText = expand ? "Hide Details" : "View Details";
 }
 
+document.addEventListener("click", async (e) => {
+  if (e.target.classList.contains("open-profile")) {
+
+    const userId = e.target.dataset.user;
+
+    document.getElementById("profilePopup").style.display = "flex";
+    document.getElementById("profileData").innerHTML = "Loading...";
+
+    const res = await fetch(`/get-profile/${userId}`);
+    const user = await res.json();
+
+    // PRIVATE ACCOUNT VIEW
+    if (user.accountType === "personal") {
+      document.getElementById("profileData").innerHTML = `
+        <img src="${user.picture || '/uploads/profilepic.jpg'}"
+             style="width:80px; height:80px; border-radius:50%; object-fit:cover;">
+  
+        <h3>${user.name}</h3>
+        <p style="color:gray;">This account is private</p>
+  
+        <div class="d-flex justify-content-center gap-4 mb-2">
+          <div><strong>${user.followers?.length || 0}</strong><br><small>Followers</small></div>
+          <div><strong>${user.following?.length || 0}</strong><br><small>Following</small></div>
+        </div>
+      `;
+      return; // stop here for private accounts
+    }
+
+    // PUBLIC ACCOUNT VIEW
+    document.getElementById("profileData").innerHTML = `
+      <img src="${user.picture || '/uploads/profilepic.jpg'}"
+           style="width:80px; height:80px; border-radius:50%; object-fit:cover;">
+
+      <h3>${user.name || "User"}</h3>
+      <p class="text-muted">${user.email || ""}</p>
+
+      <div class="d-flex justify-content-center gap-4 mb-2">
+        <div><strong>${user.followers?.length || 0}</strong><br><small>Followers</small></div>
+        <div><strong>${user.following?.length || 0}</strong><br><small>Following</small></div>
+      </div>
+
+      <div class="popup-social mt-3">
+        ${user.instagram ? `
+          <a href="${user.instagram}" target="_blank">
+            <img src="/instagram.jpeg" style="width:28px;height:28px;border-radius:50%;object-fit:cover;margin:0 6px;">
+          </a>` : ""}
+
+        ${user.linkedin ? `
+          <a href="${user.linkedin}" target="_blank">
+            <img src="/linkedin.png" style="width:28px;height:28px;border-radius:20%;object-fit:cover;margin:0 6px;">
+          </a>` : ""}
+
+        ${user.website ? `
+          <a href="${user.website}" target="_blank">
+            <img src="/website.png" style="width:28px;height:28px;border-radius:50%;object-fit:cover;margin:0 6px;">
+          </a>` : ""}
+
+        ${user.youtube ? `
+          <a href="${user.youtube}" target="_blank">
+            <img src="/youtube.jpg" style="width:28px;height:28px;border-radius:20%;object-fit:cover;margin:0 6px;">
+          </a>` : ""}
+      </div>
+    `;
+  }
+});
+
+document.querySelector(".close-popup").onclick = () => {
+  document.getElementById("profilePopup").style.display = "none";
+};
+
+document.querySelectorAll(".filter-btn").forEach(btn => {
+  btn.addEventListener("click", async () => {
+
+    // remove active class
+    document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+
+    const type = btn.dataset.type;
+    const sort = btn.dataset.sort || "";
+
+    const res = await fetch(`/posts/filter?type=${type}&sort=${sort}`);
+    const post = await res.json();
+
+    renderPost(post); // function that updates your post list
+  });
+});
+
+function renderPost(post) {
+  const container = document.getElementById("posts-container");
+  container.innerHTML = "";
+
+  post.forEach(p => {
+    container.innerHTML += createPostHTML(p); // your existing card HTML
+  });
+}

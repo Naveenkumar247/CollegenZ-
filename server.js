@@ -114,6 +114,12 @@ const userSchema = new mongoose.Schema({
 
   followers: [{ type: mongoose.Schema.Types.ObjectId, ref: "logins" }],
   following: [{ type: mongoose.Schema.Types.ObjectId, ref: "logins" }],
+  
+  accountType: {
+  type: String,
+  enum: ["public", "personal", "business"],
+  default: "public"
+},
 
   likedPosts: [{ type: mongoose.Schema.Types.ObjectId, ref: "Posts", default: [] }],
 
@@ -132,6 +138,10 @@ const userSchema = new mongoose.Schema({
   rank: { type: Number, default: () => Math.floor(Math.random() * 10000) },
   totalLikes: { type: Number, default: 0 },
   totalSaves: { type: Number, default: 0 },
+  instagram: { type: String, default: null },
+linkedin: { type: String, default: null },
+youtube: { type: String, default: null },
+website: { type: String, default: null },
 });
 
 // Create Model
@@ -357,6 +367,33 @@ app.get("/aboutus",(req,res) => {
     res.sendFile(path.join(__dirname, "about.html"));
 });
 
+
+app.get("/updateOldUsers", async (req, res) => {
+  try {
+    await genz.updateMany(
+      {},
+      {
+        $set: {
+          instagram: null,
+          linkedin: null,
+          youtube: null,
+          website: null,
+          accountType: {
+  type: String,
+  enum: ["public", "personal", "business"],
+  default: "public"
+}
+        }
+      }
+    );
+
+    res.send("All old users updated successfully!");
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Error updating users");
+  }
+});
+
 // =======================
 // Traditional Signup
 // =======================
@@ -383,6 +420,7 @@ app.post("/signup", async (req, res) => {
       password: hashedPassword,
       dream,
       college: college || null,
+      accountType: accountType || "public"
     });
 
     await newUser.save();
@@ -437,6 +475,7 @@ app.get("/auth/google/callback",
           dream: null,
           googleUser: true,
           picture: true,
+          accountType: accountType || "public"
         });
 
         await user.save();
@@ -928,6 +967,7 @@ passport.use(
             likedPosts: [],
             savedPosts: [],
             dream: "Other",
+            accountType: accountType || "public"
           });
         } else {
           // 🔁 Update existing Google user info
@@ -1132,6 +1172,8 @@ app.get("/profile", async (req, res) => {
       <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <link rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
         <title>${user.name}'s Profile</title>
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
         <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
@@ -1141,14 +1183,22 @@ app.get("/profile", async (req, res) => {
             background: #f8f9fa;
             font-family: 'Poppins', sans-serif;
           }
-          .profile-container {
-            max-width: 600px;
-            margin: 60px auto;
-            background: white;
-            padding: 30px;
-            border-radius: 20px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-          }
+          .profile-wrapper {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  padding: 40px 20px; /* good for mobile + desktop */
+  box-sizing: border-box;
+}
+
+.profile-container {
+  width: 100%;
+  max-width: 450px;  /* perfect card width */
+  background: white;
+  padding: 30px;
+  border-radius: 20px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
           .profile-img {
             width: 130px;
             height: 130px;
@@ -1171,7 +1221,7 @@ app.get("/profile", async (req, res) => {
           }
           .upload-label {
             cursor: pointer;
-            color: #007bff;
+            color: #228B22;
             text-decoration: underline;
             font-size: 0.9rem;
           }
@@ -1330,11 +1380,61 @@ app.get("/profile", async (req, res) => {
   font-size: 0.75rem;
   color: #777;
 }
+.social-links a {
+  text-decoration: none !important;
+  font-size: 24px;
+  margin: 0 8px;
+  color: #444;
+}
+
+.social-links a:hover {
+  color: #000;
+}
+
+.account-row {
+  padding: 15px 0;
+  text-align: center; /* CENTER the text */
+  border: none !important; /* REMOVE the line */
+  margin-top: 10px;
+}
+
+.account-row a {
+  color: #228B22;
+  font-size: 17px;
+  font-weight: 500;
+  display: inline-block;   /* Keep it centered */
+}
+
+#accountTypeMenu {
+  display: none;
+  flex-direction: column;
+  background: #fff;
+  border: 1px solid #ddd;
+  margin-top: 8px;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+#accountTypeMenu a {
+  padding: 12px 15px;
+  text-decoration: none;
+  color: black;
+  border-bottom: 1px solid #eee;
+}
+
+#accountTypeMenu a:last-child {
+  border-bottom: none;
+}
+
+#accountTypeMenu a:hover {
+  background: #f6f6f6;
+}
 
         </style>
       </head>
 
       <body>
+      <div class="profile-wrapper">
         <div class="profile-container text-center">
           <form id="profileForm" enctype="multipart/form-data">
             <div class="mb-3">
@@ -1363,12 +1463,59 @@ app.get("/profile", async (req, res) => {
   </div>
 </div>
 
+<div class="social-links mt-3">
+
+  ${user.instagram ? `
+    <a href="${user.instagram}" target="_blank">
+      <img src="/instagram.jpeg" width="28" height="28" style="border-radius:20%;" />
+    </a>
+  ` : ""}
+
+  ${user.linkedin ? `
+    <a href="${user.linkedin}" target="_blank">
+      <img src="/linkedin.png" width="28" height="28" style="border-radius:20%;" />
+    </a>
+  ` : ""}
+
+  ${user.website ? `
+    <a href="${user.website}" target="_blank">
+      <img src="/website.png" width="28" height="28" style="border-radius:50%;" />
+    </a>
+  ` : ""}
+
+  ${user.youtube ? `
+    <a href="${user.youtube}" target="_blank">
+      <img src="/youtube.jpg" width="28" height="28" style="border-radius:10%;" />
+    </a>
+  ` : ""}
+
+</div>
             
       <!-- Edit Button -->
       <button type="button" class="btn-edit" onclick="toggleEdit()">✏️ Edit Profile</button>
 
+     <!-- ACCOUNT TYPE SINGLE ROW -->
+<div class="account-row">
+  <a href="#" onclick="openAccountTypeMenu(event)">
+    <span id="selectedAccountType">
+      ${(user.accountType || "public").charAt(0).toUpperCase() +
+        (user.accountType || "public").slice(1)} account ⌄
+    </span>
+  </a>
+</div>
+
+<div id="accountTypeMenu" class="account-menu">
+  <a onclick="chooseAccountType('personal')">Personal account</a>
+  <a onclick="chooseAccountType('public')">Public account</a>
+  <a onclick="chooseAccountType('business')">Business account</a>
+</div>
+
+<!-- ✔ Default should match schema default: PUBLIC -->
+<input type="hidden" name="accountType" id="accountType" value="${user.accountType || 'public'}">
+
       <!-- EDIT SECTION (Hidden initially) -->
       <div id="editSection">
+      
 
         <div class="edit-group">
           <input class="edit-input" id="username" name="username" 
@@ -1399,13 +1546,32 @@ app.get("/profile", async (req, res) => {
           <textarea class="edit-input" id="bio" name="bio" rows="3"
                     placeholder="Write something...">${user.bio || ''}</textarea>
         </div>
+        <div class="edit-group">
+        <input class="edit-input" id="instagram" name="instagram"
+         value="${user.instagram || ''}" placeholder="Instagram URL">
+        </div>
+
+        <div class="edit-group">
+          <input class="edit-input" id="linkedin" name="linkedin"
+         value="${user.linkedin || ''}" placeholder="LinkedIn URL">
+        </div>
+
+        <div class="edit-group">
+          <input class="edit-input" id="youtube" name="youtube"
+         value="${user.youtube || ''}" placeholder="Youtube URL">
+        </div>
+
+        <div class="edit-group">
+  <input class="edit-input" id="website" name="website"
+         value="${user.website || ''}" placeholder="Your Website URL (https://...)">
+</div>
 
         <button type="button" class="btn-save" onclick="saveProfile()">💾 Save Changes</button>
 
       </div>
           </form>
         </div>
-
+</div>
         <div class="sidebar">
           <div class="icon">
             <a href="/"><img src="/uploads/home.png" alt="Home"></a>
@@ -1415,41 +1581,75 @@ app.get("/profile", async (req, res) => {
           </div>
         </div>
 
-        <script>
-         
-            function previewProfile(event) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        document.getElementById('previewImage').src = reader.result;
-      };
-      reader.readAsDataURL(event.target.files[0]);
+      <script>
+
+  // ========== PROFILE IMAGE PREVIEW ==========
+  function previewProfile(event) {
+    const reader = new FileReader();
+    reader.onload = () => {
+      document.getElementById('previewImage').src = reader.result;
+    };
+    reader.readAsDataURL(event.target.files[0]);
+  }
+
+  // ========== EDIT SECTION TOGGLE ==========
+  function toggleEdit() {
+    const section = document.getElementById('editSection');
+
+    if (section.classList.contains("open")) {
+      section.style.maxHeight = "0px";
+      section.classList.remove("open");
+    } else {
+      section.style.maxHeight = section.scrollHeight + "px";
+      section.classList.add("open");
     }
+  }
 
-    function toggleEdit() {
-      const section = document.getElementById('editSection');
+  // ========== SAVE PROFILE + CLOSE EDIT SECTION ==========
+  async function saveProfile() {
+    const formData = new FormData(document.getElementById('profileForm'));
 
-      if (section.style.maxHeight && section.style.maxHeight !== "0px") {
-        section.style.maxHeight = "0px";
-      } else {
-        section.style.maxHeight = section.scrollHeight + "px";
-      }
+    try {
+      const res = await axios.post('/updateProfile', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+
+      alert('✅ ' + res.data.message);
+
+      const section = document.getElementById("editSection");
+      section.style.maxHeight = "0px";
+      section.classList.remove("open");
+
+    } catch (err) {
+      console.error(err);
+      alert('❌ Failed to update profile');
     }
+  }
 
-    async function saveProfile() {
-      const formData = new FormData(document.getElementById('profileForm'));
+  // ========== ACCOUNT TYPE MENU (Instagram Style) ==========
+function openAccountTypeMenu(event) {
+  event.preventDefault();
+  document.getElementById("accountTypeMenu").style.display = "block";
+}
 
-      try {
-        const res = await axios.post('/updateProfile', formData, {
-          headers: { 'Content-Type': 'multipart/form-data' }
-        });
-        alert('✅ ' + res.data.message);
-      } catch (err) {
-        console.error(err);
-        alert('❌ Failed to update profile');
-      }
-    }
-          
-        </script>
+function chooseAccountType(type) {
+  document.getElementById("accountType").value = type;
+
+  document.getElementById("selectedAccountType").innerText =
+    type.charAt(0).toUpperCase() + type.slice(1) + " account ⌄";
+
+  document.getElementById("accountTypeMenu").style.display = "none";
+}
+
+  // ========== LOAD SAVED TYPE ON STARTUP ==========
+  window.addEventListener("DOMContentLoaded", () => {
+    const savedType = document.getElementById("accountType").value || "personal";
+
+    document.getElementById("selectedAccountType").innerText =
+      savedType.charAt(0).toUpperCase() + savedType.slice(1) + " account";
+  });
+
+</script>
       </body>
       </html>
  
@@ -1467,7 +1667,7 @@ app.post("/updateProfile", upload.single("picture"), async (req, res) => {
   if (!userId) return res.status(401).json({ error: "Not logged in" });
 
   try {
-    let { phone, username, dob, dream, college, bio } = req.body;
+    let { phone, username, dob, dream, college, bio, instagram, linkedin, youtube, website, accountType} = req.body;
     let pictureUrl = null;
 
     // ----- 1️⃣ Make username lowercase + trim -----
@@ -1508,6 +1708,11 @@ app.post("/updateProfile", upload.single("picture"), async (req, res) => {
       dream,
       college,
       bio,
+      instagram,
+      linkedin,
+      youtube,
+      website,
+      accountType
     };
 
     if (pictureUrl) updateFields.picture = pictureUrl;
@@ -1536,6 +1741,17 @@ app.post("/updateProfile", upload.single("picture"), async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 });
+
+
+app.get("/get-profile/:id", async (req, res) => {
+  try {
+    const user = await genz.findById(req.params.id);
+    res.json(user);
+  } catch (err) {
+    res.status(500).json({ error: "User not found" });
+  }
+});
+
 
 app.post("/follow/:targetId", async (req, res) => {
   try {
@@ -1586,6 +1802,48 @@ app.get("/follow-status/:targetId", async (req, res) => {
 
   res.json({ following });
 });
+
+app.get("/posts/filter", async (req, res) => {
+  try {
+    const { type } = req.query;
+
+    let post;
+
+    if (type === "event") {
+      // 1️⃣ Get event posts first
+      const events = await Post.find({ postType: "event" }).sort({ createdAt: -1 });
+
+      // 2️⃣ Then get all other posts
+      const others = await Post.find({ postType: { $ne: "event" } }).sort({ createdAt: -1 });
+
+      // merge them → event first
+      post = [...events, ...others];
+
+      return res.json(post);
+    }
+
+    if (type === "hiring") {
+      const hiring = await Post.find({ postType: "hiring" }).sort({ createdAt: -1 });
+      const others = await Post.find({ postType: { $ne: "hiring" } }).sort({ createdAt: -1 });
+      post = [...hiring, ...others];
+      return res.json(post);
+    }
+
+    if (type === "recent") {
+      post = await Post.find().sort({ createdAt: -1 });
+      return res.json(post);
+    }
+
+    // Default (all posts)
+    post = await Post.find().sort({ createdAt: -1 });
+    res.json(post);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
 
 // Protected Route
 app.get("/dashboard", (req, res) => {
@@ -2279,6 +2537,62 @@ header {
   text-decoration: underline;
 }
 
+.profile-popup {
+  display: none;
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.4);
+  justify-content: center;
+  align-items: center;
+  z-index: 5000;
+}
+
+.profile-popup-content {
+  background: #fff;
+  width: 90%;
+  max-width: 350px;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+}
+
+.close-popup {
+  float: right;
+  cursor: pointer;
+  font-size: 22px;
+}
+
+.filter-bar {
+  display: flex;
+  gap: 10px;
+  padding: 10px;
+  overflow-x: auto;
+  white-space: nowrap;
+  background: white;
+  border-bottom: 1px solid #ddd;
+}
+
+.filter-bar::-webkit-scrollbar {
+  display: none;
+}
+
+.filter-btn {
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid #ccc;
+  background: #f5f5f5;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.filter-btn.active {
+  background: #0b8e33;
+  color: white;
+  border-color: #0b8e33;
+}
 
 </style>
 </head>
@@ -2329,13 +2643,28 @@ header {
             <a href="/upload"  class="btn" style="background: #228B22;color:white;">Create Post</a>
           ` : `
             <a href="/login"  class="btn" style="background: #228B22;color:white;">Join Now</a>
+
           `}
         </div>
         <div style="font-size: 2rem;"></div>
       </div>
 
-      <hr>`;
+<hr>
+<!-- FILTER BAR START -->
+<div class="filter-bar">
+  <button class="filter-btn active" data-type="all">All</button>
+  <button class="filter-btn" data-type="recent" data-sort="recent">Recent</button>
+  <button class="filter-btn" data-type="event">Event</button>
+  <button class="filter-btn" data-type="hiring">Hiring</button>
+  <button class="filter-btn" data-type="general">General</button>
+  <button class="filter-btn" data-type="lostfound">Lost & Found</button>
+  <button class="filter-btn" data-type="confession">Confession</button>
+</div>
+<!-- FILTER BAR END -->
 
+
+
+      <hr>`;
 
 // 🔹 Display all posts
 posts.forEach((p, index) => {
@@ -2346,6 +2675,8 @@ posts.forEach((p, index) => {
   let indicators = "";
   images.forEach((_, i) => {
     indicators += `
+
+
       <button type="button" data-bs-target="#carousel-${index}" data-bs-slide-to="${i}"
         ${i === 0 ? "class='active' aria-current='true'" : ""}
         aria-label="Slide ${i + 1}"></button>
@@ -2409,7 +2740,12 @@ posts.forEach((p, index) => {
       
         <img src="${p.picture || '/uploads/profilepic.jpg'}" class="postprofile-pic">
         <div class="user-details">
-          <strong>${p.username ? p.username : p.userEmail}</strong>
+          <strong 
+  class="open-profile" 
+  data-user="${p.userId}" 
+  style="cursor:pointer; color:black;">
+  ${p.username ? p.username : p.userEmail}
+</strong>
           <p class="mb-0">${p.college ? p.college : p.name}</p>
         </div>
       
@@ -2578,6 +2914,16 @@ posts.forEach((p, index) => {
     </div>
   </main>
 
+<div id="profilePopup" class="profile-popup">
+  <div class="profile-popup-content">
+      <span class="close-popup">&times;</span>
+
+      <div id="profileData" style="text-align:center; padding:10px;">
+        Loading...
+      </div>
+  </div>
+</div>
+
   <!-- Sidebar -->
   <!-- Sidebar / Bottom Navigation -->
 <div class="sidebar">
@@ -2589,6 +2935,7 @@ posts.forEach((p, index) => {
     <a href="/calender"><img src="/uploads/calender.png" alt="Calendar" ></a>
   </div>
 </div>
+
   
 <script>
 const hamburger = document.getElementById("hamburger");
@@ -2625,6 +2972,7 @@ document.addEventListener("keydown", (e) => {
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script src="/share-script.js"></script>
   <script src="/script.js"></script>
+  <link rel="stylesheet" href="/script.css">
   <script>
 
 
