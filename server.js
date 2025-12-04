@@ -1887,11 +1887,51 @@ Sitemap: https://collegenz.in/sitemap.xml`);
 });
 
 
+app.get("/", async (req, res) => {
 
-// VIEW: all data route
-router.get("/", async (req, res) => {
-  try {
-    const posts = await Post.find().sort({ createdAt: -1 });
+try {
+
+    const { filter } = req.query;
+    let posts;
+
+    // EVENT FILTER → events first, others next
+    if (filter === "event") {
+      const events = await Post.find({ postType: "event" }).sort({ createdAt: -1 });
+      const others = await Post.find({ postType: { $ne: "event" } }).sort({ createdAt: -1 });
+      posts = [...events, ...others];
+    }
+
+    // HIRING FILTER → hiring first, others next
+    else if (filter === "hiring") {
+      const hiring = await Post.find({ postType: "hiring" }).sort({ createdAt: -1 });
+      const others = await Post.find({ postType: { $ne: "hiring" } }).sort({ createdAt: -1 });
+      posts = [...hiring, ...others];
+    }
+
+    // GENERAL FILTER → only general posts
+    else if (filter === "general") {
+      posts = await Post.find({ postType: "general" }).sort({ createdAt: -1 });
+    }
+
+    // LOST & FOUND FILTER
+    else if (filter === "lostfound") {
+      posts = await Post.find({ postType: "lostfound" }).sort({ createdAt: -1 });
+    }
+
+    // CONFESSION FILTER
+    else if (filter === "confession") {
+      posts = await Post.find({ postType: "confession" }).sort({ createdAt: -1 });
+    }
+
+    // RECENT FILTER → latest posts first
+    else if (filter === "recent") {
+      posts = await Post.find().sort({ createdAt: -1 });
+    }
+
+    // DEFAULT → all posts
+    else {
+      posts = await Post.find().sort({ createdAt: -1 });
+    }
 
    
 // ✅ Detect current login status
@@ -2035,11 +2075,72 @@ header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  position: sticky;
+  position: fixed; /* changed from sticky to fixed */
   top: 0;
+  left: 0;
+  right: 0;
   z-index: 1100;
-  margin-right: 60px; /* space for desktop sidebar */
+  margin-right: 60px;
   box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.filter-bar {
+  position: fixed;
+  top: 70px; /* under header */
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  background: white;
+  padding: 8px 10px;
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  border-bottom: 1px solid #ddd;
+
+  /* animation */
+  transition: transform 0.35s ease, opacity 0.35s ease;
+}
+
+/* hide scrollbar */
+.filter-bar::-webkit-scrollbar {
+  display: none;
+}
+
+/* hidden default */
+.hidden-bar {
+  transform: translateY(-100%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* visible */
+.visible-bar {
+  transform: translateY(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Filter Buttons */
+.filter-btn {
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid #ccc;
+  background: #f5f5f5;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.filter-btn.active {
+  background: #0b8e33;
+  color: white;
+  border-color: #0b8e33;
+}
+
+/* ===========================
+   MAIN CONTENT PUSH DOWN
+=========================== */
+main {
+  margin-top: 140px !important;
 }
 .logo-link {
   color: white;
@@ -2565,34 +2666,6 @@ header {
   font-size: 22px;
 }
 
-.filter-bar {
-  display: flex;
-  gap: 10px;
-  padding: 10px;
-  overflow-x: auto;
-  white-space: nowrap;
-  background: white;
-  border-bottom: 1px solid #ddd;
-}
-
-.filter-bar::-webkit-scrollbar {
-  display: none;
-}
-
-.filter-btn {
-  padding: 6px 14px;
-  border-radius: 20px;
-  border: 1px solid #ccc;
-  background: #f5f5f5;
-  cursor: pointer;
-  font-size: 14px;
-}
-
-.filter-btn.active {
-  background: #0b8e33;
-  color: white;
-  border-color: #0b8e33;
-}
 
 </style>
 </head>
@@ -2604,19 +2677,27 @@ header {
 </head>
 
 <body>
-    <header>
-    <h1 class="m-0">
+ <header class="main-header">
+  <h1 class="m-0">
     <a href="/aboutus" class="logo-link">CollegenZ</a>
   </h1>
-  <!-- Hamburger Menu Icon -->
   <div class="hamburger" id="hamburger">&#9776;</div>
 </header>
+
+<div id="filterBar" class="filter-bar hidden-bar">
+  <button class="filter-btn active" data-type="all">All</button>
+  <button class="filter-btn" data-type="recent">Recent</button>
+  <button class="filter-btn" data-type="event">Event</button>
+  <button class="filter-btn" data-type="hiring">Hiring</button>
+  <button class="filter-btn" data-type="general">General</button>
+</div>
+<!-- FILTER BAR END -->
 
 <!-- Right Slide Navbar -->
 <nav id="slideNav" class="slide-nav" onmouseleave="closeNav()">
   <!-- User info container (will be filled by JS) -->
     <div class="user-info">
-  <img src=${isLoggedIn ? currentUser.picture : ""||"/uploads/profilepic.jpg" }  class="profile-pic">
+  <img src="${isLoggedIn ? currentUser.picture : '/uploads/profilepic.jpg'}" class="profile-pic">
   <div class="details">
     <h3>${isLoggedIn ? currentUser.name : ""}</h3>
     <p>${isLoggedIn ? currentUser.email : ""}</p>
@@ -2632,7 +2713,7 @@ header {
 <!-- Overlay for mobile -->
 <div class="overlay" id="overlay" onclick="closeNav()"></div>
 
-  <main class="d-flex" style="margin-top: 50px;">
+  <main class="d-flex">
     <div class="container me-auto">
       <!-- Join With Us Section -->
       <div class="card mb-4 p-3 d-flex flex-row justify-content-between align-items-center">
@@ -2650,21 +2731,7 @@ header {
       </div>
 
 <hr>
-<!-- FILTER BAR START -->
-<div class="filter-bar">
-  <button class="filter-btn active" data-type="all">All</button>
-  <button class="filter-btn" data-type="recent" data-sort="recent">Recent</button>
-  <button class="filter-btn" data-type="event">Event</button>
-  <button class="filter-btn" data-type="hiring">Hiring</button>
-  <button class="filter-btn" data-type="general">General</button>
-  <button class="filter-btn" data-type="lostfound">Lost & Found</button>
-  <button class="filter-btn" data-type="confession">Confession</button>
-</div>
-<!-- FILTER BAR END -->
-
-
-
-      <hr>`;
+`;
 
 // 🔹 Display all posts
 posts.forEach((p, index) => {
@@ -2733,8 +2800,7 @@ posts.forEach((p, index) => {
   `;
 
   // ✅ Move this part *inside* the loop
-  html += ` 
- 
+  html += `
        <div class="card mb-3 p-3 text-center" style="max-width: 700px; margin: 20px auto; border-radius: 15px;">
     <div class="postuser-info">
       
@@ -3065,6 +3131,34 @@ if (e.target.closest(".share-btn")) {
 }       
 
     });
+
+//filter option
+document.querySelectorAll(".filter-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const type = btn.getAttribute("data-type");
+
+    // Reload page with filter
+    if (type === "all") {
+      window.location.href = "/";
+    } else {
+      window.location.href = "/?filter=" + type;
+    }
+  });
+});
+
+//filter bar scroll
+window.addEventListener("scroll", () => {
+    const filterBar = document.getElementById("filterBar");
+    const showAfter = window.innerHeight * 0.25; // 25% scroll
+
+    if (window.scrollY > showAfter) {
+        filterBar.classList.remove("hidden-bar");
+        filterBar.classList.add("visible-bar");
+    } else {
+        filterBar.classList.add("hidden-bar");
+        filterBar.classList.remove("visible-bar");
+    }
+});
 
 </script>
 </body>
