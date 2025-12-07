@@ -452,7 +452,59 @@ app.post("/signup", async (req, res) => {
 // Google Signup using Passport
 // =======================
 
-// Step 1: Start Google
+// Step 1: Start Google signup
+app.get("/auth/google-signup", passport.authenticate("google", { scope: ["profile", "email"] }));
+
+// Step 2: Google callback
+app.get("/auth/google/callback",
+  passport.authenticate("google", { failureRedirect: "/signup" }),
+  async (req, res) => {
+    try {
+      let user = await genz.findOne({ email: req.user.email });
+
+      // If user does not exist → create new one
+      if (!user) {
+        user = new genz({
+          name: req.user.name,
+          email: req.user.email,
+          username: null,
+          password: null,
+          college: null,
+          age: null,
+          phone: null,
+          dream: null,
+          googleUser: true,
+          picture: true,
+          accountType: accountType || "public"
+        });
+
+        await user.save();
+      }
+
+      // Store express-session
+      req.session.userId = user._id;
+      req.session.username = user.name;
+      req.session.email = user.email;
+
+      // Create session record
+      await Session.create({
+        name: user.name,
+        username: user.username || "",
+        college: user.college || "",
+        email: user.email,
+        userId: user._id,        // ✔ correct
+        sessionId: req.sessionID,
+        createdAt: new Date(),
+        expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24)
+      });
+
+      res.redirect("/");
+    } catch (err) {
+      console.error("Google signup error:", err);
+      res.redirect("/signup");
+    }
+  }
+);
   
 // =======================
 // Create Session (Reusable route)
@@ -915,7 +967,7 @@ passport.use(
             likedPosts: [],
             savedPosts: [],
             dream: "Other",
-            accountType: "public"
+            accountType: accountType || "public"
           });
         } else {
           // 🔁 Update existing Google user info
@@ -2033,16 +2085,16 @@ header {
 }
 
 .common-btn {
-        width: 8px;
-        background: #228B22;
-        color: white;
-        padding: 14px;
-        border: none;
-        font-size: 18px;
-        border-radius: 8px;
-        margin-top: 15px;
-        cursor: pointer;
-    }
+  width: 100%;
+  display: block;
+  padding: 14px;
+  background: #228B22;
+  color: white;
+  text-align: center;
+  border-radius: 8px;
+  font-size: 18px;
+  font-weight: 500;
+}
 .filter-bar {
   position: fixed;
   top: 70px; /* under header */
@@ -2661,7 +2713,7 @@ main {
   <div class="details">
     <h3>${isLoggedIn ? currentUser.name : ""}</h3>
     <p>${isLoggedIn ? currentUser.email : ""}</p>
-  </div>
+   </div>
 </div>
 
   <hr>
@@ -2681,9 +2733,10 @@ main {
           <h2>Welcome ${isLoggedIn ? currentUser.name : ""}</h2>
           <p>${isLoggedIn ? "Welcome back! Explore new posts and connect with others." : "Represent your college with us"}</p>
           ${isLoggedIn ? `
-            <a href="/upload"  class="common-btn">Create Post</a>
+            <a href="/upload"  class="common-btn" style="background: #228B22;color:white;">Create Post</a>
           ` : `
-            <a href="/login" class="common-btn">
+            <a href="/login" class="common-btn"
+   style= "background:#228B22; color:white;">
    Login now 
 </a>
 
