@@ -209,7 +209,11 @@
 
   <h2>Upload a Post</h2>
 
-<form action="/submit" method="POST" enctype="multipart/form-data">
+ <form
+  id="postForm"
+  action="/submit"
+  method="POST"
+  enctype="multipart/form-data">
 
   <!-- Select Post Type -->
   <div class="mb-3">
@@ -334,6 +338,7 @@
 
   <!-- Image Preview Script -->
    <!-- JS -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script>
   // IMAGE PREVIEW
   const input = document.querySelector('input[name="images"]');
@@ -375,6 +380,73 @@
 
   });
 
+</script>
+<script>
+const postForm = document.getElementById("postForm");
+
+postForm.addEventListener("submit", async (e) => {
+  e.preventDefault(); // 🔥 stop normal form submit
+
+  const formData = new FormData(postForm);
+
+  try {
+    const response = await fetch("/submit", {
+      method: "POST",
+      body: formData
+    });
+
+    const data = await response.json();
+
+    // ❌ AUTH ERROR (401)
+    if (response.status === 401 && data.type === "AUTH") {
+      return Swal.fire({
+        icon: "warning",
+        title: "Login Required",
+        text: data.message,
+        confirmButtonText: "Login"
+      }).then(() => {
+        window.location.href = "/login";
+      });
+    }
+
+    // ❌ VALIDATION ERROR (400)
+    if (response.status === 400 && data.type === "VALIDATION") {
+      return Swal.fire({
+        icon: "error",
+        title: "Missing Fields",
+        text: data.message
+      });
+    }
+
+    // ❌ SERVER ERROR (500)
+    if (response.status === 500) {
+      return Swal.fire({
+        icon: "error",
+        title: "Server Error",
+        text: data.message
+      });
+    }
+
+    // ✅ SUCCESS (200)
+    if (response.ok && data.success) {
+      return Swal.fire({
+        icon: "success",
+        title: "Posted Successfully 🎉",
+        text: data.message,
+        confirmButtonText: "Go Home"
+      }).then(() => {
+        window.location.href = "/";
+      });
+    }
+
+  } catch (err) {
+    Swal.fire({
+      icon: "error",
+      title: "Network Error",
+      text: "Unable to reach server"
+    });
+  }
+});
 </script>
 </body>
 </html>

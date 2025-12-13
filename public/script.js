@@ -190,3 +190,35 @@ function renderPost(post) {
     container.innerHTML += createPostHTML(p); // your existing card HTML
   });
 }
+
+document.addEventListener("DOMContentLoaded", () => {
+  if (!window.IS_LOGGED_IN) {
+
+    // Show only once per session
+    if (sessionStorage.getItem("loginAlertShown")) return;
+    sessionStorage.setItem("loginAlertShown", "true");
+
+    setTimeout(() => {
+      Swal.fire({
+        title: "Login Required",
+        text: "Login to create posts, follow users, and access all CollegenZ features.",
+        icon: "info",
+        showCancelButton: true,
+        confirmButtonText: "Login",
+        cancelButtonText: "Later",
+        confirmButtonColor: "#228B22",
+
+        // 🔒 User MUST choose
+        allowOutsideClick: false,
+        allowEscapeKey: false
+      }).then((result) => {
+        if (result.isConfirmed) {
+          window.location.href = "/login";
+        }
+        // "Later" → closes dialog only
+      });
+    }, 5000); // shows after 5 seconds
+  }
+});
+
+

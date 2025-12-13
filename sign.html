@@ -150,49 +150,58 @@
     </p>
   </div>
 
-  <script>
-    const form = document.getElementById("signupForm");
+   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-    // Traditional Signup
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const data = Object.fromEntries(new FormData(form).entries());
-      data.age = Number(data.age);
-      try {
-        const res = await fetch("/signup", { // change to your signup route
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(data),
-        });
-        const result = await res.json();
-        if (!res.ok) {
-          alert(result.message || "Sign-up failed. Please check your details.");
-        } else {
-          alert(result.message || "Sign-up successful!");
-          window.location.href = "/dashboard";
-        }
-      } catch (err) {
-        console.error(err);
-        alert("Server error. Please try again later.");
-      }
-    });
-  
-  const togglePassword = document.getElementById("togglePassword");
-  const passwordInput = document.getElementById("passwordInput");
+<script>
+document.getElementById("signupForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
 
-  togglePassword.addEventListener("click", () => {
-    const type = passwordInput.type === "password" ? "text" : "password";
-    passwordInput.type = type;
+  const formData = Object.fromEntries(new FormData(e.target).entries());
+  formData.age = Number(formData.age);
 
-    // Toggle Icon
-    togglePassword.classList.toggle("bi-eye");
-    togglePassword.classList.toggle("bi-eye-slash");
+  const res = await fetch("/signup", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(formData)
   });
 
-    // Google Signup
-    document.getElementById("googleSignupBtn").addEventListener("click", () => {
-      window.location.href = "/auth/google-signup"; // passport route for Google signup
+  const data = await res.json();
+
+  if (data.success) {
+    Swal.fire({
+      title: "Signup Successful!",
+      text: "Welcome to CollegenZ 🎉",
+      icon: "success",
+      confirmButtonColor: "#228B22"
+    }).then(() => {
+      window.location.href = data.redirectUrl;
     });
-  </script>
+  } else {
+    Swal.fire({
+      title: "Signup Failed",
+      text: data.message || "Something went wrong.",
+      icon: "error",
+      confirmButtonColor: "#228B22"
+    });
+  }
+});
+
+// Password toggle
+const togglePassword = document.getElementById("togglePassword");
+const passwordInput = document.getElementById("passwordInput");
+
+togglePassword.addEventListener("click", () => {
+  const type = passwordInput.type === "password" ? "text" : "password";
+  passwordInput.type = type;
+
+  togglePassword.classList.toggle("bi-eye");
+  togglePassword.classList.toggle("bi-eye-slash");
+});
+
+// Google Signup
+document.getElementById("googleSignupBtn").addEventListener("click", () => {
+  window.location.href = "/auth/google";
+});
+</script>
 </body>
 </html>

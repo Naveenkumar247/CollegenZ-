@@ -1,0 +1,122 @@
+<body class="container mt-4">
+
+<h2>Upload a Post</h2>
+
+<form
+  id="postForm"
+  method="POST"
+  enctype="multipart/form-data">
+
+  <!-- Post Type -->
+  <div class="mb-3">
+    <label class="form-label">Post Type</label>
+    <select name="post_type" id="postType" class="form-control" required>
+      <option value="">Select</option>
+      <option value="general">General</option>
+      <option value="event">Event</option>
+      <option value="hiring">Hiring</option>
+    </select>
+  </div>
+
+  <!-- Title -->
+  <div class="mb-3">
+    <label class="form-label">Post Title</label>
+    <input type="text" name="data" class="form-control" required>
+  </div>
+
+  <!-- Images -->
+  <div class="mb-3">
+    <label class="form-label">Images</label>
+    <input type="file" name="images" class="form-control" multiple>
+    <div id="preview" class="mt-2 d-flex gap-2"></div>
+  </div>
+
+  <!-- EVENT FIELDS -->
+  <div class="eventField" style="display:none;">
+    <label>Description</label>
+    <textarea name="event_description" class="form-control"></textarea>
+  </div>
+
+  <!-- HIRING FIELDS -->
+  <div class="hiringField" style="display:none;">
+    <label>Description</label>
+    <textarea name="job_description" class="form-control"></textarea>
+  </div>
+
+  <button type="submit" class="btn" style="background:#228B22;color:white;">
+    Post
+  </button>
+</form>
+
+<!-- ✅ SweetAlert FIRST -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+/* IMAGE PREVIEW */
+const input = document.querySelector('input[name="images"]');
+const preview = document.getElementById("preview");
+
+input?.addEventListener("change", () => {
+  preview.innerHTML = "";
+  [...input.files].forEach(file => {
+    const img = document.createElement("img");
+    img.src = URL.createObjectURL(file);
+    img.style.width = "100px";
+    preview.appendChild(img);
+  });
+});
+
+/* SHOW / HIDE FIELDS */
+const postType = document.getElementById("postType");
+const eventFields = document.querySelectorAll(".eventField");
+const hiringFields = document.querySelectorAll(".hiringField");
+
+postType.addEventListener("change", () => {
+  eventFields.forEach(e => e.style.display = "none");
+  hiringFields.forEach(h => h.style.display = "none");
+
+  if (postType.value === "event")
+    eventFields.forEach(e => e.style.display = "block");
+
+  if (postType.value === "hiring")
+    hiringFields.forEach(h => h.style.display = "block");
+});
+
+/* FORM SUBMIT (SweetAlert) */
+const postForm = document.getElementById("postForm");
+
+postForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const formData = new FormData(postForm);
+
+  try {
+    const res = await fetch("/submit", {
+      method: "POST",
+      body: formData
+    });
+
+    const data = await res.json();
+
+    if (!data.success && data.type === "AUTH") {
+      return Swal.fire("Login Required", data.message, "warning")
+        .then(() => location.href = "/login");
+    }
+
+    if (!data.success && data.type === "VALIDATION") {
+      return Swal.fire("Error", data.message, "error");
+    }
+
+    if (data.success) {
+      return Swal.fire("Success 🎉", "Post created", "success")
+        .then(() => location.href = "/");
+    }
+
+  } catch {
+    Swal.fire("Error", "Server error", "error");
+  }
+});
+</script>
+
+</body>
+</html>

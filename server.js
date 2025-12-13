@@ -209,125 +209,158 @@ const postSchema = new mongoose.Schema({
 
 const Post = mongoose.model("Users", postSchema);
 
-// POST form handler
+// ✅ Optional middleware (JSON-based, SweetAlert friendly)
 function requireLogin(req, res, next) {
   if (!res.locals.currentUser) {
-    return res.redirect('/login');
+    return res.status(401).json({
+      success: false,
+      type: "AUTH",
+      message: "Please login to create a post."
+    });
   }
   next();
 }
 
-router.post("/submit", upload.array("images", 10), async (req, res) => {
-  try {
-    const {
-      post_type,
-      data,
+router.post(
+  "/submit",
+  upload.array("images", 10),
+  async (req, res) => {
+    try {
+      const {
+        post_type,
+        data,
 
-      // Event fields
-      event_title,
-      event_location,
-      event_mode,
-      event_date,
-      event_time,
-      event_contact,
-      event_link,
-      event_description,
+        // Event fields
+        event_title,
+        event_location,
+        event_mode,
+        event_date,
+        event_time,
+        event_contact,
+        event_link,
+        event_description,
 
-      // Hiring fields
-      job_title,
-      job_location,
-      job_mode,
-      job_contact,
-      job_description,
-      job_deadline,
-      job_link
+        // Hiring fields
+        job_title,
+        job_location,
+        job_mode,
+        job_contact,
+        job_description,
+        job_deadline,
+        job_link
+      } = req.body;
 
-    } = req.body;
-
-    if (!data || !post_type) {
-      return res.send("<h3>Missing fields</h3>");
-    }
-
-    const currentUser = res.locals.currentUser;
-    if (!currentUser) {
-      return res.send("<h3>User not logged in</h3>");
-    }
-
-    const userId = currentUser._id;
-    const userEmail = currentUser.email;
-    const username = currentUser.username || null;
-    const picture = currentUser.picture || null;
-    const college = currentUser.college?.trim() || null;
-
-    // ------------------------------
-    //  CLOUDINARY IMAGE UPLOAD
-    // ------------------------------
-    let imageurls = [];
-
-    if (req.files?.length > 0) {
-      for (const file of req.files) {
-        const uploaded = await cloudinary.uploader.upload(file.path);
-        imageurls.push(uploaded.secure_url);
-        fs.unlinkSync(file.path);
+      // ❌ Validation: missing fields
+      if (!post_type || !data) {
+        return res.status(400).json({
+          success: false,
+          type: "VALIDATION",
+          message: "Post type and content are required."
+        });
       }
+
+      // ❌ Not logged in
+      const currentUser = res.locals.currentUser;
+      if (!currentUser) {
+        return res.status(401).json({
+          success: false,
+          type: "AUTH",
+          message: "Please login to create a post."
+        });
+      }
+
+      const userId = currentUser._id;
+      const userEmail = currentUser.email;
+      const username = currentUser.username || null;
+      const picture = currentUser.picture || null;
+      const college = currentUser.college?.trim() || null;
+
+      // ------------------------------
+      //  CLOUDINARY IMAGE UPLOAD
+      // ------------------------------
+      let imageurls = [];
+
+      if (req.files?.length > 0) {
+        for (const file of req.files) {
+          const uploaded = await cloudinary.uploader.upload(file.path);
+          imageurls.push(uploaded.secure_url);
+          fs.unlinkSync(file.path);
+        }
+      }
+
+      // ------------------------------
+      //  BASE POST DATA
+      // ------------------------------
+      const postData = {
+        postType: post_type,
+        userId,
+        username,
+        userEmail,
+        picture,
+        college,
+        data,
+        imageurl: imageurls
+      };
+
+      // ------------------------------
+      //  EVENT POST FIELDS
+      // ------------------------------
+      if (post_type === "event") {
+        Object.assign(postData, {
+          event_title: event_title || null,
+          event_location: event_location || null,
+          event_mode: event_mode || null,
+          event_date: event_date || null,
+          event_time: event_time || null,
+          event_contact: event_contact || null,
+          event_link: event_link || null,
+          event_description: event_description || null
+        });
+      }
+
+      // ------------------------------
+      //  HIRING POST FIELDS
+      // ------------------------------
+      if (post_type === "hiring") {
+        Object.assign(postData, {
+          job_title: job_title || null,
+          job_location: job_location || null,
+          job_mode: job_mode || null,
+          job_contact: job_contact || null,
+          job_description: job_description || null,
+          job_deadline: job_deadline || null,
+          job_link: job_link || null
+        });
+      }
+
+      // ------------------------------
+      //  SAVE POST
+      // ------------------------------
+      const newPost = new Post(postData);
+      await newPost.save();
+
+      await genz.findByIdAndUpdate(userId, {
+        $inc: { postCount: 1 }
+      });
+
+      console.log(`✔ Post saved successfully (${post_type.toUpperCase()})`);
+
+      // ✅ SUCCESS RESPONSE
+      return res.json({
+        success: true,
+        message: "Post created successfully"
+      });
+
+    } catch (err) {
+      console.error("✘ Save failed:", err);
+      return res.status(500).json({
+        success: false,
+        type: "SERVER",
+        message: "Error saving post. Please try again."
+      });
     }
-
-    // ------------------------------
-    //  BASE POST DATA
-    // ------------------------------
-    const postData = {
-      postType: post_type,
-      userId,
-      username,
-      userEmail,
-      picture,
-      college,
-      data,
-      imageurl: imageurls
-    };
-
-    // ------------------------------
-    //        EVENT POST FIELDS
-    // ------------------------------
-    if (post_type === "event") {
-      postData.event_title = event_title || null;
-      postData.event_location = event_location || null;
-      postData.event_mode = event_mode || null;
-      postData.event_date = event_date || null;
-      postData.event_time = event_time || null;
-      postData.event_contact = event_contact || null;
-      postData.event_link = event_link || null;
-      postData.event_description = event_description || null;
-    }
-
-    // ------------------------------
-    //        HIRING POST FIELDS
-    // ------------------------------
-    if (post_type === "hiring") {
-      postData.job_title = job_title || null;
-      postData.job_location = job_location || null;
-      postData.job_mode = job_mode || null;
-      postData.job_contact = job_contact || null;
-      postData.job_description = job_description || null;
-      postData.job_deadline = job_deadline || null;
-      postData.job_link = job_link || null;
-    }
-
-    // SAVE POST
-    const newPost = new Post(postData);
-    await newPost.save();
-
-    // INCREMENT USER POST COUNT
-    await genz.findByIdAndUpdate(userId, { $inc: { postCount: 1 } });
-
-    console.log(`✔ Post saved successfully (${post_type.toUpperCase()})`);
-
-    res.redirect("/");
-  } catch (err) {
-    console.error("✘ Save failed:", err);
-    res.status(500).send("Error saving to database");
   }
-});
+);
 
 
 
@@ -405,10 +438,11 @@ app.post("/signup", async (req, res) => {
     const existingUser = await genz.findOne({ email: lowerEmail });
 
     if (existingUser) {
-      return res.status(400).json({ message: "User already exists. Try logging in." });
+      return res.status(400).json({ success: false, message: "User already exists. Try logging in." });
     }
 
     const hashedPassword = await bcryptjs.hash(password, 10);
+    const picture = req.body.picture || null;
 
     const newUser = new genz({
       name,
@@ -420,31 +454,30 @@ app.post("/signup", async (req, res) => {
       password: hashedPassword,
       dream,
       college: college || null,
-      accountType: accountType || "public"
+      accountType: req.body.accountType || "public"
     });
 
     await newUser.save();
 
-    // Store session
     req.session.userId = newUser._id;
     req.session.username = newUser.name;
     req.session.email = newUser.email;
 
-    // Create session doc
     await Session.create({
       name: newUser.name,
       username: newUser.username || "",
       college: newUser.college || "",
       email: newUser.email,
-      userId: newUser._id,        // ✔ correct user id stored
+      userId: newUser._id,
       sessionId: req.sessionID,
-      expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24) // 24 hrs
+      expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24)
     });
 
-    res.redirect("/");
+    res.json({ success: true, redirectUrl: "/" });
+
   } catch (err) {
     console.error("Signup error:", err);
-    res.status(500).json({ message: "Server error during signup." });
+    res.status(500).json({ success: false, message: "Server error during signup." });
   }
 });
 
@@ -499,57 +532,6 @@ const SessionSchema = new mongoose.Schema({
 
 const Session = mongoose.model("Session", SessionSchema);
 
-/*router.post("/save/:id", async (req, res) => {
-  try {
-    const postId = req.params.id;
-    const userId = req.session.userId; // must be set at login
-
-    console.log("👉 Save attempt:", { postId, userId });
-
-    if (!userId) {
-      return res.status(401).json({ success: false, message: "Please log in first." });
-    }
-
-    // Find the post
-    const foundPost = await Post.findById(postId);
-    if (!foundPost) {
-      return res.status(404).json({ success: false, message: "Post not found." });
-    }
-
-    // Find the user
-    const user = await genz.findById(userId);
-    if (!user) {
-      return res.status(404).json({ success: false, message: "User not found." });
-    }
-
-    // Prevent duplicates
-    const alreadySaved = user.savedPosts.some(
-      (p) => p.postId.toString() === foundPost._id.toString()
-    );
-    if (alreadySaved) {
-      return res.json({ success: false, message: "Already saved." });
-    }
-
-    // Add new saved post
-    user.savedPosts.push({
-      postId: foundPost._id,
-      data: foundPost.data,
-      imageurl: foundPost.imageurl,
-      event_date: foundPost.event_date,
-      createdAt: foundPost.createdAt,
-      userEmail: foundPost.userEmail
-    });
-
-    await user.save();
-
-    console.log("✅ Post saved for user:", user.email, user.savedPosts);
-
-    res.json({ success: true, message: "Post saved successfully!" });
-  } catch (err) {
-    console.error("❌ Save failed:", err.message);
-    res.status(500).json({ success: false, message: "Server error" });
-  }
-  });*/
 
 router.post("/save/:id", async (req, res) => {
   try {
@@ -1003,13 +985,6 @@ router.post("/login", (req, res, next) => {
 
 router.get("/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
 
-/*router.get(
-  "/auth/google/callback",
-  passport.authenticate("google", { failureRedirect: "/signup" }),
-  (req, res) => {
-    res.redirect("/view");
-  }
-);*/
 
 router.get(
   "/auth/google/callback",
@@ -1906,6 +1881,7 @@ console.log("POST USER IDs:", posts.map(p => p.userId));
   <meta charset="UTF-8">
   <title>CollegenZ</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Open+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
@@ -2033,16 +2009,42 @@ header {
 }
 
 .common-btn {
-        width: 8px;
-        background: #228B22;
-        color: white;
-        padding: 14px;
-        border: none;
-        font-size: 18px;
-        border-radius: 8px;
-        margin-top: 15px;
-        cursor: pointer;
-    }
+  width: 100%;           /* full width on mobile */
+  display: block;
+  text-align: center;
+  text-decoration: none;
+  background: #228B22;
+  color: white;
+  padding: 5px;
+  border: none;
+  font-size: 18px;
+  border-radius: 8px;
+  margin-top: 15px;
+  cursor: pointer;
+}
+
+/* Desktop and large screens */
+@media (min-width: 768px) {
+  .common-btn {
+    width: auto;        /* shrink to content size */
+    display: inline-block;
+    padding-left: 5px;
+    padding-right: 5px;
+  }
+}
+
+/* Optional: Even better styling for large desktops */
+@media (min-width: 1024px) {
+  .common-btn {
+    max-width: 300px;   /* or any size you prefer */
+  }
+}
+
+/*welcome container*/
+.font-style {
+  font-family: inter, sans-serif;
+}
+
 .filter-bar {
   position: fixed;
   top: 70px; /* under header */
@@ -2103,6 +2105,7 @@ main {
 }
 
 .logo-link {
+  font-family: 'Poppins', sans-serif;
   color: white;
   text-decoration: none;
   transition: 0.3s;
@@ -2674,11 +2677,11 @@ main {
 <div class="overlay" id="overlay" onclick="closeNav()"></div>
 
   <main class="d-flex">
-    <div class="container me-auto">
+    <div class="container me-auto font-style">
       <!-- Join With Us Section -->
-      <div class="card mb-4 p-3 d-flex flex-row justify-content-between align-items-center">
+      <div class="card mb-4 p-3 font-style">
         <div>
-          <h2>Welcome ${isLoggedIn ? currentUser.name : ""}</h2>
+          <h2>Welcome ${isLoggedIn ? currentUser.name : "to CollegenZ"}</h2>
           <p>${isLoggedIn ? "Welcome back! Explore new posts and connect with others." : "Represent your college with us"}</p>
           ${isLoggedIn ? `
             <a href="/upload"  class="common-btn">Create Post</a>
@@ -2963,6 +2966,11 @@ posts.forEach((p, index) => {
     <a href="/calender"><img src="/uploads/calender.png" alt="Calendar" ></a>
   </div>
 </div>
+
+<script>
+  window.IS_LOGGED_IN = ${isLoggedIn}; // true or false
+</script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
   
 <script>
