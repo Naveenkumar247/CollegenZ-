@@ -17,6 +17,15 @@ const nodemailer = require("nodemailer");
 const sessionSecret = process.env.SESSION_SECRET;
 const cloudinary = require("cloudinary").v2;
 const fs = require("fs");
+const http = require("http");
+const { Server } = require("socket.io");
+const server = http.createServer(app);  // ✅ STEP 2
+const io = new Server(server, {
+  cors: {
+    origin: "*"
+  }
+});
+console.log("✅ Socket.io initialized");
 
 cloudinary.config({
   secure: true, // ensures HTTPS
@@ -93,6 +102,16 @@ const storage = multer.diskStorage({
 });
 
 
+function requireLogin(req, res, next) {
+  if (!res.locals.currentUser) {
+    return res.status(401).json({
+      type: "AUTH",
+      message: "Login required"
+    });
+  }
+  next();
+}
+
 
 const userSchema = new mongoose.Schema({
   name: { type: String, required: true },
@@ -114,7 +133,11 @@ const userSchema = new mongoose.Schema({
 
   followers: [{ type: mongoose.Schema.Types.ObjectId, ref: "logins" }],
   following: [{ type: mongoose.Schema.Types.ObjectId, ref: "logins" }],
-  
+ 
+
+friends: [{ type: mongoose.Schema.Types.ObjectId, ref: "logins" }],
+friendRequestsSent: [{ type: mongoose.Schema.Types.ObjectId, ref: "logins" }],
+friendRequestsReceived: [{ type: mongoose.Schema.Types.ObjectId, ref: "logins" }],
   accountType: {
   type: String,
   enum: ["public", "personal", "business"],
@@ -208,6 +231,96 @@ const postSchema = new mongoose.Schema({
 });
 
 const Post = mongoose.model("Users", postSchema);
+
+const notificationSchema = new mongoose.Schema({
+  // Who receives this notification
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "logins",
+    required: true
+  },
+
+  // Who triggered it (optional)
+  fromUser: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "logins",
+    default: null
+  },
+
+  // WHAT happened (generic)
+  type: {
+    type: String,
+    enum: [
+      "FRIEND_REQUEST",
+      "FRIEND_ACCEPT",
+      "FOLLOW",
+      "LIKE",
+      "COMMENT",
+      "POST",
+      "MESSAGE",
+      "SYSTEM",
+      "ADMIN"
+    ],
+    required: true
+  },
+
+  // Human-readable text
+  message: {
+    type: String,
+    required: true
+  },
+
+  // Where to go when clicked
+  link: {
+    type: String,
+    default: null
+  },
+
+  // Extra metadata (flexible!)
+  meta: {
+    type: Object,
+    default: {}
+  },
+
+  isRead: {
+    type: Boolean,
+    default: false
+  },
+
+  createdAt: {
+    type: Date,
+    default: Date.now
+  }
+});
+
+const Notification = mongoose.model("notifications", notificationSchema);
+
+const messageSchema = new mongoose.Schema({
+  sender: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "logins",
+    required: true
+  },
+  receiver: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "logins",
+    required: true
+  },
+  text: {
+    type: String,
+    required: true
+  },
+  isRead: {
+    type: Boolean,
+    default: false   // 🔑 IMPORTANT
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now
+  }
+});
+
+const Message = mongoose.model("messages", messageSchema);
 
 // ✅ Optional middleware (JSON-based, SweetAlert friendly)
 function requireLogin(req, res, next) {
@@ -363,6 +476,28 @@ router.post(
 );
 
 
+io.on("connection", socket => {
+
+  socket.on("joinRoom", room => {
+    socket.join(room);
+    console.log("Joined room:", room);
+  });
+
+  socket.on("sendMessage", async data => {
+    console.log("MESSAGE RECEIVED:", data);
+
+    // save to DB
+    await Message.create({
+      sender: data.sender,
+      receiver: data.receiver,
+      text: data.text
+    });
+
+    // send to both users
+    io.to(data.room).emit("newMessage", data);
+  });
+
+});
 
 // Routes
 
@@ -399,6 +534,69 @@ app.get("/share/postId",(req,res) => {
 app.get("/aboutus",(req,res) => {
     res.sendFile(path.join(__dirname, "about.html"));
 });
+app.get("/notifications",(req,res) => {
+    res.sendFile(path.join(__dirname, "notify.html"));
+});
+
+
+app.use(async (req, res, next) => {
+  if (req.session?.userId) {
+    res.locals.currentUser = await genz.findById(req.session.userId);
+  } else {
+    res.locals.currentUser = null;
+  }
+  next();
+});
+
+async function isFriend(req, res, next) {
+  try {
+    // 🔒 Check login FIRST
+    if (!res.locals.currentUser) {
+      console.log("❌ No currentUser in res.locals");
+      return res.status(401).send("Please login to chat");
+    }
+
+    const userId = res.locals.currentUser._id.toString();
+    const friendId = req.params.friendId;
+
+    console.log("👉 Logged-in userId:", userId);
+    console.log("👉 Requested friendId:", friendId);
+
+    const user = await genz.findById(userId);
+
+    if (!user) {
+      console.log("❌ User not found in DB");
+      return res.status(401).send("User not found");
+    }
+
+    console.log(
+      "👉 Friends in DB:",
+      user.friends.map(id => id.toString())
+    );
+
+    const isFriend = user.friends.some(
+      id => id.toString() === friendId
+    );
+
+    console.log("✅ isFriend result:", isFriend);
+
+    if (!isFriend) {
+      return res.status(403).send("You can only chat with friends");
+    }
+
+    next();
+  } catch (err) {
+    console.error("🔥 isFriend error:", err);
+    res.status(500).send("Server error");
+  }
+}
+
+
+app.get("/chat/:friendId", isFriend, (req, res) => {
+  res.sendFile(path.join(__dirname, "chat.html"));
+});
+
+
 
 
 app.get("/updateOldUsers", async (req, res) => {
@@ -411,6 +609,9 @@ app.get("/updateOldUsers", async (req, res) => {
           linkedin: null,
           youtube: null,
           website: null,
+          friends: [{ type: mongoose.Schema.Types.ObjectId, ref: "logins" }],
+friendRequestsSent: [{ type: mongoose.Schema.Types.ObjectId, ref: "logins" }],
+friendRequestsReceived: [{ type: mongoose.Schema.Types.ObjectId, ref: "logins" }],
           accountType: {
   type: String,
   enum: ["public", "personal", "business"],
@@ -724,6 +925,257 @@ app.post("/posts/:id/share", async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+//Friend Details
+
+router.post("/friend/request/:userId", async (req, res) => {
+  try {
+    const senderId = res.locals.currentUser._id;
+    const receiverId = req.params.userId;
+
+    if (senderId.equals(receiverId)) {
+      return res.status(400).json({ message: "You cannot add yourself" });
+    }
+
+    const sender = await genz.findById(senderId);
+    const receiver = await genz.findById(receiverId);
+
+    if (!receiver) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Already friends
+    if (sender.friends.includes(receiverId)) {
+      return res.status(400).json({ message: "Already friends" });
+    }
+
+    // Request already sent
+    if (sender.friendRequestsSent.includes(receiverId)) {
+      return res.status(400).json({ message: "Friend request already sent" });
+    }
+
+    // Already received request (auto-accept optional)
+    if (sender.friendRequestsReceived.includes(receiverId)) {
+      return res.status(400).json({ message: "User already sent you a request" });
+    }
+
+    sender.friendRequestsSent.push(receiverId);
+    receiver.friendRequestsReceived.push(senderId);
+
+    await sender.save();
+    await receiver.save();
+    
+    await Notification.create({
+  userId: receiverId,          // who receives notification
+  fromUser: senderId,          // who sent request
+  type: "FRIEND_REQUEST",
+  message: "sent you a friend request",
+  meta: {
+    senderId
+  }
+});
+
+    res.json({ success: true, message: "Friend request sent" });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+router.post("/friend/accept/:userId", async (req, res) => {
+  try {
+    const receiverId = res.locals.currentUser._id;
+    const senderId = req.params.userId;
+
+    const receiver = await genz.findById(receiverId);
+    const sender = await genz.findById(senderId);
+
+    if (!receiver.friendRequestsReceived.includes(senderId)) {
+      return res.status(400).json({ message: "No friend request found" });
+    }
+
+    // Add both as friends
+    receiver.friends.push(senderId);
+    sender.friends.push(receiverId);
+
+    // Remove requests
+    receiver.friendRequestsReceived.pull(senderId);
+    sender.friendRequestsSent.pull(receiverId);
+
+    await receiver.save();
+    await sender.save();
+    
+    await Notification.deleteMany({
+  userId: receiverId,
+  fromUser: senderId,
+  type: "FRIEND_REQUEST"
+});
+    res.json({ success: true, message: "Friend request accepted" });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+router.post("/friend/reject/:userId", async (req, res) => {
+  try {
+    const receiverId = res.locals.currentUser._id;
+    const senderId = req.params.userId;
+
+    const receiver = await genz.findById(receiverId);
+    const sender = await genz.findById(senderId);
+
+    receiver.friendRequestsReceived.pull(senderId);
+    sender.friendRequestsSent.pull(receiverId);
+
+    await receiver.save();
+    await sender.save();
+
+    await Notification.deleteMany({
+  userId: receiverId,
+  fromUser: senderId,
+  type: "FRIEND_REQUEST"
+});
+    res.json({ success: true, message: "Friend request rejected" });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+router.post("/friend/cancel/:userId", async (req, res) => {
+  try {
+    const senderId = res.locals.currentUser._id;
+    const receiverId = req.params.userId;
+
+    const sender = await genz.findById(senderId);
+    const receiver = await genz.findById(receiverId);
+
+    sender.friendRequestsSent.pull(receiverId);
+    receiver.friendRequestsReceived.pull(senderId);
+
+    await sender.save();
+    await receiver.save();
+
+    res.json({ success: true, message: "Friend request cancelled" });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+router.post("/friend/remove/:userId", async (req, res) => {
+  try {
+    const userId = res.locals.currentUser._id;
+    const friendId = req.params.userId;
+
+    const user = await genz.findById(userId);
+    const friend = await genz.findById(friendId);
+
+    user.friends.pull(friendId);
+    friend.friends.pull(userId);
+
+    await user.save();
+    await friend.save();
+
+    res.json({ success: true, message: "Friend removed" });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+router.get("/api/notifications", requireLogin, async (req, res) => {
+  const userId = res.locals.currentUser._id;
+
+  const notifications = await Notification.find({ userId })
+    .populate("fromUser", "name picture")
+    .sort({ createdAt: -1 })
+    .limit(30);
+
+  res.json(notifications);
+});
+
+router.get("/notifications/count", requireLogin, async (req, res) => {
+  const userId = res.locals.currentUser._id;
+
+  const count = await Notification.countDocuments({
+    userId,
+    isRead: false
+  });
+
+  res.json({ count });
+});
+
+router.post("/notifications/read/:id", requireLogin, async (req, res) => {
+  await Notification.findByIdAndUpdate(req.params.id, {
+    isRead: true
+  });
+
+  res.json({ success: true });
+});
+
+app.get("/api/user/:id", async (req, res) => {
+  try {
+    const user = await genz.findById(
+      req.params.id,
+      "name picture"
+    );
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.json(user);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to load user" });
+  }
+});
+
+app.get("/api/me", (req, res) => {
+  if (!res.locals.currentUser) {
+    return res.status(401).json({ error: "Not logged in" });
+  }
+  res.json({ id: res.locals.currentUser._id.toString() });
+});
+
+router.get("/api/messages/:friendId", async (req, res) => {
+  try {
+    if (!res.locals.currentUser) {
+      return res.status(401).json({ error: "Not logged in" });
+    }
+
+    const userId = res.locals.currentUser._id;
+    const friendId = req.params.friendId;
+
+    // ✅ mark messages read
+    await Message.updateMany(
+      {
+        sender: friendId,
+        receiver: userId,
+        isRead: false
+      },
+      { $set: { isRead: true } }
+    );
+
+    const messages = await Message.find({
+      $or: [
+        { sender: userId, receiver: friendId },
+        { sender: friendId, receiver: userId }
+      ]
+    }).sort({ createdAt: 1 });
+
+    res.json(messages);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to load messages" });
+  }
+});
+
 
 const transporter = nodemailer.createTransport({
   host: "smtp.zoho.in", // ✅ Use this for India data center
@@ -1339,6 +1791,7 @@ app.get("/profile", async (req, res) => {
 }
 
 #accountTypeMenu a {
+  display: block;              /* 👈 IMPORTANT */
   padding: 12px 15px;
   text-decoration: none;
   color: black;
@@ -1499,7 +1952,7 @@ app.get("/profile", async (req, res) => {
           <div class="icon">
             <a href="/"><img src="/uploads/home.png" alt="Home"></a>
             <a href="/profile"><img src="/uploads/settings.png" alt="Settings"></a>
-            <a href="/upload"><img src="/uploads/add.png" alt="Add"></a>
+            <a href="/friends"><img src="/chaticon.png" alt="post"></a>
             <a href="/calender"><img src="/uploads/calender.png" alt="Calendar"></a>
           </div>
         </div>
@@ -1555,13 +2008,28 @@ function openAccountTypeMenu(event) {
   document.getElementById("accountTypeMenu").style.display = "block";
 }
 
-function chooseAccountType(type) {
+async function chooseAccountType(type) {
+  // Update UI immediately
   document.getElementById("accountType").value = type;
-
   document.getElementById("selectedAccountType").innerText =
-    type.charAt(0).toUpperCase() + type.slice(1) + " account ⌄";
+    type.charAt(0).toUpperCase() + type.slice(1) + " account";
 
   document.getElementById("accountTypeMenu").style.display = "none";
+
+  // 🔥 AUTO-SAVE ACCOUNT TYPE
+  const formData = new FormData();
+  formData.append("accountType", type);
+
+  try {
+    await axios.post("/updateProfile", formData, {
+      headers: { "Content-Type": "multipart/form-data" }
+    });
+
+    console.log("Account type updated successfully");
+  } catch (err) {
+    alert("❌ Failed to update account type");
+    console.error(err);
+  }
 }
 
   // ========== LOAD SAVED TYPE ON STARTUP ==========
@@ -1668,11 +2136,356 @@ app.post("/updateProfile", upload.single("picture"), async (req, res) => {
 
 app.get("/get-profile/:id", async (req, res) => {
   try {
-    const user = await genz.findById(req.params.id);
-    res.json(user);
+    const profileUserId = req.params.id;
+    const currentUserId = res.locals.currentUser?._id;
+
+    const profileUser = await genz.findById(profileUserId)
+      .select("-password"); // optional security
+
+    if (!profileUser) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Default relationship state
+    let relationship = {
+      isFriend: false,
+      requestSent: false,
+      requestReceived: false
+    };
+
+    // If logged in → compute relationship
+    if (currentUserId) {
+      const currentUser = await genz.findById(currentUserId);
+
+      relationship.isFriend =
+        currentUser.friends?.some(id => id.equals(profileUserId));
+
+      relationship.requestSent =
+        currentUser.friendRequestsSent?.some(id => id.equals(profileUserId));
+
+      relationship.requestReceived =
+        currentUser.friendRequestsReceived?.some(id => id.equals(profileUserId));
+    }
+
+    res.json({
+      ...profileUser.toObject(),
+      relationship
+    });
+
   } catch (err) {
-    res.status(500).json({ error: "User not found" });
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
   }
+});
+
+
+app.get("/friends", async (req, res) => {
+  const currentUser = res.locals.currentUser;
+  if (!currentUser) return res.redirect("/login");
+
+  // 1️⃣ Fetch friends basic info
+  const friends = await genz.find(
+    { _id: { $in: currentUser.friends } },
+    "name picture"
+  ).lean();
+
+  // 2️⃣ Fetch last messages + unread counts
+  for (let f of friends) {
+    const lastMsg = await Message.findOne({
+      $or: [
+        { sender: currentUser._id, receiver: f._id },
+        { sender: f._id, receiver: currentUser._id }
+      ]
+    }).sort({ createdAt: -1 });
+
+    f.lastMessage = lastMsg?.text || "Tap to start chatting";
+    f.lastMessageAt = lastMsg?.createdAt || null;
+
+    f.unreadCount = await Message.countDocuments({
+      sender: f._id,
+      receiver: currentUser._id,
+      isRead: { $ne: true }   // safe even if isRead not yet added
+    });
+
+    // UI-ready (you can wire socket later)
+    f.isOnline = false;
+  }
+
+  let html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Chats</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    body {
+      margin: 0;
+      font-family: system-ui, sans-serif;
+      background: #f8f9fa;
+      color: #222;
+    }
+
+    .top {
+      background: #228B22;
+      color: white;
+      padding: 14px;
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .chat-list {
+      background: #fff;
+    }
+
+    .chat-row {
+      display: flex;
+      gap: 12px;
+      padding: 14px;
+      text-decoration: none;
+      color: #222;
+      border-bottom: 1px solid #eee;
+      align-items: center;
+    }
+
+    .chat-row:hover {
+      background: #f4fdf4;
+    }
+
+    .avatar {
+      position: relative;
+    }
+
+    .avatar img {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+    }
+
+    .online-dot {
+      position: absolute;
+      bottom: 2px;
+      right: 2px;
+      width: 10px;
+      height: 10px;
+      background: #228B22;
+      border-radius: 50%;
+      border: 2px solid #fff;
+    }
+
+    .chat-info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .chat-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .chat-name {
+      font-weight: 600;
+      font-size: 15px;
+    }
+
+    .chat-time {
+      font-size: 12px;
+      color: #777;
+    }
+
+    .chat-bottom {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .chat-preview {
+      font-size: 13px;
+      color: #666;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 220px;
+    }
+
+    .unread-badge {
+      background: #228B22;
+      color: white;
+      font-size: 11px;
+      font-weight: 600;
+      min-width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .empty {
+      padding: 20px;
+      text-align: center;
+      color: #777;
+    }
+
+        /* === Sidebar (Default: Desktop layout) === */
+.sidebar {
+  width: 60px;
+  background: #f1f1f1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 0;
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100vh;
+  z-index: 2000;
+  transition: all 0.3s ease-in-out;
+  box-shadow: -2px 0 8px rgba(0,0,0,0.1);
+}
+
+.sidebar .icon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.2rem;
+  margin-top: 2rem;
+}
+
+.sidebar img {
+  width: 45px;
+  height: 45px;
+  transition: transform 0.2s ease;
+}
+
+/* Slight zoom effect on hover */
+.sidebar img:hover {
+  transform: scale(1.1);
+}
+/* === Tablet Size (medium screens) === */
+@media (max-width: 992px) {
+  .sidebar img {
+    width: 45px;
+    height: 45px;
+  }
+}
+
+/* === Mobile Layout: Sidebar becomes bottom nav === */
+@media (max-width: 768px) {
+  .sidebar {
+    width: 100%;
+    height: 35px; /* slightly smaller bottom nav */
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    bottom: 0;
+    top: auto;
+    right: 0;
+    left: 0;
+    background: #f1f1f1;
+    border-top: 1px solid #ddd;
+    box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
+  }
+
+  .sidebar .icon {
+    flex-direction: row;
+    justify-content: space-around;
+    width: 100%;
+    gap: 2rem; /* more spacing between icons */
+    margin-top: 0;
+    padding: 0 0.5rem; /* side padding */
+  }
+
+  .sidebar img {
+    width: 45px; /* smaller icons for mobile */
+    height: 45px;
+  }
+
+  header {
+    margin-right: 0;
+    margin-bottom: 65px; /* space for bottom nav */
+    padding: 0.8rem 1rem; /* slightly smaller header*/
+  }
+}
+
+/* === Extra Small Screens (very small phones) === */
+@media (max-width: 480px) {
+  .sidebar .icon {
+    flex-wrap: wrap; /* allow icons to wrap if too many */
+  }
+
+  .sidebar img {
+    width: 24px;
+    height: 24px;
+  }
+}
+   @media (max-width: 576px) {
+    main h2 {
+      font-size: 1.4rem;
+    }
+    main p {
+      font-size: 0.9rem;
+    }
+    main .btn {
+      width: 100%;
+    }
+  }
+  </style>
+</head>
+
+<body>
+
+  <div class="top">Chats</div>
+
+  <div class="chat-list">
+    ${
+      friends.length === 0
+        ? `<div class="empty">No friends yet</div>`
+        : friends.map(f => `
+            <a href="/chat/${f._id}" class="chat-row">
+              <div class="avatar">
+                <img src="${f.picture || '/uploads/profilepic.jpg'}">
+                ${f.isOnline ? `<span class="online-dot"></span>` : ""}
+              </div>
+
+              <div class="chat-info">
+                <div class="chat-top">
+                  <span class="chat-name">${f.name}</span>
+                  <span class="chat-time">
+                    ${f.lastMessageAt ? new Date(f.lastMessageAt).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : ""}
+                  </span>
+                </div>
+
+                <div class="chat-bottom">
+                  <span class="chat-preview">${f.lastMessage}</span>
+                  ${
+                    f.unreadCount > 0
+                      ? `<span class="unread-badge">${f.unreadCount}</span>`
+                      : ""
+                  }
+                </div>
+              </div>
+            </a>
+          `).join("")
+    }
+  </div>
+<div class="sidebar">
+  <div class="icon">
+    <a href="/"><img src="/uploads/home.png" alt="Home" ></a>
+    <a href="/profile"><img src="/uploads/settings.png" alt="Settings" ></a>
+    <a href="/friends"><img src="/chaticon.png" alt="post"></a>
+    <a href="/calender"><img src="/uploads/calender.png" alt="Calendar" ></a>
+  </div>
+</div>
+</body>
+</html>
+`;
+
+  res.send(html);
 });
 
 
@@ -1863,15 +2676,34 @@ const currentUser = res.locals.currentUser ?? null;     // User info if logged i
 const currentUserId = currentUser ? currentUser._id.toString() : null;
 const loginSession = res.locals.loginSession ?? null;   // Session info if logged in
 const isLoggedIn = Boolean(currentUser);                // true if logged in
+const friendIds = currentUser
+  ? currentUser.friends.map(id => id.toString())
+  : [];
+let friendsList = [];
+
+if (currentUser && friendIds.length > 0) {
+  friendsList = await genz.find(
+    { _id: { $in: friendIds } },
+    "name picture"
+  );
+}
 const updatedPosts = posts.map((p) => {
+  const postUserId = p.userId?.toString();
+
   return {
     ...p.toObject(),
+
     isFollowing: currentUser
-      ? currentUser.following.map(id => id.toString()).includes(p.userId?.toString())
+      ? currentUser.following
+          .map(id => id.toString())
+          .includes(postUserId)
+      : false,
+
+    isFriend: currentUser
+      ? friendIds.includes(postUserId)
       : false
   };
 });
-console.log("POST USER IDs:", posts.map(p => p.userId));
 
 
     let html = `
@@ -2006,6 +2838,12 @@ header {
   z-index: 1100;
   margin-right: 60px;
   box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
 }
 
 .common-btn {
@@ -2629,6 +3467,111 @@ main {
   font-size: 22px;
 }
 
+.nav-notification {
+  margin-left:12px; 
+  position: relative;
+  cursor: pointer;
+}
+
+.nav-notification i {
+  font-size: 22px;
+  color: #fff;
+}
+
+.notif-badge {
+  position: absolute;
+  top: -6px;
+  right: -8px;
+  background: #fff;
+  color: #228B22;
+  font-size: 11px;
+  font-weight: bold;
+  padding: 2px 6px;
+  border-radius: 50%;
+  min-width: 18px;
+  text-align: center;
+}
+
+.notif-dropdown {
+  position: absolute;
+  top: 45px;
+  right: 0;
+  width: 320px;
+  max-height: 400px;
+  overflow-y: auto;
+  background: #fff;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+  border-radius: 8px;
+  z-index: 1000;
+}
+
+.notif-header {
+  padding: 10px;
+  font-weight: bold;
+  border-bottom: 1px solid #eee;
+}
+
+.notif-item {
+  padding: 10px;
+  display: flex;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.notif-item.unread {
+  background: #f5f7ff;
+}
+
+.notif-item:hover {
+  background: #f0f0f0;
+}
+
+/* Floating Action Button */
+.post-fab {
+  position: fixed;
+  bottom: 70px;        /* 🔥 FIXED position (above bottom nav) */
+  right: 20px;
+
+  width: 46px;
+  height: 46px;
+
+  background-color: #228B22;
+  background-image: url("/posticon.png");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 22px 22px;
+
+  border-radius: 50%;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+
+  z-index: 9999;
+  overflow: hidden;
+
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Hover effect (NO movement) */
+.post-fab:hover {
+  transform: scale(1.06);
+  box-shadow: 0 8px 22px rgba(0,0,0,0.35);
+}
+
+/* Mobile spacing */
+@media (max-width: 480px) {
+  .post-fab {
+    bottom: 70px;
+    right: 16px;
+  }
+}
+
+.swal-title-custom {
+  font-size: 18px !important;
+}
+
+.swal-text-custom {
+  font-size: 13px !important;
+}
+
 
 </style>
 </head>
@@ -2644,8 +3587,22 @@ main {
   <h1 class="m-0">
     <a href="/aboutus" class="logo-link">CollegenZ</a>
   </h1>
-  <div class="hamburger" id="hamburger">&#9776;</div>
+
+  <!-- RIGHT ACTIONS -->
+  <div class="header-actions">
+
+    <!-- NOTIFICATIONS -->
+    <a href="/notifications" class="nav-notification">
+      <i class="bi bi-bell-fill"></i>
+      <span class="notif-badge" id="notifBadge" style="display:none;">0</span>
+    </a>
+
+    <!-- HAMBURGER -->
+    <div class="hamburger" id="hamburger">&#9776;</div>
+
+  </div>
 </header>
+
 
 <div id="filterBar" class="filter-bar hidden-bar">
   <button class="filter-btn active" data-type="all">All</button>
@@ -2955,14 +3912,16 @@ posts.forEach((p, index) => {
   </div>
 </div>
 
+<a href="/upload" class="post-fab" title="Create Post"></a>
+
   <!-- Sidebar -->
   <!-- Sidebar / Bottom Navigation -->
 <div class="sidebar">
   <div class="icon">
-    <a href="/"><img src="/uploads/home.png" alt="Home" ></a>
 
+    <a href="/"><img src="/uploads/home.png" alt="Home" ></a>
     <a href="/profile"><img src="/uploads/settings.png" alt="Settings" ></a>
-    <a href="/upload"><img src="/uploads/add.png" alt="Add" ></a>
+    <a href="/friends"><img src="/chaticon.png" alt="post"></a>
     <a href="/calender"><img src="/uploads/calender.png" alt="Calendar" ></a>
   </div>
 </div>
@@ -3130,6 +4089,21 @@ window.addEventListener("scroll", () => {
     }
 });
 
+
+const chatToggle = document.getElementById("chatToggle");
+const chatDropdown = document.getElementById("chatDropdown");
+
+chatToggle.onclick = () => {
+  chatDropdown.style.display =
+    chatDropdown.style.display === "block" ? "none" : "block";
+};
+
+// Close when clicking outside
+document.addEventListener("click", e => {
+  if (!e.target.closest(".chat-menu")) {
+    chatDropdown.style.display = "none";
+  }
+});
 </script>
 </body>
 </html>
@@ -3147,7 +4121,8 @@ window.addEventListener("scroll", () => {
 app.use("/", router);
 
 
-// Start the server
-app.listen(3000, () => {
-  console.log("🚀 Server running on http://localhost:3000");
+const PORT = process.env.PORT || 3000;
+
+server.listen(PORT, () => {
+  console.log(`🚀 Server running on http://localhost:${PORT}`);
 });

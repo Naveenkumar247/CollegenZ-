@@ -202,6 +202,15 @@
   height: auto;
   border-radius: 12px;
 }
+.swal-title-custom {
+  font-size: 18px !important;
+}
+
+.swal-text-custom {
+  font-size: 13px !important;
+}
+
+
 
   </style>
 </head>
@@ -331,7 +340,7 @@
     <div class="icon">
       <a href="/"><img src="/uploads/home.png" alt="Home"></a>
       <a href="/profile"><img src="/uploads/settings.png" alt="Settings"></a>
-      <a href="/upload"><img src="/uploads/add.png" alt="Add"></a>
+      <a href="/friends"><img src="/chaticon.png" alt="post"></a>
       <a href="/calender"><img src="/uploads/calender.png" alt="Calendar"></a>
     </div>
   </div>
@@ -400,7 +409,10 @@ postForm.addEventListener("submit", async (e) => {
     // ❌ AUTH ERROR (401)
     if (response.status === 401 && data.type === "AUTH") {
       return Swal.fire({
-        icon: "warning",
+        width:320,
+         imageUrl: "loginalert.png",
+  imageWidth: 200,
+  imageHeight: 200,
         title: "Login Required",
         text: data.message,
         confirmButtonText: "Login"
@@ -430,7 +442,10 @@ postForm.addEventListener("submit", async (e) => {
     // ✅ SUCCESS (200)
     if (response.ok && data.success) {
       return Swal.fire({
-        icon: "success",
+         width:320,
+         imageUrl: "postalert.png",
+  imageWidth: 200,
+  imageHeight: 200,
         title: "Posted Successfully 🎉",
         text: data.message,
         confirmButtonText: "Go Home"

@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Chat</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+:root {
+  --green: #228B22;
+  --green-light: #e9f7ec;
+  --bg-page: #f8f9fa;
+  --bg-panel: #ffffff;
+  --border: #e5e5e5;
+  --text-dark: #222;
+  --text-muted: #777;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+  background: var(--bg-page);
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Wrapper */
+.chat-wrapper {
+  width: 100%;
+  max-width: 480px;
+  height: 100%;
+  background: var(--bg-panel);
+  display: flex;
+  flex-direction: column;
+}
+
+@media (min-width: 768px) {
+  .chat-wrapper {
+    height: 92vh;
+    border-radius: 12px;
+    box-shadow: 0 15px 40px rgba(0,0,0,.15);
+    overflow: hidden;
+  }
+}
+
+/* Header */
+.chat-header {
+  background: var(--green);
+  color: white;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.chat-header img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+}
+
+.chat-header h4 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.chat-header span {
+  font-size: 12px;
+  opacity: .85;
+}
+
+/* Messages */
+.messages {
+  flex: 1;
+  padding: 16px;
+  overflow-y: auto;
+  background: #fdfdfd;
+}
+
+.date-separator {
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-muted);
+  margin: 12px 0;
+}
+
+.msg {
+  max-width: 75%;
+  padding: 8px 12px;
+  margin-bottom: 6px;
+  border-radius: 8px;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.msg.me {
+  background: var(--green-light);
+  margin-left: auto;
+  border-top-right-radius: 0;
+}
+
+.msg.other {
+  background: #f1f1f1;
+  border-top-left-radius: 0;
+}
+
+.msg .status {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-align: right;
+  margin-top: 2px;
+}
+
+/* Typing */
+.typing {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin: 6px;
+}
+
+/* Input */
+.chat-input {
+  display: flex;
+  gap: 10px;
+  padding: 10px;
+  border-top: 1px solid var(--border);
+}
+
+.chat-input input {
+  flex: 1;
+  padding: 10px 14px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  outline: none;
+}
+
+.chat-input input:focus {
+  border-color: var(--green);
+}
+
+.chat-input button {
+  background: var(--green);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  padding: 10px 14px;
+  cursor: pointer;
+}
+
+
+</style>
+</head>
+
+<body>
+
+<div class="chat-wrapper">
+
+  <!-- Header -->
+  <div class="chat-header">
+    <img src="/uploads/profilepic.jpg">
+    <div>
+      <h4 id="friendName">Loading...</h4>
+<span id="status">offline</span>
+    </div>
+  </div>
+
+  <!-- Messages -->
+  <div class="messages" id="messages"></div>
+  <div class="typing" id="typing" style="display:none;">Typing…</div>
+
+  <!-- Input -->
+  <form class="chat-input" id="chatForm">
+    <input type="text" id="messageInput" placeholder="Type a message…" autocomplete="off">
+    <button>➤</button>
+  </form>
+
+</div>
+<script src="/socket.io/socket.io.js"></script>
+
+<script>
+(async () => {
+  const socket = io();
+
+  // ✅ 1. GET friendId FIRST
+  const friendId = location.pathname.split("/").pop();
+
+  // ✅ 2. LOAD FRIEND INFO
+  const friendRes = await fetch(`/api/user/${friendId}`);
+  const friend = await friendRes.json();
+
+  document.getElementById("friendName").textContent = friend.name;
+  document.querySelector(".chat-header img").src =
+    friend.picture || "/uploads/profilepic.jpg";
+
+  // ✅ 3. LOAD CURRENT USER
+  const me = await fetch("/api/me").then(r => r.json());
+  const myId = me.id;
+
+  // ✅ 4. JOIN ROOM
+  const room = [myId, friendId].sort().join("_");
+  socket.emit("joinRoom", room);
+  socket.emit("online", myId);
+
+  const box = document.getElementById("messages");
+  const input = document.getElementById("messageInput");
+  const typing = document.getElementById("typing");
+
+  // ✅ 5. LOAD MESSAGE HISTORY
+  const history = await fetch(`/api/messages/${friendId}`).then(r => r.json());
+
+  let lastDate = "";
+  history.forEach(m => {
+    const d = new Date(m.createdAt).toDateString();
+    if (d !== lastDate) {
+      addDate(d);
+      lastDate = d;
+    }
+    addMessage(m.text, m.sender === myId, m.isRead);
+  });
+
+  function addDate(text) {
+    const div = document.createElement("div");
+    div.className = "date-separator";
+    div.textContent = text;
+    box.appendChild(div);
+  }
+
+  function addMessage(text, isMe, isRead = false) {
+    const div = document.createElement("div");
+    div.className = "msg " + (isMe ? "me" : "other");
+    div.innerHTML = `
+      ${text}
+      ${isMe ? `<div class="status">${isRead ? "✓✓ Seen" : "✓ Sent"}</div>` : ""}
+    `;
+    box.appendChild(div);
+    box.scrollTop = box.scrollHeight;
+  }
+
+  // ✅ 6. SEND MESSAGE
+  document.getElementById("chatForm").onsubmit = e => {
+    e.preventDefault();
+    const text = input.value.trim();
+    if (!text) return;
+
+    addMessage(text, true);
+
+    socket.emit("sendMessage", {
+      room,
+      sender: myId,
+      receiver: friendId,
+      text
+    });
+
+    input.value = "";
+  };
+
+  // ✅ 7. TYPING INDICATOR
+  input.oninput = () => socket.emit("typing", room);
+
+  socket.on("typing", () => {
+    typing.style.display = "block";
+    setTimeout(() => typing.style.display = "none", 1200);
+  });
+
+  // ✅ 8. RECEIVE MESSAGE
+  socket.on("newMessage", msg => {
+    if (msg.sender === myId) return;
+    addMessage(msg.text, false);
+  });
+
+  // ✅ 9. ONLINE / OFFLINE STATUS
+  socket.on("online", () => {
+    document.getElementById("status").textContent = "online";
+  });
+
+  socket.on("offline", () => {
+    document.getElementById("status").textContent = "offline";
+  });
+})();
+</script>
