@@ -52,7 +52,66 @@ app.use('/', express.static('assets'));
 app.use(express.static("public"));
 
 
+// ===============================
+// 🔹 SIMPLE TEXT MODERATION
+// ===============================
+const bannedWords = [
+  "porn", "sex", "xxx", "nude", "fuck",
+  "boobs", "blowjob", "rape", "adult"
+];
 
+function hasBannedText(text = "") {
+  return bannedWords.some(word =>
+    text.toLowerCase().includes(word)
+  );
+}
+// ===============================
+// 🔒 IMAGE CONTENT RULES
+// ===============================
+const BLOCKED_LABELS = [
+  "Swimwear",
+  "Bikini",
+  "Lingerie",
+  "Partial Nudity",
+  "Suggestive",
+  "Sexualized"
+];
+
+const ALLOWED_CONTEXTS = [
+  "Classroom",
+  "Education",
+  "Conference",
+  "Seminar",
+  "Workshop",
+  "Office",
+  "Stage",
+  "College",
+  "University"
+];
+
+function isBlockedImage(uploaded, postType) {
+  const labels = uploaded.moderation?.[0]?.moderationLabels || [];
+
+  // 1️⃣ Block sexualized labels
+  const blocked = labels.find(
+    l => BLOCKED_LABELS.includes(l.Name) && l.Confidence >= 60
+  );
+  if (blocked) return true;
+
+  // 2️⃣ Detect person
+  const hasPerson = labels.some(l => l.Name === "Person");
+
+  // 3️⃣ Check valid context
+  const hasContext = labels.some(l =>
+    ALLOWED_CONTEXTS.includes(l.Name)
+  );
+
+  // 4️⃣ Rules
+  if (hasPerson && !hasContext) return true;
+  if (postType === "general" && hasPerson) return true;
+
+  return false;
+}
 
 // ---------- Session Setup ----------
 app.use(session({
@@ -69,20 +128,54 @@ app.use(session({
 
 app.post("/upload", upload.single("image"), async (req, res) => {
   try {
-    const result = await cloudinary.uploader.upload(req.file.path, {
-      folder: "users",
-      flags: "no_index"   // Prevent Google from indexing images
-    });
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: "No image uploaded"
+      });
+    }
 
+    // 🔍 CLOUDINARY UPLOAD WITH NSFW MODERATION
+     const moderation = uploaded.moderation?.[0];
+
+    // ❌ BLOCK NSFW IMAGES
+    const uploaded = await cloudinary.uploader.upload(req.file.path, {
+  folder: "users",
+  moderation: "aws_rek",
+  flags: "no_index"
+});
+
+// 🔴 STRONG IMAGE CHECK
+if (isBlockedImage(uploaded, "general")) {
+  fs.unlinkSync(req.file.path);
+  return res.status(400).json({
+    success: false,
+    type: "CONTENT",
+    message: "Non-productive or inappropriate image detected"
+  });
+}
+
+    // ✅ CLEAN IMAGE → DELETE LOCAL FILE
     fs.unlinkSync(req.file.path);
 
+    // ✅ SUCCESS
     res.json({
       success: true,
-      imageUrl: result.secure_url,
+      imageUrl: uploaded.secure_url
     });
+
   } catch (error) {
     console.error("❌ Cloudinary Upload Error:", error);
-    res.status(500).json({ success: false, message: "Upload failed" });
+
+    // cleanup in case of error
+    if (req.file?.path && fs.existsSync(req.file.path)) {
+      fs.unlinkSync(req.file.path);
+    }
+
+    res.status(500).json({
+      success: false,
+      message: "Upload failed"
+    });
   }
 });
 
@@ -203,6 +296,16 @@ const postSchema = new mongoose.Schema({
   job_deadline: Date,
   job_link: String,
 
+  status: {
+  type: String,
+  enum: ["APPROVED", "REJECTED"],
+  default: "APPROVED"
+},
+moderationReason: {
+  type: String,
+  default: null
+},
+  
   saves: { type: Number, default: 0 },
   savedBy: {
     type: [{ type: mongoose.Schema.Types.ObjectId, ref: "logins" }],
@@ -363,7 +466,7 @@ router.post(
         job_link
       } = req.body;
 
-      // ❌ Validation: missing fields
+      // ❌ VALIDATION: REQUIRED FIELDS
       if (!post_type || !data) {
         return res.status(400).json({
           success: false,
@@ -372,7 +475,16 @@ router.post(
         });
       }
 
-      // ❌ Not logged in
+      // ❌ TEXT MODERATION (ADULT / NSFW / ABUSE)
+      if (hasBannedText(data)) {
+        return res.status(400).json({
+          success: false,
+          type: "CONTENT",
+          message: "Your post violates community guidelines."
+        });
+      }
+
+      // ❌ AUTH CHECK
       const currentUser = res.locals.currentUser;
       if (!currentUser) {
         return res.status(401).json({
@@ -389,11 +501,11 @@ router.post(
       const college = currentUser.college?.trim() || null;
 
       // ------------------------------
-      //  CLOUDINARY IMAGE UPLOAD
+      // 📸 IMAGE UPLOAD (CLOUDINARY)
       // ------------------------------
       let imageurls = [];
 
-      if (req.files?.length > 0) {
+      if (req.files && req.files.length > 0) {
         for (const file of req.files) {
           const uploaded = await cloudinary.uploader.upload(file.path);
           imageurls.push(uploaded.secure_url);
@@ -402,7 +514,7 @@ router.post(
       }
 
       // ------------------------------
-      //  BASE POST DATA
+      // 🧱 BASE POST DATA
       // ------------------------------
       const postData = {
         postType: post_type,
@@ -412,11 +524,12 @@ router.post(
         picture,
         college,
         data,
-        imageurl: imageurls
+        imageurl: imageurls,
+        status: "APPROVED" // moderation passed
       };
 
       // ------------------------------
-      //  EVENT POST FIELDS
+      // 📅 EVENT POST FIELDS
       // ------------------------------
       if (post_type === "event") {
         Object.assign(postData, {
@@ -432,7 +545,7 @@ router.post(
       }
 
       // ------------------------------
-      //  HIRING POST FIELDS
+      // 💼 HIRING POST FIELDS
       // ------------------------------
       if (post_type === "hiring") {
         Object.assign(postData, {
@@ -447,7 +560,7 @@ router.post(
       }
 
       // ------------------------------
-      //  SAVE POST
+      // 💾 SAVE POST
       // ------------------------------
       const newPost = new Post(postData);
       await newPost.save();

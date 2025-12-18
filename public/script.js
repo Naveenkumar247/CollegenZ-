@@ -135,17 +135,17 @@ document.addEventListener("click", async (e) => {
     if (user.relationship.isFriend) {
       friendButton = `
         <a href="#" class="friend-action" data-userid="${user._id}" data-action="remove">
-          <img src="/friends.png" style="width:34px;cursor:pointer;">
+          <img src="/unfriend.png" style="width:34px;cursor:pointer;">
         </a>`;
     } else if (user.relationship.requestSent) {
       friendButton = `
         <a href="#" class="friend-action" data-userid="${user._id}" data-action="cancel">
-          <img src="/requested.png" style="width:34px;cursor:pointer;">
+          <img src="/unfriend.png" style="width:34px;cursor:pointer;">
         </a>`;
     } else if (user.relationship.requestReceived) {
       friendButton = `
         <a href="#" class="friend-action" data-userid="${user._id}" data-action="accept">
-          <img src="/accept.png" style="width:34px;cursor:pointer;">
+          <img src="/addfriend2.png" style="width:34px;cursor:pointer;">
         </a>`;
     } else {
       friendButton = `
@@ -265,37 +265,32 @@ function renderPost(post) {
 document.addEventListener("DOMContentLoaded", () => {
   if (!window.IS_LOGGED_IN) {
 
-    // Show only once per session
-    if (sessionStorage.getItem("loginAlertShown")) return;
-    sessionStorage.setItem("loginAlertShown", "true");
-
     setTimeout(() => {
       Swal.fire({
-        width:320,
+        width: 320,
         title: "Login Required",
         text: "Login to create posts, follow users, and access all CollegenZ features.",
-         imageUrl: "loginalert.png",
-  imageWidth: 200,
-  imageHeight:200,
+        imageUrl: "loginalert.png",
+        imageWidth: 200,
+        imageHeight: 200,
         showCancelButton: true,
         confirmButtonText: "Login",
         cancelButtonText: "Later",
         confirmButtonColor: "#228B22",
 
-        // 🔒 User MUST choose
+        // 🔒 Force decision
         allowOutsideClick: false,
         allowEscapeKey: false
       }).then((result) => {
         if (result.isConfirmed) {
           window.location.href = "/login";
         }
-        // "Later" → closes dialog only
+        // Later → just closes
       });
-    }, 5000); // shows after 5 seconds
+    }, 5000); // show after 5 seconds
+
   }
 });
-
-
 
 async function loadNotificationCount() {
   try {
