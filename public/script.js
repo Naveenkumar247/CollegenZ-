@@ -81,15 +81,22 @@ document.addEventListener("click", async (e) => {
     }
 });
 
-
 function toggleDetails(id) {
   const rows = document.querySelectorAll(`.row-${id}`);
   const btn = document.querySelector(`#details-${id} .view-btn`);
 
-  const expand = rows[0].style.display === "none";
+  // ✅ Check if any TABLE row is hidden
+  const expand = [...rows].some(
+    r => r.tagName === "TR" && r.style.display === "none"
+  );
 
   rows.forEach(r => {
-    r.style.display = expand ? "table-row" : "none";
+    if (r.tagName === "TR") {
+      r.style.display = expand ? "table-row" : "none";
+    } else {
+      // title-only div
+      r.style.display = expand ? "none" : "block";
+    }
   });
 
   btn.innerText = expand ? "Hide Details" : "View Details";
@@ -159,6 +166,17 @@ document.addEventListener("click", async (e) => {
      PUBLIC ACCOUNT VIEW
   ========================== */
   document.getElementById("profileData").innerHTML = `
+  <div style="position:relative;">
+
+    <div style="
+      position:absolute;
+      top:14px;
+      left:14px;
+      z-index:10;
+    ">
+      ${friendButton}
+    </div>
+
     <img src="${user.picture || "/uploads/profilepic.jpg"}"
          style="width:80px;height:80px;border-radius:50%;object-fit:cover;">
 
@@ -166,9 +184,18 @@ document.addEventListener("click", async (e) => {
     <p class="text-muted">${user.email || ""}</p>
 
     <div class="d-flex justify-content-center gap-4 mb-2 align-items-center">
-      <div><strong>${user.followers?.length || 0}</strong><br><small>Followers</small></div>
-      <div><strong>${user.following?.length || 0}</strong><br><small>Following</small></div>
-      ${friendButton}
+      <div>
+        <strong>${user.followers?.length || 0}</strong><br>
+        <small>Followers</small>
+      </div>
+      <div>
+        <strong>${user.following?.length || 0}</strong><br>
+        <small>Following</small>
+      </div>
+      <div>
+        <strong>${user.points || 0}</strong><br>
+        <small>Points</small>
+      </div>
     </div>
 
     <div class="popup-social mt-3">

@@ -249,7 +249,7 @@ friendRequestsReceived: [{ type: mongoose.Schema.Types.ObjectId, ref: "logins" }
       userEmail: String,
     }
   ],
-
+  points: { type: Number, default: 0 },
   postCount: { type: Number, default: 0 },
   rank: { type: Number, default: () => Math.floor(Math.random() * 10000) },
   totalLikes: { type: Number, default: 0 },
@@ -722,22 +722,33 @@ app.get("/updateOldUsers", async (req, res) => {
           linkedin: null,
           youtube: null,
           website: null,
-          friends: [{ type: mongoose.Schema.Types.ObjectId, ref: "logins" }],
-friendRequestsSent: [{ type: mongoose.Schema.Types.ObjectId, ref: "logins" }],
-friendRequestsReceived: [{ type: mongoose.Schema.Types.ObjectId, ref: "logins" }],
-          accountType: {
-  type: String,
-  enum: ["public", "personal", "business"],
-  default: "public"
-}
+          accountType: "public"
         }
       }
     );
 
-    res.send("All old users updated successfully!");
+    // Ensure arrays exist
+    await genz.updateMany(
+      {
+        $or: [
+          { friends: { $exists: false } },
+          { friendRequestsSent: { $exists: false } },
+          { friendRequestsReceived: { $exists: false } }
+        ]
+      },
+      {
+        $set: {
+          friends: [],
+          friendRequestsSent: [],
+          friendRequestsReceived: []
+        }
+      }
+    );
+
+    res.send("✅ All old users updated successfully!");
   } catch (err) {
     console.error(err);
-    res.status(500).send("Error updating users");
+    res.status(500).send("❌ Error updating users");
   }
 });
 
@@ -1949,6 +1960,10 @@ app.get("/profile", async (req, res) => {
   <div class="text-center">
     <h6 class="m-0">${user.following?.length || 0}</h6>
     <small class="text-muted">Following</small>
+  </div>
+  <div class="text-center">
+    <h6 class="m-0">${user.points?.length || 0}</h6>
+    <small class="text-muted">Points</small>
   </div>
 </div>
 
@@ -3900,82 +3915,177 @@ posts.forEach((p, index) => {
       //   EVENT POST (COLLAPSIBLE TABLE)
       // --------------------------
       p.postType === "event"
-      ?
-      `
-      <div class="details-box" id="details-${p._id}">
+?
+`
+<div class="details-box" id="details-${p._id}">
+
+  <!-- ✅ TITLE ONLY (VISIBLE WHEN COLLAPSED) -->
+  <div
+    class="row-${p._id}"
+    style="
+      font-weight:600;
+      text-align:center;
+      margin-bottom:8px;
+    ">
+    ${p.data || "-"}
+  </div>
 
   <table class="table details-table">
     <tbody>
-      <!-- Always visible -->
-      <tr><th>Title</th><td style="text-align:center;">${p.data || "-"}</td></tr>
 
-      <!-- Hidden rows -->
-      <tr class="hidden-row row-${p._id}" style="display:none;"><th>Date</th><td>${p.event_date || "-"}</td></tr>
-      <tr class="hidden-row row-${p._id}" style="display:none;"><th>Time</th><td>${p.event_time || "-"}</td></tr>
-      <tr class="hidden-row row-${p._id}" style="display:none;"><th>Mode</th><td>${p.event_mode || "-"}</td></tr>
-      <tr class="hidden-row row-${p._id}" style="display:none;"><th>Location</th><td>${p.event_location || "-"}</td></tr>
-      <tr class="hidden-row row-${p._id}" style="display:none;"><th>Contact</th><td>${p.event_contact || "-"}</td></tr>
-      <tr class="hidden-row row-${p._id}" style="display:none;"><th>Description</th>
- <td> ${
-    p.event_description && p.event_description.length > 100
-      ? `${p.event_description.slice(0, 100)}
-           <span class="dots">...</span>
-           <span class="more-text" style="display:none;">${p.event_description.slice(100)}</span>
-           <button class="see-more-btn" onclick="toggleCaption('${p._id}')">See More</button>`
-      : (p.event_description || "-")
-  }</td>
-</tr>
-      <tr class="hidden-row row-${p._id}" style="display:none;"><th>Reg. Link</th><td><a href="${p.event_link}" target="_blank">Open</a></td></tr>
-      
+      <!-- ❗ Title row is NOW hidden -->
+      <tr class="hidden-row row-${p._id}" style="display:none;">
+        <th>Title</th>
+        <td style="text-align:center;">${p.data || "-"}</td>
+      </tr>
+
+      <tr class="hidden-row row-${p._id}" style="display:none;">
+        <th>Date</th><td>${p.event_date || "-"}</td>
+      </tr>
+
+      <tr class="hidden-row row-${p._id}" style="display:none;">
+        <th>Time</th><td>${p.event_time || "-"}</td>
+      </tr>
+
+      <tr class="hidden-row row-${p._id}" style="display:none;">
+        <th>Mode</th><td>${p.event_mode || "-"}</td>
+      </tr>
+
+      <tr class="hidden-row row-${p._id}" style="display:none;">
+        <th>Location</th><td>${p.event_location || "-"}</td>
+      </tr>
+
+      <tr class="hidden-row row-${p._id}" style="display:none;">
+        <th>Contact</th><td>${p.event_contact || "-"}</td>
+      </tr>
+
+      <tr class="hidden-row row-${p._id}" style="display:none;">
+        <th>Description</th>
+        <td>
+          ${
+            p.event_description && p.event_description.length > 100
+              ? `${p.event_description.slice(0, 100)}
+                   <span class="dots">...</span>
+                   <span class="more-text" style="display:none;">
+                     ${p.event_description.slice(100)}
+                   </span>
+                   <button class="see-more-btn"
+                     onclick="toggleCaption('${p._id}')">
+                     See More
+                   </button>`
+              : (p.event_description || "-")
+          }
+        </td>
+      </tr>
+
+      <tr class="hidden-row row-${p._id}" style="display:none;">
+        <th>Reg. Link</th>
+        <td>
+          <a href="${p.event_registration || "#"}" target="_blank">
+            Open Link
+          </a>
+        </td>
+      </tr>
+
     </tbody>
   </table>
 
-  <!-- This MUST be outside the table -->
+  <!-- Button remains unchanged -->
   <div class="view-btn-container">
-    <button class="view-btn" onclick="toggleDetails('${p._id}')">View Details</button>
+    <button class="view-btn"
+      onclick="toggleDetails('${p._id}')">
+      View Details
+    </button>
   </div>
 
 </div>
-      `
-
-      :
+`
+:
 
       // --------------------------
       //   HIRING POST (COLLAPSIBLE TABLE)
       // --------------------------
       `
-      <div class="details-box" id="details-${p._id}">
-        <table class="table details-table">
-          <tbody>
-            <tr><th>Title</th><td>${p.data || "-"}</td></tr>
-            
-            <!-- Hidden Rows -->
-            <tr class="hidden-row row-${p._id}" style="display:none;"  ><th>Location</th><td>${p.job_location || "-"}</td></tr>
-            <tr class="hidden-row row-${p._id}" style="display:none;" ><th>Mode</th><td>${p.job_mode || "-"}</td></tr>
-            <tr class="hidden-row row-${p._id}" style="display:none;"><th>Contact</th><td>${p.job_contact || "-"}</td></tr>
-            <tr class="hidden-row row-${p._id}" style="display:none;"><th>Description</th>
- <td> ${
-    p.job_description && p.job_description.length > 100
-      ? `${p.job_description.slice(0, 100)}
-           <span class="dots">...</span>
-           <span class="more-text" style="display:none;">${p.job_description.slice(100)}</span>
-           <button class="see-more-btn" onclick="toggleCaption('${p._id}')">See More</button>`
-      : (p.job_description || "-")
-  }</td>
-</tr>
-            <tr class="hidden-row row-${p._id}" style="display:none;"><th>Deadline</th><td>${p.job_deadline || "-"}</td></tr>
-            <tr class="hidden-row row-${p._id}" style="display:none;"><th>Apply Link</th><td><a href="${p.job_link}" target="_blank">Apply</a></td></tr>
-          </tbody>
-        </table>
+<div class="details-box" id="details-${p._id}">
 
-        <!-- This MUST be outside the table -->
-        <div class="view-btn-container">
-           <button class="view-btn" onclick="toggleDetails('${p._id}')">View Details</button>
-        </div>        
+  <!-- ✅ TITLE ONLY (VISIBLE WHEN COLLAPSED) -->
+  <div
+    class="row-${p._id}"
+    style="
+      display:block;
+      font-weight:600;
+      text-align:center;
+      margin-bottom:8px;
+    ">
+    ${p.data || "-"}
+  </div>
 
+  <table class="table details-table">
+    <tbody>
 
-      </div>
-      `
+      <!-- ❗ Title row hidden initially -->
+      <tr class="hidden-row row-${p._id}" style="display:none;">
+        <th>Title</th>
+        <td>${p.data || "-"}</td>
+      </tr>
+
+      <tr class="hidden-row row-${p._id}" style="display:none;">
+        <th>Location</th>
+        <td>${p.job_location || "-"}</td>
+      </tr>
+
+      <tr class="hidden-row row-${p._id}" style="display:none;">
+        <th>Mode</th>
+        <td>${p.job_mode || "-"}</td>
+      </tr>
+
+      <tr class="hidden-row row-${p._id}" style="display:none;">
+        <th>Contact</th>
+        <td>${p.job_contact || "-"}</td>
+      </tr>
+
+      <tr class="hidden-row row-${p._id}" style="display:none;">
+        <th>Description</th>
+        <td>
+          ${
+            p.job_description && p.job_description.length > 100
+              ? `${p.job_description.slice(0, 100)}
+                   <span class="dots">...</span>
+                   <span class="more-text" style="display:none;">
+                     ${p.job_description.slice(100)}
+                   </span>
+                   <button class="see-more-btn"
+                     onclick="toggleCaption('${p._id}')">
+                     See More
+                   </button>`
+              : (p.job_description || "-")
+          }
+        </td>
+      </tr>
+
+      <tr class="hidden-row row-${p._id}" style="display:none;">
+        <th>Deadline</th>
+        <td>${p.job_deadline || "-"}</td>
+      </tr>
+
+      <tr class="hidden-row row-${p._id}" style="display:none;">
+        <th>Apply Link</th>
+        <td>
+          <a href="${p.job_link || "#"}" target="_blank">Apply</a>
+        </td>
+      </tr>
+
+    </tbody>
+  </table>
+
+  <div class="view-btn-container">
+    <button class="view-btn" onclick="toggleDetails('${p._id}')">
+      View Details
+    </button>
+  </div>
+
+</div>
+`
   }
 
 </div>
