@@ -3981,9 +3981,12 @@ posts.forEach((p, index) => {
       <tr class="hidden-row row-${p._id}" style="display:none;">
         <th>Reg. Link</th>
         <td>
-          <a href="${p.event_registration || "#"}" target="_blank">
-            Open Link
-          </a>
+          <a
+  href="${p.job_link?.startsWith('http') ? p.job_link : 'https://' + p.job_link}"
+  target="_blank"
+>
+  Open Link
+</a>
         </td>
       </tr>
 
@@ -4071,7 +4074,12 @@ posts.forEach((p, index) => {
       <tr class="hidden-row row-${p._id}" style="display:none;">
         <th>Apply Link</th>
         <td>
-          <a href="${p.job_link || "#"}" target="_blank">Apply</a>
+          <a 
+  href="${p.job_link?.startsWith('http') ? p.job_link : 'https://' + p.job_link}" 
+  target="_blank"
+>
+  Apply
+</a>
         </td>
       </tr>
 
