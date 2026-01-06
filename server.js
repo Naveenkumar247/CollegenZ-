@@ -27,6 +27,8 @@ const io = new Server(server, {
 });
 console.log("✅ Socket.io initialized");
 
+const collegenzCertificateRoutes = require("./routes/collegenz.certificate.routes");
+
 cloudinary.config({
   secure: true, // ensures HTTPS
 });
@@ -250,6 +252,7 @@ friendRequestsReceived: [{ type: mongoose.Schema.Types.ObjectId, ref: "logins" }
     }
   ],
   points: { type: Number, default: 0 },
+  learningpath: { type: String, default: null },
   postCount: { type: Number, default: 0 },
   rank: { type: Number, default: () => Math.floor(Math.random() * 10000) },
   totalLikes: { type: Number, default: 0 },
@@ -718,6 +721,7 @@ app.get("/updateOldUsers", async (req, res) => {
       {},
       {
         $set: {
+          learningpath: null,
           instagram: null,
           linkedin: null,
           youtube: null,
@@ -1299,6 +1303,15 @@ router.get("/api/messages/:friendId", async (req, res) => {
     res.status(500).json({ error: "Failed to load messages" });
   }
 });
+
+/* CollegenZ Certificate Routes */
+app.use("/api/collegenz/certificate", collegenzCertificateRoutes);
+
+/* Certificate verification page */
+app.get("/collegenz/certificate/:code", (req, res) => {
+  res.sendFile(path.join(__dirname, "view", "certificate.html"));
+});
+
 
 
 const transporter = nodemailer.createTransport({

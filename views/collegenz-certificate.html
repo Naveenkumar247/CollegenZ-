@@ -1,0 +1,21 @@
+<script>
+  const code = window.location.pathname.split("/").pop();
+
+  fetch(`/api/collegenz/certificate/${code}`)
+    .then(res => {
+      if (!res.ok) throw new Error();
+      return res.json();
+    })
+    .then(data => {
+      document.getElementById("content").innerHTML = `
+        <p><strong>Certificate Code:</strong> ${data.code}</p>
+        <p><strong>Name:</strong> ${data.name}</p>
+        <p><strong>Issued By:</strong> ${data.organization}</p>
+        <p><strong>Date of Issue:</strong> ${data.issueDate}</p>
+      `;
+    })
+    .catch(() => {
+      document.getElementById("content").innerHTML =
+        "<p style='color:red;'>❌ Invalid Certificate</p>";
+    });
+</script>
