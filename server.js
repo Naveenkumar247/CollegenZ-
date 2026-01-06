@@ -1304,12 +1304,22 @@ router.get("/api/messages/:friendId", async (req, res) => {
   }
 });
 
-/* CollegenZ Certificate Routes */
+/* ---------------- CERTIFICATE PAGE (IMPORTANT: FIRST) ---------------- */
+app.get("/certificate/:code", (req, res) => {
+  res.sendFile(
+    path.join(__dirname, "views", "collegenz-certificate.html")
+  );
+});
+
+/* ---------------- API ROUTES ---------------- */
 app.use("/api/collegenz/certificate", collegenzCertificateRoutes);
 
-/* Certificate verification page */
-app.get("/collegenz/certificate/:code", (req, res) => {
-  res.sendFile(path.join(__dirname, "view", "certificate.html"));
+/* ---------------- STATIC MAIN WEBSITE ---------------- */
+app.use(express.static(path.join(__dirname, "public")));
+
+/* ---------------- SPA FALLBACK (LAST) ---------------- */
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
 
