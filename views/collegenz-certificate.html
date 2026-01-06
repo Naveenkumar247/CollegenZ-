@@ -1,21 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Certificate Verification | CollegenZ</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .certificate-box {
+      background: #ffffff;
+      padding: 30px;
+      width: 100%;
+      max-width: 420px;
+      border-radius: 10px;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.1);
+    }
+    h2 {
+      text-align: center;
+      color: #222;
+      margin-bottom: 20px;
+    }
+    .row {
+      margin-bottom: 12px;
+    }
+    .label {
+      font-size: 13px;
+      color: #666;
+    }
+    .value {
+      font-size: 16px;
+      font-weight: bold;
+      color: #000;
+    }
+    .error {
+      text-align: center;
+      color: red;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+<div class="certificate-box">
+  <h2>Certificate Verification</h2>
+
+  <!-- ✅ THIS IS THE CONTAINER -->
+  <div id="certificate-data">Verifying certificate...</div>
+</div>
+
 <script>
   const code = window.location.pathname.split("/").pop();
+  const container = document.getElementById("certificate-data");
 
   fetch(`/api/collegenz/certificate/${code}`)
     .then(res => {
-      if (!res.ok) throw new Error();
+      if (!res.ok) throw new Error("Invalid");
       return res.json();
     })
     .then(data => {
-      document.getElementById("content").innerHTML = `
-        <p><strong>Certificate Code:</strong> ${data.code}</p>
-        <p><strong>Name:</strong> ${data.name}</p>
-        <p><strong>Issued By:</strong> ${data.organization}</p>
-        <p><strong>Date of Issue:</strong> ${data.issueDate}</p>
+      container.innerHTML = `
+        <div class="row">
+          <div class="label">Certificate Code</div>
+          <div class="value">${data.code}</div>
+        </div>
+        <div class="row">
+          <div class="label">Name</div>
+          <div class="value">${data.name}</div>
+        </div>
+        <div class="row">
+          <div class="label">Issued By</div>
+          <div class="value">${data.organization}</div>
+        </div>
+        <div class="row">
+          <div class="label">Date of Issue</div>
+          <div class="value">${data.issueDate}</div>
+        </div>
       `;
     })
     .catch(() => {
-      document.getElementById("content").innerHTML =
-        "<p style='color:red;'>❌ Invalid Certificate</p>";
+      container.innerHTML =
+        `<div class="error">❌ Invalid Certificate</div>`;
     });
 </script>
+
+</body>
+</html>
