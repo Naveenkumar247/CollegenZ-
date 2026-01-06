@@ -1314,13 +1314,7 @@ app.get("/certificate/:code", (req, res) => {
 /* ---------------- API ROUTES ---------------- */
 app.use("/api/collegenz/certificate", collegenzCertificateRoutes);
 
-/* ---------------- STATIC MAIN WEBSITE ---------------- */
-app.use(express.static(path.join(__dirname, "public")));
 
-/* Home page */
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index.html"));
-});
 
 const transporter = nodemailer.createTransport({
   host: "smtp.zoho.in", // ✅ Use this for India data center
