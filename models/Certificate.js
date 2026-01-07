@@ -1,4 +1,4 @@
-const { primaryDB } = require("../db");
+const { secondaryDB } = require("../db");
 const mongoose = require("mongoose");
 
 const CertificateSchema = new mongoose.Schema({
