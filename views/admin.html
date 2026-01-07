@@ -18,18 +18,30 @@
 
 <script>
 function save() {
+  const code = document.getElementById("code").value;
+  const name = document.getElementById("name").value;
+  const organization = document.getElementById("org").value;
+  const issueDate = document.getElementById("date").value;
+
   fetch("/api/admin/certificate/save", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      code: code.value,
-      name: name.value,
-      organization: org.value,
-      issueDate: date.value
+      code,
+      name,
+      organization,
+      issueDate
     })
   })
   .then(res => res.json())
-  .then(() => msg.innerText = "✅ Saved Successfully");
+  .then(data => {
+    console.log(data); // ✅ DEBUG
+    document.getElementById("msg").innerText = "✅ Saved Successfully";
+  })
+  .catch(err => {
+    console.error(err);
+    document.getElementById("msg").innerText = "❌ Error saving";
+  });
 }
 </script>
 

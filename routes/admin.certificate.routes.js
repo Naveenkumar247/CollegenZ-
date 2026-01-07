@@ -5,15 +5,37 @@ const router = express.Router();
 
 /* Create or Update certificate */
 router.post("/save", async (req, res) => {
-  const { code, name, organization, issueDate } = req.body;
+  try {
+    const { code, name, organization, issueDate } = req.body;
 
-  const cert = await Certificate.findOneAndUpdate(
-    { code },
-    { name, organization, issueDate },
-    { upsert: true, new: true }
-  );
+    if (!code) {
+      return res.status(400).json({ error: "code is required" });
+    }
 
-  res.json({ message: "Certificate saved", cert });
+    const cleanCode = code.trim();
+
+    const updateData = {};
+    if (name) updateData.name = name;
+    if (organization) updateData.organization = organization;
+    if (issueDate) updateData.issueDate = issueDate;
+
+    const cert = await Certificate.findOneAndUpdate(
+      { code: cleanCode },
+      updateData,
+      {
+        upsert: true,
+        new: true,
+        runValidators: true,
+        setDefaultsOnInsert: true
+      }
+    );
+
+    res.json({ message: "Certificate saved", cert });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
 });
 
 module.exports = router;
