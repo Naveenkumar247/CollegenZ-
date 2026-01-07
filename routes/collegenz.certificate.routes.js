@@ -1,5 +1,5 @@
 const express = require("express");
-const Certificate = require("../models/Certificate");
+const Certificate = require("../models/Certificate.js");
 
 const router = express.Router();
 
