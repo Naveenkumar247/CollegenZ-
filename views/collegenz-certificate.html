@@ -4,54 +4,108 @@
   <meta charset="UTF-8" />
   <title>Certificate Verification | CollegenZ</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
   <style>
     body {
       margin: 0;
-      font-family: Arial, sans-serif;
+      font-family: "Segoe UI", Arial, sans-serif;
       background: #f4f6f8;
       display: flex;
       justify-content: center;
       align-items: center;
       height: 100vh;
     }
+
     .certificate-box {
       background: #ffffff;
-      padding: 30px;
+      padding: 28px;
       width: 100%;
       max-width: 420px;
-      border-radius: 10px;
-      box-shadow: 0 12px 30px rgba(0,0,0,0.1);
+      border-radius: 12px;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.12);
+      border-top: 6px solid #1fa36b; /* CollegenZ green */
     }
+
     h2 {
       text-align: center;
-      color: #222;
+      color: #1a1a1a;
       margin-bottom: 20px;
     }
-    .row {
-      margin-bottom: 12px;
+
+    /* ✅ Verification Badge */
+    .verified-badge {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: #e9f8f1;
+      color: #1fa36b;
+      padding: 10px;
+      border-radius: 8px;
+      font-weight: 600;
+      margin-bottom: 18px;
+      border: 1px solid #bce8d3;
     }
+
+    .verified-badge span {
+      font-size: 18px;
+    }
+
+    .code-box {
+      background: #f6f7f9;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px dashed #ccc;
+      text-align: center;
+      margin-bottom: 18px;
+    }
+
+    .code-box .label {
+      font-size: 12px;
+      color: #666;
+    }
+
+    .code-box .value {
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: #000;
+      margin-top: 4px;
+    }
+
+    .row {
+      margin-bottom: 14px;
+    }
+
     .label {
       font-size: 13px;
       color: #666;
     }
+
     .value {
       font-size: 16px;
-      font-weight: bold;
+      font-weight: 600;
       color: #000;
     }
+
     .error {
       text-align: center;
-      color: red;
-      font-weight: bold;
+      color: #d93025;
+      font-weight: 700;
+      background: #fdecea;
+      padding: 14px;
+      border-radius: 8px;
+      border: 1px solid #f5c2c7;
     }
   </style>
 </head>
+
 <body>
 
 <div class="certificate-box">
   <h2>Certificate Verification</h2>
 
-  <!-- ✅ THIS IS THE CONTAINER -->
+  <!-- ✅ DATA CONTAINER -->
   <div id="certificate-data">Verifying certificate...</div>
 </div>
 
@@ -66,18 +120,28 @@
     })
     .then(data => {
       container.innerHTML = `
-        <div class="row">
+        <!-- ✅ Verification Badge -->
+        <div class="verified-badge">
+          <span>✔</span>
+          Verified Certificate
+        </div>
+
+        <!-- ✅ Certificate Code -->
+        <div class="code-box">
           <div class="label">Certificate Code</div>
           <div class="value">${data.code}</div>
         </div>
+
         <div class="row">
           <div class="label">Name</div>
           <div class="value">${data.name}</div>
         </div>
+
         <div class="row">
           <div class="label">Issued By</div>
           <div class="value">${data.organization}</div>
         </div>
+
         <div class="row">
           <div class="label">Date of Issue</div>
           <div class="value">${data.issueDate}</div>
@@ -85,8 +149,11 @@
       `;
     })
     .catch(() => {
-      container.innerHTML =
-        `<div class="error">❌ Invalid Certificate</div>`;
+      container.innerHTML = `
+        <div class="error">
+          ❌ Invalid or Unverified Certificate
+        </div>
+      `;
     });
 </script>
 

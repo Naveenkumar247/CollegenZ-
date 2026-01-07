@@ -28,6 +28,7 @@ const io = new Server(server, {
 console.log("✅ Socket.io initialized");
 
 const collegenzCertificateRoutes = require("./routes/collegenz.certificate.routes");
+const adminRoutes = require("./routes/admin.certificate.routes");
 
 cloudinary.config({
   secure: true, // ensures HTTPS
@@ -45,6 +46,8 @@ const upload = multer({ dest: "uploads/" });
 mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => console.log("✅ Connected to MongoDB!"))
   .catch(err => console.error("❌ MongoDB connection error:", err.message));
+
+
 
 // ---------- Express Middleware ----------
 app.use(express.json());
@@ -652,6 +655,9 @@ app.get("/aboutus",(req,res) => {
 });
 app.get("/notifications",(req,res) => {
     res.sendFile(path.join(__dirname, "notify.html"));
+});
+app.get("/admin/certificate", (req, res) => {
+  res.sendFile(path.join(__dirname, "views", "admin.html"));
 });
 
 
@@ -1311,10 +1317,15 @@ app.get("/certificate/:code", (req, res) => {
   );
 });
 
-/* ---------------- API ROUTES ---------------- */
+
+/* Admin page */
+app.get("/admin/certificate", (req, res) => {
+  res.sendFile(path.join(__dirname, "views", "admin.html"));
+});
+
+/* Routes */
 app.use("/api/collegenz/certificate", collegenzCertificateRoutes);
-
-
+app.use("/api/admin/certificate", adminRoutes);
 
 const transporter = nodemailer.createTransport({
   host: "smtp.zoho.in", // ✅ Use this for India data center

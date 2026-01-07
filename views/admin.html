@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Certificate Admin | CollegenZ</title>
+</head>
+<body>
+
+<h2>Update Certificate</h2>
+
+<input id="code" placeholder="Certificate Code"><br><br>
+<input id="name" placeholder="Name"><br><br>
+<input id="org" placeholder="Organization"><br><br>
+<input id="date" placeholder="Issue Date"><br><br>
+
+<button onclick="save()">Save</button>
+
+<p id="msg"></p>
+
+<script>
+function save() {
+  fetch("/api/admin/certificate/save", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      code: code.value,
+      name: name.value,
+      organization: org.value,
+      issueDate: date.value
+    })
+  })
+  .then(res => res.json())
+  .then(() => msg.innerText = "✅ Saved Successfully");
+}
+</script>
+
+</body>
+</html>
