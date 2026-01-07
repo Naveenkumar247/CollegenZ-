@@ -19,7 +19,7 @@ router.post("/save", async (req, res) => {
     if (organization) updateData.organization = organization;
     if (issueDate) updateData.issueDate = issueDate;
 
-    const cert = await Certificates.findOneAndUpdate(
+    const cert = await Certificate.findOneAndUpdate(
       { code: cleanCode },
       updateData,
       {

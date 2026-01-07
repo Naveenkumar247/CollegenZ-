@@ -4,7 +4,7 @@ const Certificate = require("../models/Certificate");
 const router = express.Router();
 
 router.get("/:code", async (req, res) => {
-  const cert = await Certificates.findOne({ code: req.params.code });
+  const cert = await Certificate.findOne({ code: req.params.code });
 
   if (!cert) {
     return res.status(404).json({ error: "Invalid Certificate" });

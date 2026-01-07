@@ -27,8 +27,8 @@ const io = new Server(server, {
 });
 console.log("✅ Socket.io initialized");
 
-const collegenzCertificateRoutes = require("./routes/collegenz.certificate.routes");
-const adminRoutes = require("./routes/admin.certificate.routes");
+const collegenzCertificateRoutes = require("./routes/collegenz.certificate.routes.js");
+const adminRoutes = require("./routes/admin.certificate.routes.js");
 
 cloudinary.config({
   secure: true, // ensures HTTPS
