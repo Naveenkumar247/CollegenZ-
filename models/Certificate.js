@@ -8,4 +8,4 @@ const CertificateSchema = new mongoose.Schema({
   issueDate: String
 });
 
-module.exports = primaryDB.model("Certificate", CertificateSchema);
+module.exports = secondaryDB.model("Certificate", CertificateSchema);
