@@ -70,4 +70,4 @@ moderationReason: {
   }
 });
 
-module.exports = primaryDB.model("Posts", postSchema);
+module.exports = primaryDB.model("users", postSchema);
