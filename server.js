@@ -2764,44 +2764,47 @@ const updatedPosts = posts.map((p) => {
   box-sizing: border-box;
 }
 
+/* HEADER */
 .header {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
   background: #228B22;
-  padding: 12px 16px;
+  padding: 14px 16px;
   display: flex;
-  flex-direction: column;   /* 🔥 logo on top */
+  flex-direction: column;
   align-items: center;
+  transition: all 0.3s ease;
 }
 
 /* LOGO */
 .doodle {
   margin-bottom: 10px;
+  transition: all 0.3s ease;
 }
 
 .logo {
   height: 96px;
-  width: auto;
+  transition: all 0.3s ease;
 }
 
-/* SECOND ROW */
+/* SEARCH ROW */
 .header-row {
   width: 100%;
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 12px;
 }
 
 .z-outside {
-  font-size: 18px;
-  font-weight: 600;
   color: #fff;
+  font-weight: 600;
+  font-size: 18px;
 }
 
 /* SEARCH BAR */
 .search-bar {
   flex: 1;
-  display: flex;
-  align-items: center;
   background: #fff;
   border-radius: 24px;
   padding: 6px 12px;
@@ -2809,46 +2812,67 @@ const updatedPosts = posts.map((p) => {
 }
 
 .search-bar input {
+  width: 100%;
   border: none;
   outline: none;
-  width: 100%;
-  padding-left: 6px;
 }
 
 /* ACTIONS */
 .header-actions {
   display: flex;
-  align-items: center;
   gap: 16px;
   color: #fff;
 }
 
 .nav-notification i {
   font-size: 20px;
-  color: #fff;
 }
 
 .hamburger {
   font-size: 26px;
-  color: #fff;
   cursor: pointer;
 }
 
-.tagline {
-  font-size: 12px;
-  opacity: 0.8;
-  text-align: center;
+/* 🔥 MINI HEADER STATE */
+.header.shrink {
+  padding: 6px 12px;
 }
 
+.header.shrink .doodle {
+  height: 0;
+  opacity: 0;
+  margin: 0;
+  overflow: hidden;
+}
 
-.search-bar .icon,
-.search-bar .z {
+.header.shrink .logo {
+  height: 0;
+}
+
+/* FILTER BAR */
+.filter-bar {
+  position: sticky;
+  top: 58px;
+  background: #fff;
+  display: flex;
+  gap: 10px;
+  padding: 8px 12px;
+  border-bottom: 1px solid #ddd;
+  z-index: 999;
+}
+
+.filter-btn {
+  border: none;
+  padding: 6px 14px;
+  border-radius: 20px;
+  background: #eee;
+  cursor: pointer;
+}
+
+.filter-btn.active {
+  background: #228B22;
   color: #fff;
-  font-size: 18px;
 }
-
-
-
 
 .common-btn {
   width: 100%;           /* full width on mobile */
@@ -2897,23 +2921,6 @@ const updatedPosts = posts.map((p) => {
   font-family: inter, sans-serif;
 }
 
-.filter-bar {
-  position: fixed;
-  top: 70px; /* under header */
-  left: 0;
-  right: 0;
-  z-index: 1000;
-  background: white;
-  padding: 8px 10px;
-  display: flex;
-  gap: 10px;
-  overflow-x: auto;
-  border-bottom: 1px solid #ddd;
-
-  /* animation */
-  transition: transform 0.35s ease, opacity 0.35s ease;
-}
-
 /* hide scrollbar */
 .filter-bar::-webkit-scrollbar {
   display: none;
@@ -2933,21 +2940,6 @@ const updatedPosts = posts.map((p) => {
   pointer-events: auto;
 }
 
-/* Filter Buttons */
-.filter-btn {
-  padding: 6px 14px;
-  border-radius: 20px;
-  border: 1px solid #ccc;
-  background: #f5f5f5;
-  cursor: pointer;
-  font-size: 14px;
-}
-
-.filter-btn.active {
-  background: #0b8e33;
-  color: white;
-  border-color: #0b8e33;
-}
 
 /* ===========================
    MAIN CONTENT PUSH DOWN
@@ -3587,42 +3579,38 @@ main {
 <body>
  
 <!-- HEADER (FULL WIDTH) -->
-<header class="header">
+<!-- HEADER -->
+<header class="header" id="mainHeader">
 
-  <!-- LOGO / DOODLE (TOP) -->
+  <!-- LOGO -->
   <a href="/" class="doodle">
     <img src="Doodle.png" alt="CollegenZ Logo" class="logo">
   </a>
 
-  <!-- SECOND ROW -->
+  <!-- SEARCH ROW -->
   <div class="header-row">
-  
-  <div class="z-outside">Z</div>
+    <div class="z-outside">Z</div>
 
-    <!-- SEARCH -->
     <div class="search-bar">
-      
       <input type="text" placeholder="Search">
     </div>
 
-    <!-- ACTIONS -->
     <div class="header-actions">
       <a class="nav-notification">
         <i class="bi bi-bell-fill"></i>
       </a>
       <div class="hamburger">&#9776;</div>
     </div>
-
   </div>
 </header>
 
 <!-- FILTER BAR -->
-<div id="filterBar" class="filter-bar hidden-bar">
-  <button class="filter-btn active" data-type="all">All</button>
-  <button class="filter-btn" data-type="recent">Recent</button>
-⁰  <button class="filter-btn" data-type="event">Event</button>
-  <button class="filter-btn" data-type="hiring">Hiring</button>
-  <button class="filter-btn" data-type="general">General</button>
+<div id="filterBar" class="filter-bar">
+  <button class="filter-btn active">All</button>
+  <button class="filter-btn">Recent</button>
+  <button class="filter-btn">Event</button>
+  <button class="filter-btn">Hiring</button>
+  <button class="filter-btn">General</button>
 </div>
 
 <!-- SIDE NAV -->
@@ -4030,9 +4018,23 @@ posts.forEach((p, index) => {
 
   
 <script>
+
+
+
 const hamburger = document.getElementById("hamburger");
 const slideNav = document.getElementById("slideNav");
 const overlay = document.getElementById("overlay");
+
+
+  const header = document.getElementById("mainHeader");
+
+  window.addEventListener("scroll", () => {
+    if (window.scrollY > 80) {
+      header.classList.add("shrink");
+    } else {
+      header.classList.remove("shrink");
+    }
+  });
 
 function openNav() {
   slideNav.classList.add("active");
