@@ -32,5 +32,14 @@
     "passport-google-oauth20": "^2.0.0",
     "passport-local": "^1.0.0",
     "socket.io": "^4.8.1"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Naveenkumar247/CollegenZ-.git"
+  },
+  "keywords": [],
+  "bugs": {
+    "url": "https://github.com/Naveenkumar247/CollegenZ-/issues"
+  },
+  "homepage": "https://github.com/Naveenkumar247/CollegenZ-#readme"
 }

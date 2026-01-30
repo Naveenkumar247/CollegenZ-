@@ -326,6 +326,28 @@
     <input type="url" name="job_link" class="form-control">
   </div>
 
+<!-- ⭐ FEATURED POST SETTINGS (ADMIN ONLY) -->
+<div class="mb-3 border p-3 rounded bg-light">
+  <label class="form-label fw-bold">Featured Post Settings</label>
+
+  <div class="form-check">
+    <input class="form-check-input" type="checkbox" name="is_featured" value="true" id="featuredCheck">
+    <label class="form-check-label" for="featuredCheck">
+      Mark as Featured
+    </label>
+  </div>
+
+  <div class="mt-2">
+    <label>Featured Order</label>
+    <input type="number" name="featured_order" class="form-control" placeholder="0 = top priority">
+  </div>
+
+  <div class="mt-2">
+    <label>Featured Until (optional)</label>
+    <input type="date" name="featured_until" class="form-control">
+  </div>
+</div>
+
   <button type="submit" class="btn" style="background-color:#228B22; color:white;">Post</button>
 </form>
 

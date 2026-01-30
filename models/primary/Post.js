@@ -67,7 +67,10 @@ moderationReason: {
     type: [{ type: mongoose.Schema.Types.ObjectId, ref: "logins" }],
     default: [],
     set: arr => [...new Set(arr.map(id => id.toString()))]
-  }
+  },
+  isFeatured: { type: Boolean, default: false },
+featuredOrder: { type: Number, default: 0 },
+featuredUntil: { type: Date, default: null },
 });
 
 module.exports = primaryDB.model("users", postSchema);

@@ -25,4 +25,15 @@ document.addEventListener("click", async (e) => {
     }
   }
 });
+fetch("/api/featured")
+  .then(r => r.json())
+  .then(posts => {
+    featuredSlider.innerHTML = posts.map(p => `
+      <div class="featured-card">
+        <img src="${p.imageurl[0]}">
+        <h6>${p.data.substring(0,60)}</h6>
+      </div>
+    `).join("");
+  });
+
 </script>
