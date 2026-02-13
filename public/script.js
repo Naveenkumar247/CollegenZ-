@@ -1,382 +1,243 @@
-document.addEventListener("click", async (e) => {
-  if (e.target.classList.contains("delete-post-btn")) {
-    const postId = e.target.dataset.id;
-    const confirmDelete = confirm("Are you sure you want to delete this post?");
-    if (!confirmDelete) return;
+console.log("🔥 SCRIPT LOADED");
 
-    try {
-      const response = await fetch(`/deletepost/${postId}`, {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-      });
+/* ======================================
+   HEADER COLLAPSE
+====================================== */
+let lastScroll = 0;
 
-      if (response.ok) {
-        alert("Post deleted successfully!");
-        document.querySelector(`[data-id="${postId}"]`).closest(".card").remove();
-      } else {
-        alert("Failed to delete post");
-      }
-    } catch (err) {
-      console.error(err);
-      alert("Error deleting post.");
-    }
-  }
-});
+window.addEventListener("scroll", () => {
+  const topHeader = document.getElementById("topHeader");
+  if (!topHeader) return;
 
+  const current = window.scrollY;
 
-function toggleCaption(id) {
-  const caption = document.getElementById(`caption-${id}`);
-  const dots = caption.querySelector(".dots");
-  const moreText = caption.querySelector(".more-text");
-  const btn = caption.querySelector(".see-more-btn");
-
-  if (moreText.style.display === "none") {
-    moreText.style.display = "inline";
-    dots.style.display = "none";
-    btn.innerText = "See Less";
-  } else {
-    moreText.style.display = "none";
-    dots.style.display = "inline";
-    btn.innerText = "See More";
-  }
-}
-
-
-document.addEventListener("DOMContentLoaded", async () => {
-    const followButtons = document.querySelectorAll(".follow-btn");
-
-    followButtons.forEach(async (btn) => {
-        const targetId = btn.dataset.target;
-
-        const res = await fetch(`/follow-status/${targetId}`);
-        const data = await res.json();
-
-        if (data.following) {
-            btn.textContent = "Following";
-            btn.classList.remove("btn-primary");
-            btn.classList.add("btn-success");
-        } else {
-            btn.textContent = "Follow";
-            btn.classList.remove("btn-success");
-            btn.classList.add("btn-primary");
-        }
-    });
-});
-
-document.addEventListener("click", async (e) => {
-    const btn = e.target.closest(".follow-btn");
-    if (!btn) return;
-
-    const targetId = btn.dataset.target;
-
-    const res = await fetch(`/follow/${targetId}`, { method: "POST" });
-    const data = await res.json();
-
-    if (data.following) {
-        btn.textContent = "Following";
-        btn.classList.add("following");
-    } else {
-        btn.textContent = "Follow";
-        btn.classList.remove("following");
-    }
-});
-
-function toggleDetails(id) {
-  const rows = document.querySelectorAll(`.row-${id}`);
-  const btn = document.querySelector(`#details-${id} .view-btn`);
-
-  // ✅ Check if any TABLE row is hidden
-  const expand = [...rows].some(
-    r => r.tagName === "TR" && r.style.display === "none"
-  );
-
-  rows.forEach(r => {
-    if (r.tagName === "TR") {
-      r.style.display = expand ? "table-row" : "none";
-    } else {
-      // title-only div
-      r.style.display = expand ? "none" : "block";
-    }
-  });
-
-  btn.innerText = expand ? "Hide Details" : "View Details";
-}
-
-document.addEventListener("click", async (e) => {
-  const openBtn = e.target.closest(".open-profile");
-  if (!openBtn) return;
-
-  const userId = openBtn.dataset.user;
-
-  document.getElementById("profilePopup").style.display = "flex";
-  document.getElementById("profileData").innerHTML = "Loading...";
-
-  const res = await fetch(`/get-profile/${userId}`);
-  const user = await res.json();
-
-  /* =========================
-     PRIVATE ACCOUNT VIEW
-  ========================== */
-  if (user.accountType === "personal") {
-    document.getElementById("profileData").innerHTML = `
-      <img src="${user.picture || "/uploads/profilepic.jpg"}"
-           style="width:80px;height:80px;border-radius:50%;object-fit:cover;">
-
-      <h3>${user.name}</h3>
-      <p style="color:gray;">This account is private</p>
-
-      <div class="d-flex justify-content-center gap-4 mb-2">
-        <div><strong>${user.followers?.length || 0}</strong><br><small>Followers</small></div>
-        <div><strong>${user.following?.length || 0}</strong><br><small>Following</small></div>
-      </div>
-    `;
-    return;
+  if (current > 80 && current > lastScroll) {
+    topHeader.style.height = "0";
+    topHeader.style.overflow = "hidden";
   }
 
-  /* =========================
-     FRIEND BUTTON LOGIC
-  ========================== */
-  let friendButton = "";
-
-  if (user.relationship) {
-    if (user.relationship.isFriend) {
-      friendButton = `
-        <a href="#" class="friend-action" data-userid="${user._id}" data-action="remove">
-          <img src="/unfriend.png" style="width:34px;cursor:pointer;">
-        </a>`;
-    } else if (user.relationship.requestSent) {
-      friendButton = `
-        <a href="#" class="friend-action" data-userid="${user._id}" data-action="cancel">
-          <img src="/unfriend.png" style="width:34px;cursor:pointer;">
-        </a>`;
-    } else if (user.relationship.requestReceived) {
-      friendButton = `
-        <a href="#" class="friend-action" data-userid="${user._id}" data-action="accept">
-          <img src="/addfriend2.png" style="width:34px;cursor:pointer;">
-        </a>`;
-    } else {
-      friendButton = `
-        <a href="#" class="friend-action" data-userid="${user._id}" data-action="request">
-          <img src="/addfriend2.jpeg" style="width:34px;cursor:pointer;">
-        </a>`;
-    }
+  if (current < 40) {
+    topHeader.style.height = "110px";
   }
 
-  /* =========================
-     PUBLIC ACCOUNT VIEW
-  ========================== */
-  document.getElementById("profileData").innerHTML = `
-  <div style="position:relative;">
-
-    <div style="
-      position:absolute;
-      top:14px;
-      left:14px;
-      z-index:10;
-    ">
-      ${friendButton}
-    </div>
-
-    <img src="${user.picture || "/uploads/profilepic.jpg"}"
-         style="width:80px;height:80px;border-radius:50%;object-fit:cover;">
-
-    <h3>${user.name || "User"}</h3>
-    <p class="text-muted">${user.email || ""}</p>
-
-    <div class="d-flex justify-content-center gap-4 mb-2 align-items-center">
-      <div>
-        <strong>${user.followers?.length || 0}</strong><br>
-        <small>Followers</small>
-      </div>
-      <div>
-        <strong>${user.following?.length || 0}</strong><br>
-        <small>Following</small>
-      </div>
-      <div>
-        <strong>${user.points || 0}</strong><br>
-        <small>Points</small>
-      </div>
-    </div>
-
-    <div class="popup-social mt-3">
-      ${user.instagram ? `
-        <a href="${user.instagram}" target="_blank">
-          <img src="/instagram.jpeg"
-               style="width:28px;height:28px;border-radius:50%;object-fit:cover;margin:0 6px;">
-        </a>` : ""}
-
-      ${user.linkedin ? `
-        <a href="${user.linkedin}" target="_blank">
-          <img src="/linkedin.png"
-               style="width:28px;height:28px;border-radius:20%;object-fit:cover;margin:0 6px;">
-        </a>` : ""}
-
-      ${user.website ? `
-        <a href="${user.website}" target="_blank">
-          <img src="/website.png"
-               style="width:28px;height:28px;border-radius:50%;object-fit:cover;margin:0 6px;">
-        </a>` : ""}
-
-      ${user.youtube ? `
-        <a href="${user.youtube}" target="_blank">
-          <img src="/youtube.jpg"
-               style="width:28px;height:28px;border-radius:20%;object-fit:cover;margin:0 6px;">
-        </a>` : ""}
-    </div>
-  `;
+  lastScroll = current;
 });
 
-/* =========================
-   FRIEND BUTTON CLICK HANDLER
-========================== */
-document.addEventListener("click", async (e) => {
-  const btn = e.target.closest(".friend-action");
-  if (!btn) return;
+/* ======================================
+   GLOBAL USER STATE
+====================================== */
+let CURRENT_USER = null;
+let IS_LOGGED_IN = false;
 
-  e.preventDefault();
-
-  const userId = btn.dataset.userid;
-  const action = btn.dataset.action;
-
-  const routes = {
-    request: `/friend/request/${userId}`,
-    cancel: `/friend/cancel/${userId}`,
-    accept: `/friend/accept/${userId}`,
-    remove: `/friend/remove/${userId}`
-  };
-
-  const res = await fetch(routes[action], { method: "POST" });
-  const data = await res.json();
-
-  if (data.success) {
-    document.getElementById("profilePopup").style.display = "none";
-  } else {
-    alert(data.message || "Action failed");
-  }
-});
-
-/* =========================
-   CLOSE POPUP
-========================== */
-document.querySelector(".close-popup").onclick = () => {
-  document.getElementById("profilePopup").style.display = "none";
-};
-    
-
-document.querySelectorAll(".filter-btn").forEach(btn => {
-  btn.addEventListener("click", async () => {
-
-    // remove active class
-    document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
-    btn.classList.add("active");
-
-    const type = btn.dataset.type;
-    const sort = btn.dataset.sort || "";
-
-    const res = await fetch(`/posts/filter?type=${type}&sort=${sort}`);
-    const post = await res.json();
-
-    renderPost(post); // function that updates your post list
-  });
-});
-
-function renderPost(post) {
-  const container = document.getElementById("posts-container");
-  container.innerHTML = "";
-
-  post.forEach(p => {
-    container.innerHTML += createPostHTML(p); // your existing card HTML
-  });
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-  if (!window.IS_LOGGED_IN) {
-
-    setTimeout(() => {
-      Swal.fire({
-        width: 320,
-        title: "Login Required",
-        text: "Login to create posts, follow users, and access all CollegenZ features.",
-        imageUrl: "loginalert.png",
-        imageWidth: 200,
-        imageHeight: 200,
-        showCancelButton: true,
-        confirmButtonText: "Login",
-        cancelButtonText: "Later",
-        confirmButtonColor: "#228B22",
-
-        // 🔒 Force decision
-        allowOutsideClick: false,
-        allowEscapeKey: false
-      }).then((result) => {
-        if (result.isConfirmed) {
-          window.location.href = "/login";
-        }
-        // Later → just closes
-      });
-    }, 5000); // show after 5 seconds
-
-  }
-});
-
-async function loadNotificationCount() {
+/* ======================================
+   LOAD USER
+====================================== */
+async function loadUser() {
   try {
-    const res = await fetch("/notifications/count");
+    const res = await fetch("/api/me");
     const data = await res.json();
 
-    const badge = document.getElementById("notifBadge");
+    IS_LOGGED_IN = data.isLoggedIn;
+    CURRENT_USER = data.user || null;
 
-    if (data.count > 0) {
-      badge.textContent = data.count;
-      badge.style.display = "inline-block";
-    } else {
-      badge.style.display = "none";
+    if (CURRENT_USER) {
+      document.getElementById("navUsername").textContent = CURRENT_USER.username || "";
+      document.getElementById("navEmail").textContent = CURRENT_USER.email || "";
+      document.getElementById("navProfilePic").src =
+        CURRENT_USER.picture || "/uploads/profilepic.jpg";
     }
   } catch (err) {
-    console.error("Notification count error");
+    console.error("User load failed");
   }
 }
 
-// Load on page load
-loadNotificationCount();
+/* ======================================
+   LOAD POSTS
+====================================== */
+async function loadPosts(filter = "all") {
+  try {
+    const [postRes, featuredRes] = await Promise.all([
+      fetch("/api/posts"),
+      fetch("/api/featured")
+    ]);
 
-// Refresh every 15 seconds
-setInterval(loadNotificationCount, 15000);
+    const postData = await postRes.json();
+    const featuredData = await featuredRes.json();
 
-const notifIcon = document.getElementById("notifIcon");
-const notifDropdown = document.getElementById("notifDropdown");
+    const posts = postData.posts || [];
+    const featured = featuredData.featured || [];
 
-notifIcon.addEventListener("click", async () => {
-  notifDropdown.style.display =
-    notifDropdown.style.display === "none" ? "block" : "none";
+    const featuredSlider = document.getElementById("featuredSlider");
+    const postContainer = document.getElementById("postContainer");
 
-  const res = await fetch("/notifications");
-  const notifications = await res.json();
+    featuredSlider.innerHTML = "";
+    postContainer.innerHTML = "";
 
-  const list = document.getElementById("notifList");
-  list.innerHTML = "";
+    // ==========================
+    // ⭐ FEATURED SLIDER
+    // ==========================
+    featured.forEach(p => {
 
-  notifications.forEach(n => {
-    list.innerHTML += `
-      <div class="notif-item ${n.isRead ? "" : "unread"}"
-           onclick="openNotification('${n._id}', '${n.link}')">
-        ${n.fromUser
-          ? `<img src="${n.fromUser.picture}" width="32" height="32" style="border-radius:50%">`
-          : ""}
-        <div>
-          <b>${n.fromUser?.name || "System"}</b> ${n.message}
-          <div style="font-size:11px;color:gray">
-            ${new Date(n.createdAt).toLocaleString()}
-          </div>
+      const images = Array.isArray(p.imageurl) ? p.imageurl : [p.imageurl];
+
+      featuredSlider.insertAdjacentHTML("beforeend", `
+        <div class="featured-card">
+          <img src="${images[0]}">
+          <strong>${p.username}</strong>
         </div>
-      </div>
-    `;
-  });
-});
+      `);
+    });
 
-async function openNotification(id, link) {
-  await fetch(`/notifications/read/${id}`, { method: "POST" });
+    // ==========================
+    // 📰 NORMAL POSTS
+    // ==========================
+    posts.forEach((p, index) => {
 
-  if (link) window.location.href = link;
+      if (filter !== "all" && p.postType !== filter) return;
+
+      const images = Array.isArray(p.imageurl) ? p.imageurl : [p.imageurl];
+
+      const carouselItems = images.map((img, i) => `
+        <div class="carousel-item ${i === 0 ? "active" : ""}">
+          <img src="${img}" class="d-block w-100">
+        </div>
+      `).join("");
+
+      postContainer.insertAdjacentHTML("beforeend", `
+        <div class="card mb-3 p-3" style="max-width:700px;margin:auto">
+
+          <strong>${p.username}</strong>
+
+          <div class="my-3">
+            <div class="carousel slide">
+              <div class="carousel-inner">${carouselItems}</div>
+            </div>
+          </div>
+
+          <p>${p.data}</p>
+
+        </div>
+      `);
+    });
+
+  } catch (err) {
+    console.error("Load failed", err);
+  }
 }
 
+/* ======================================
+   LIKE / SAVE / SHARE (FIXED)
+====================================== */
+document.addEventListener("click", async e => {
+
+const like=e.target.closest(".like-btn");
+const save=e.target.closest(".save-btn");
+const share=e.target.closest(".share-btn");
+
+/* LIKE */
+if(like){
+const id=like.dataset.id;
+const r=await fetch(`/posts/${id}/like`,{method:"POST"});
+const d=await r.json();
+if(d.error)return alert("Login first");
+document.getElementById("like-count-"+id).textContent=d.likes;
+}
+
+/* SAVE */
+if(save){
+const id=save.dataset.id;
+const r=await fetch(`/posts/${id}/save`,{method:"POST"});
+const d=await r.json();
+if(d.error)return alert("Login first");
+document.getElementById("save-count-"+id).textContent=d.saves;
+}
+
+/* SHARE */
+if(share){
+const id=share.dataset.id;
+const r=await fetch(`/posts/${id}/share`,{method:"POST"});
+const d=await r.json();
+if(d.error)return alert("Login first");
+document.getElementById("share-count-"+id).textContent=d.shares;
+}
+
+});
+
+/* ======================================
+   FILTERS
+====================================== */
+document.querySelectorAll(".filter-btn").forEach(b=>{
+b.onclick=()=>{
+document.querySelectorAll(".filter-btn").forEach(x=>x.classList.remove("active"));
+b.classList.add("active");
+loadPosts(b.dataset.type);
+};
+});
+
+/* ======================================
+   SIDEBAR
+====================================== */
+const hamburger=document.getElementById("hamburger");
+const slideNav=document.getElementById("slideNav");
+const overlay=document.getElementById("overlay");
+
+hamburger.onclick=()=>{
+slideNav.classList.add("active");
+overlay.classList.add("active");
+};
+
+overlay.onclick=()=>{
+slideNav.classList.remove("active");
+overlay.classList.remove("active");
+};
+
+/* ======================================
+   INIT
+====================================== */
+document.addEventListener("click", async (e)=>{
+
+/* LIKE */
+const like = e.target.closest(".like-btn");
+if(like){
+const id = like.dataset.id;
+
+const res = await fetch(`/posts/${id}/like`,{method:"POST"});
+const d = await res.json();
+
+if(d.error) return alert("Login required");
+
+document.getElementById(`like-count-${id}`).textContent = d.likes;
+like.querySelector("i").className = d.liked?"bi bi-heart-fill":"bi bi-heart";
+}
+
+/* SAVE */
+const save = e.target.closest(".save-btn");
+if(save){
+const id = save.dataset.id;
+
+const res = await fetch(`/posts/${id}/save`,{method:"POST"});
+const d = await res.json();
+
+if(d.error) return alert("Login required");
+
+document.getElementById(`save-count-${id}`).textContent = d.saves;
+save.querySelector("i").className = d.saved?"bi bi-bookmark-fill":"bi bi-bookmark";
+}
+
+/* SHARE */
+const share = e.target.closest(".share-btn");
+if(share){
+const id = share.dataset.id;
+
+const res = await fetch(`/posts/${id}/share`,{method:"POST"});
+const d = await res.json();
+
+if(d.error) return alert("Login required");
+
+document.getElementById(`share-count-${id}`).textContent = d.shares;
+}
+
+});
+loadUser();
+loadPosts();
+});

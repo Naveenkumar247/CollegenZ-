@@ -25,15 +25,22 @@ document.addEventListener("click", async (e) => {
     }
   }
 });
-fetch("/api/featured")
-  .then(r => r.json())
-  .then(posts => {
-    featuredSlider.innerHTML = posts.map(p => `
-      <div class="featured-card">
-        <img src="${p.imageurl[0]}">
-        <h6>${p.data.substring(0,60)}</h6>
-      </div>
-    `).join("");
-  });
+document.addEventListener("DOMContentLoaded", () => {
+  const slider = document.getElementById("featuredSlider");
+  if (!slider) return;
+
+  fetch("/api/featured")
+    .then(res => res.json())
+    .then(posts => {
+      slider.innerHTML = posts.map(p => `
+        <div class="featured-card">
+          <img src="${p.imageurl?.[0] || '/uploads/default.jpg'}" alt="featured">
+          <div class="featured-caption">
+            ${p.data.substring(0, 40)}
+          </div>
+        </div>
+      `).join("");
+    });
+});
 
 </script>

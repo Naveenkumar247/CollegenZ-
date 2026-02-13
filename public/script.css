@@ -1,14 +1,324 @@
-.social-links img,
-.popup-social img {
-  width: 30px;
-  height: 30px;
-  object-fit: cover;
-  border-radius: 50%;
-  margin: 0 6px;
+/* ================= GLOBAL ================= */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
-/* Fix underline on anchor tags */
-.social-links a,
-.popup-social a {
-  text-decoration: none !important;
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #f5f6f7;
+  color: #222;
+}
+
+/* ================= HEADER ================= */
+
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  background: #228B22;
+}
+
+/* BIG HEADER */
+.top-header {
+  height: 110px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #228B22;
+  transition: height 0.3s ease;
+}
+
+.logo {
+  height: 80px;
+}
+
+/* SHRINK MODE */
+.header.shrink .top-header {
+  height: 0;
+  overflow: hidden;
+}
+
+/* COMPACT HEADER */
+.bottom-header {
+  height: 60px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 12px;
+  background: #228B22;
+  color: white;
+}
+
+/* Left Z */
+.z-logo {
+  font-size: 22px;
+  font-weight: bold;
+  flex-shrink: 0;
+}
+
+/* Search takes remaining space */
+.search-bar {
+  flex: 1;
+}
+
+/* Input fills available width */
+.search-bar input {
+  width: 100%;
+  padding: 8px 14px;
+  border-radius: 22px;
+  border: none;
+  outline: none;
+}
+
+/* Right icons */
+.header-actions {
+  display: flex;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.header-actions i,
+.hamburger {
+  color: white;
+  font-size: 22px;
+}
+
+/* ================= FILTER BAR ================= */
+
+#filterBar {
+  transform: translateY(-100%);
+  transition: 0.3s ease;
+}
+
+.filter-bar {
+  position: sticky;
+  top: 60px;
+  background: white;
+  padding: 8px;
+  display: flex;
+  gap: 8px;
+  z-index: 999;
+  transition: transform 0.3s ease;
+}
+
+.hidden-bar {
+  transform: translateY(-100%);
+}
+
+.show-bar {
+  transform: translateY(0);
+}
+
+.filter-btn {
+  border: none;
+  padding: 6px 14px;
+  border-radius: 20px;
+  background: #eee;
+}
+
+.filter-btn.active {
+  background: black;
+  color: white;
+}
+
+/* ================= FEATURED ================= */
+
+.featured-wrapper {
+  background: white;
+}
+
+.featured-slider {
+  display: flex;
+  gap: 12px;
+  padding: 10px;
+  overflow-x: auto;
+}
+
+.featured-card {
+  min-width: 90px;
+  height: 140px;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.featured-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ================= POSTS ================= */
+
+#postContainer {
+  padding: 12px;
+}
+
+.card {
+  background: white;
+  border-radius: 14px;
+  margin-bottom: 12px;
+  padding: 12px;
+  box-shadow: 0 2px 6px rgba(0,0,0,.08);
+}
+
+.postprofile-pic {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+}
+
+/* ================= CAROUSEL ================= */
+
+.carousel img {
+  width: 100%;
+  border-radius: 12px;
+  object-fit: contain;
+}
+
+/* ================= FAB ================= */
+
+.post-fab {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  width: 54px;
+  height: 54px;
+  background: #228B22;
+  border-radius: 50%;
+}
+
+/* ================= SIDEBAR ================= */
+
+/* ================= SIDEBAR / BOTTOM NAV ================= */
+
+.sidebar {
+  width: 60px;
+  background: #f1f1f1;
+  position: fixed;
+  right: 0;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  z-index: 2000;
+}
+
+/* icon container */
+.sidebar .icon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 22px;               /* 👈 SPACE BETWEEN ICONS */
+  margin-top: 24px;
+}
+
+/* icon images */
+.sidebar img {
+  width: 38px;
+  height: 38px;
+  object-fit: contain;
+}
+
+/* ================= MOBILE = BOTTOM BAR ================= */
+
+@media (min-width: 992px) {
+
+  .bottom-header {
+    max-width: 900px;
+    margin: auto;
+  }
+
+  .search-bar input {
+    max-width: 500px;
+  }
+}
+
+
+@media (max-width: 768px) {
+
+  .sidebar {
+    width: 100%;
+    height: 60px;
+    bottom: 0;
+    top: auto;
+    left: 0;
+    right: 0;
+    background: #f1f1f1;
+    border-top: 1px solid #ddd;
+  }
+
+  .sidebar .icon {
+    flex-direction: row;
+    justify-content: space-around;
+    width: 100%;
+    margin-top: 0;
+    gap: 0;               /* spacing handled by space-around */
+  }
+
+  .sidebar img {
+    width: 32px;
+    height: 32px;
+  }
+}
+
+/* ================= SLIDE NAV ================= */
+
+.slide-nav {
+  position: fixed;
+  top: 0;
+  left: -280px;
+  width: 260px;
+  height: 100%;
+  background: white;
+  z-index: 3000;
+  padding: 20px;
+  transition: left 0.3s ease;
+  box-shadow: 2px 0 10px rgba(0,0,0,0.15);
+}
+
+.slide-nav.active {
+  left: 0;
+}
+
+.slide-nav a {
+  display: block;
+  padding: 10px 0;
+  color: #333;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.slide-nav a:hover {
+  color: #228B22;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 15px;
+}
+
+.profile-pic {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+/* Dark overlay */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  display: none;
+  z-index: 2500;
+}
+
+.overlay.active {
+  display: block;
 }

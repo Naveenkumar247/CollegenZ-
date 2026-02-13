@@ -1,0 +1,81 @@
+body{
+background:#f8f9fa;
+font-family:Poppins,sans-serif;
+}
+
+.profile-wrapper{
+min-height:100vh;
+display:flex;
+justify-content:center;
+align-items:center;
+padding:20px;
+}
+
+.profile-container{
+background:white;
+padding:35px 25px;
+border-radius:20px;
+box-shadow:0 6px 20px rgba(0,0,0,.1);
+max-width:420px;
+width:100%;
+text-align:center;
+}
+
+.profile-img{
+width:130px;
+height:130px;
+border-radius:50%;
+border:3px solid #228B22;
+object-fit:cover;
+margin:auto;
+display:block;
+}
+
+.upload-label{
+color:#228B22;
+display:block;
+margin:10px 0;
+}
+
+.follow-stats{
+display:flex;
+justify-content:center;
+gap:40px;
+margin:20px 0;
+}
+
+.follow-stats h6{margin:0}
+.follow-stats small{color:#777}
+
+.social-links img{
+width:32px;
+margin:0 8px;
+}
+
+.btn-edit,.btn-save{
+background:#228B22;
+color:white;
+border:none;
+padding:12px;
+width:100%;
+border-radius:14px;
+margin-top:15px;
+font-size:16px;
+}
+
+#editSection{
+overflow:hidden;
+max-height:0;
+transition:.4s;
+}
+
+.edit-group{margin-bottom:12px}
+
+.edit-input{
+width:100%;
+padding:12px;
+border-radius:12px;
+border:1px solid #ddd;
+}
+
+.account-row{margin-top:20px}

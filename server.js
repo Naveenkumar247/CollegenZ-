@@ -1,30 +1,28 @@
-
 require("dotenv").config();
-const bcryptjs = require("bcryptjs");
+
 const express = require("express");
 const mongoose = require("mongoose");
 const session = require("express-session");
+const MongoStore = require("connect-mongo");
 const passport = require("passport");
+const http = require("http");
+const { Server } = require("socket.io");
+const path = require("path");
+
+const app = express();
+const server = http.createServer(app);
+const io = new Server(server, { cors: { origin: "*" } });
+const passportroutes = require("./config/passport");
+const bcryptjs = require("bcryptjs");
 const { Strategy: GoogleStrategy } = require("passport-google-oauth20");
 const LocalStrategy = require("passport-local").Strategy;
-const MongoStore = require("connect-mongo");
 const multer = require("multer");
-const path = require("path");
-const app = express();
 const router = express.Router();
 const cron = require("node-cron");
 const nodemailer = require("nodemailer");
 const sessionSecret = process.env.SESSION_SECRET;
 const cloudinary = require("cloudinary").v2;
 const fs = require("fs");
-const http = require("http");
-const { Server } = require("socket.io");
-const server = http.createServer(app);  // ✅ STEP 2
-const io = new Server(server, {
-  cors: {
-    origin: "*"
-  }
-});
 console.log("✅ Socket.io initialized");
 const genz = require("./models/primary/User");
 const Post = require("./models/primary/Post");
@@ -34,165 +32,88 @@ const Message = require("./models/primary/Message");
 const Certificate = require("./models/secondary/Certificate");
 const collegenzCertificateRoutes = require("./routes/collegenz.certificate.routes.js");
 const adminRoutes = require("./routes/admin.certificate.routes.js");
+console.log("✅ Socket.io initialized");
+const currentUser = require("./middlewares/currentUser");
+const profileRoutes = require("./routes/profile.routes");
+const postActions = require("./routes/postActions");
+const postsRoute = require("./routes/posts");
+// --------------------
+// DB CONNECT
+// --------------------
+mongoose.connect(process.env.MONGO_URI, {
+  serverSelectionTimeoutMS: 30000,
+  socketTimeoutMS: 45000,
+  maxPoolSize: 5
+})
+  .then(() => console.log("✅ MongoDB connected"))
+  .catch(err => console.error("❌ Mongo error:", err));
 
-cloudinary.config({
-  secure: true, // ensures HTTPS
-});
-
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
-
-const upload = multer({ dest: "uploads/" });
-
-// ---------- MongoDB Connection ----------
-mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => console.log("✅ Connected to MongoDB!"))
-  .catch(err => console.error("❌ MongoDB connection error:", err.message));
-
-
-
-// ---------- Express Middleware ----------
+// --------------------
+// BODY PARSER
+// --------------------
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use('/uploads', express.static('uploads'));
-app.use('/', express.static('assets'));
+
+// --------------------
+// STATIC FILES
+// --------------------
+app.use("/uploads", express.static("uploads"));
+app.use("/", express.static("assets"));
 app.use(express.static("public"));
+// --------------------
+// SESSION (🔥 MUST BE BEFORE PASSPORT)
+// --------------------
+app.use(
+  session({
+    name: "collegenz.sid",
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
+    store: MongoStore.create({
+      mongoUrl: process.env.MONGO_URI,
+      ttl: 24 * 60 * 60, // 1 day
+    }),
+    cookie: {
+      maxAge: 24 * 60 * 60 * 1000,
+      httpOnly: true,
+      secure: false, // set true in production (HTTPS)
+    },
+  })
+);
 
-
-// ===============================
-// 🔹 SIMPLE TEXT MODERATION
-// ===============================
-const bannedWords = [
-  "porn", "sex", "xxx", "nude", "fuck",
-  "boobs", "blowjob", "rape", "adult"
-];
-
-function hasBannedText(text = "") {
-  return bannedWords.some(word =>
-    text.toLowerCase().includes(word)
-  );
-}
-// ===============================
-// 🔒 IMAGE CONTENT RULES
-// ===============================
-const BLOCKED_LABELS = [
-  "Swimwear",
-  "Bikini",
-  "Lingerie",
-  "Partial Nudity",
-  "Suggestive",
-  "Sexualized"
-];
-
-const ALLOWED_CONTEXTS = [
-  "Classroom",
-  "Education",
-  "Conference",
-  "Seminar",
-  "Workshop",
-  "Office",
-  "Stage",
-  "College",
-  "University"
-];
-
-function isBlockedImage(uploaded, postType) {
-  const labels = uploaded.moderation?.[0]?.moderationLabels || [];
-
-  // 1️⃣ Block sexualized labels
-  const blocked = labels.find(
-    l => BLOCKED_LABELS.includes(l.Name) && l.Confidence >= 60
-  );
-  if (blocked) return true;
-
-  // 2️⃣ Detect person
-  const hasPerson = labels.some(l => l.Name === "Person");
-
-  // 3️⃣ Check valid context
-  const hasContext = labels.some(l =>
-    ALLOWED_CONTEXTS.includes(l.Name)
-  );
-
-  // 4️⃣ Rules
-  if (hasPerson && !hasContext) return true;
-  if (postType === "general" && hasPerson) return true;
-
-  return false;
-}
-
-// ---------- Session Setup ----------
-app.use(session({
-  secret: process.env.SESSION_SECRET,
-  resave: false,
-  saveUninitialized: false,
-  store: MongoStore.create({
-    mongoUrl: process.env.MONGO_URI,
-    ttl: 24 * 60 * 60, // 1 day
-  }),
-  cookie: { maxAge: 24 * 60 * 60 * 1000, secure: false, httpOnly: true },
-}));
-
-
-app.post("/upload", upload.single("image"), async (req, res) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({
-        success: false,
-        message: "No image uploaded"
-      });
-    }
-
-    // 🔍 CLOUDINARY UPLOAD WITH NSFW MODERATION
-     const moderation = uploaded.moderation?.[0];
-
-    // ❌ BLOCK NSFW IMAGES
-    const uploaded = await cloudinary.uploader.upload(req.file.path, {
-  folder: "users",
-  moderation: "aws_rek",
-  flags: "no_index"
-});
-
-// 🔴 STRONG IMAGE CHECK
-if (isBlockedImage(uploaded, "general")) {
-  fs.unlinkSync(req.file.path);
-  return res.status(400).json({
-    success: false,
-    type: "CONTENT",
-    message: "Non-productive or inappropriate image detected"
-  });
-}
-
-    // ✅ CLEAN IMAGE → DELETE LOCAL FILE
-    fs.unlinkSync(req.file.path);
-
-    // ✅ SUCCESS
-    res.json({
-      success: true,
-      imageUrl: uploaded.secure_url
-    });
-
-  } catch (error) {
-    console.error("❌ Cloudinary Upload Error:", error);
-
-    // cleanup in case of error
-    if (req.file?.path && fs.existsSync(req.file.path)) {
-      fs.unlinkSync(req.file.path);
-    }
-
-    res.status(500).json({
-      success: false,
-      message: "Upload failed"
-    });
-  }
-});
-
-
-// ---------- Passport Setup ----------
+// --------------------
+// PASSPORT (🔥 AFTER SESSION)
+// --------------------
+require("./config/passport"); // <-- strategy setup
 app.use(passport.initialize());
 app.use(passport.session());
+app.use(currentUser);
+
+// --------------------
+// ROUTES (🔥 AFTER PASSPORT)
+// --------------------
+// API FIRST
+app.use("/api/posts", postsRoute);
+app.use("/posts", postActions);
+
+// Pages AFTER
+app.use("/", require("./routes/auth"));
+app.use("/", require("./routes/session"));
+app.use("/", require("./routes/featured"));
+app.use("/", require("./routes/featured-page"));
+app.use("/", require("./routes/upload"));
+app.use("/", require("./routes/featured-api"));
+app.use("/", require("./routes/profile"));
+app.use("/", profileRoutes);
+app.use("/", require("./routes/home"));
+// --------------------
+// SERVER START
+// --------------------
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => {
+  console.log(`🚀 Server running on http://localhost:${PORT}`);
+});
+
 
 // File upload setup using multer
 const storage = multer.diskStorage({
@@ -203,17 +124,6 @@ const storage = multer.diskStorage({
     cb(null, Date.now() + '-' + file.originalname);
   }
 });
-
-
-function requireLogin(req, res, next) {
-  if (!res.locals.currentUser) {
-    return res.status(401).json({
-      type: "AUTH",
-      message: "Login required"
-    });
-  }
-  next();
-}
 
 
 // ✅ Optional middleware (JSON-based, SweetAlert friendly)
@@ -377,7 +287,7 @@ router.post(
       });
     }
   }
-);*/
+);
 
 
 router.post(
@@ -388,11 +298,6 @@ router.post(
       const {
         post_type,
         data,
-
-        // ⭐ FEATURED FIELDS
-        is_featured,
-        featured_order,
-        featured_until,
 
         // Event fields
         event_title,
@@ -554,7 +459,7 @@ router.post(
     }
   }
 );
-
+*/
 
 io.on("connection", socket => {
 
@@ -723,113 +628,11 @@ app.get("/updateOldUsers", async (req, res) => {
   }
 });
 
-// =======================
-// Traditional Signup
-// =======================
-app.post("/signup", async (req, res) => {
-  try {
-    const { name, username, age, phone, email, password, college, dream } = req.body;
 
-    const lowerEmail = email.toLowerCase();
-    const existingUser = await genz.findOne({ email: lowerEmail });
-
-    if (existingUser) {
-      return res.status(400).json({ success: false, message: "User already exists. Try logging in." });
-    }
-
-    const hashedPassword = await bcryptjs.hash(password, 10);
-    const picture = req.body.picture || null;
-
-    const newUser = new genz({
-      name,
-      username: username || null,
-      age,
-      picture,
-      phone,
-      email: lowerEmail,
-      password: hashedPassword,
-      dream,
-      college: college || null,
-      accountType: req.body.accountType || "public"
-    });
-
-    await newUser.save();
-
-    req.session.userId = newUser._id;
-    req.session.username = newUser.name;
-    req.session.email = newUser.email;
-
-    await Session.create({
-      name: newUser.name,
-      username: newUser.username || "",
-      college: newUser.college || "",
-      email: newUser.email,
-      userId: newUser._id,
-      sessionId: req.sessionID,
-      expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24)
-    });
-
-    res.json({ success: true, redirectUrl: "/" });
-
-  } catch (err) {
-    console.error("Signup error:", err);
-    res.status(500).json({ success: false, message: "Server error during signup." });
-  }
-});
-
-// =======================
-// Google Signup using Passport
-// =======================
-
-// Step 1: Start Google
-  
-// =======================
-// Create Session (Reusable route)
-// =======================
-app.post("/create-session", async (req, res) => {
-  try {
-    const user = await genz.findById(req.session.userId);
-
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    const sessionData = await Session.create({
-      name: user.name,
-      username: user.username || "",
-      college: user.college || "",
-      email: user.email,
-      userId: user._id,
-      sessionId: req.sessionID,
-      createdAt: new Date(),
-      expiresAt: new Date(Date.now() + 86400000) // 24 hours
-    });
-
-    res.json({ message: "Session created", session: sessionData });
-  } catch (err) {
-    console.error("Session creation error:", err);
-    res.status(500).json({ message: "Server error" });
-  }
-});
-
-const SessionSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: "logins", required: true },
-  email: { type: String, required: true },
-
-  // ❌ required: true  →  ✅ optional
-  username: { type: String, default: null },
-  college: { type: String, default: null },
-
-  sessionId: { type: String, required: true },
-  createdAt: { type: Date, default: Date.now },
-  expiresAt: { type: Date }
-});
-
-const Session = mongoose.model("Session", SessionSchema);
+   
 
 
-router.post("/save/:id", async (req, res) => {
+/*router.post("/save/:id", async (req, res) => {
   try {
     const postId = req.params.id;
     const userId = req.session.userId;
@@ -884,12 +687,12 @@ router.post("/save/:id", async (req, res) => {
     console.error("❌ Save failed:", err.message);
     res.status(500).json({ success: false, message: "Server error" });
   }
-});
+});*/
 
 // Routes
 //app.use("/auth", authRoutes);
 
-app.use(async (req, res, next) => {
+/*app.use(async (req, res, next) => {
   if (req.session.userId) {
     // Fetch the user from the genz collection
     const user = await genz.findById(req.session.userId);
@@ -904,7 +707,7 @@ app.use(async (req, res, next) => {
     res.locals.loginSession = null;
   }
   next();
-});
+});*/
 
 
 app.post("/posts/:id/like", async (req, res) => {
@@ -1185,7 +988,7 @@ router.post("/friend/remove/:userId", async (req, res) => {
   }
 });
 
-router.get("/api/notifications", requireLogin, async (req, res) => {
+/*router.get("/api/notifications", requireLogin, async (req, res) => {
   const userId = res.locals.currentUser._id;
 
   const notifications = await Notification.find({ userId })
@@ -1213,7 +1016,7 @@ router.post("/notifications/read/:id", requireLogin, async (req, res) => {
   });
 
   res.json({ success: true });
-});
+});*/
 
 app.get("/api/user/:id", async (req, res) => {
   try {
@@ -1384,6 +1187,7 @@ router.get("/calender", async (req, res) => {
   }
 });
 
+
 router.get("/featured", async (req, res) => {
   const posts = await Post.find({
     isFeatured: true,
@@ -1433,140 +1237,7 @@ passport.use(
   )
 );
 
-// =======================
-// 🔹 GOOGLE STRATEGY
-// =======================
-passport.use(
-  new GoogleStrategy(
-    {
-      clientID: process.env.GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL:
-        process.env.NODE_ENV === "production"
-          ? "https://collegenz.in/auth/google/callback"
-          : "http://localhost:3000/auth/google/callback",
-    },
-    async (accessToken, refreshToken, profile, done) => {
-      try {
-        const email = profile.emails?.[0]?.value?.toLowerCase();
-        let user = await genz.findOne({ email });
 
-        if (!user) {
-          const baseName =
-            profile.displayName?.replace(/\s+/g, "").toLowerCase() ||
-            email.split("@")[0];
-          const randomNum = Math.floor(Math.random() * 10000);
-          const username = `${baseName}${randomNum}`;
-
-          // 🆕 Create new user for first-time Google login
-          user = await genz.create({
-            name: profile.displayName,
-            email,
-            username,
-            password: null,
-            googleUser: true,
-            college:null,
-            picture: profile.photos?.[0]?.value || null, // ✅ stores profile photo
-            likedPosts: [],
-            savedPosts: [],
-            dream: "Other",
-            accountType: "public"
-          });
-        } else {
-          // 🔁 Update existing Google user info
-          user.picture = profile.photos?.[0]?.value || user.picture;
-          user.name = profile.displayName || user.name;
-
-          if (!user.username) {
-            const baseName =
-              profile.displayName?.replace(/\s+/g, "").toLowerCase() ||
-              email.split("@")[0];
-            const randomNum = Math.floor(Math.random() * 10000);
-            user.username = `${baseName}${randomNum}`;
-          }
-
-          await user.save();
-        }
-
-        return done(null, user);
-      } catch (err) {
-        console.error("Google auth error:", err);
-        return done(err, null);
-      }
-    }
-  )
-);
-
-// =======================
-// 🔹 SERIALIZATION
-// =======================
-passport.serializeUser((user, done) => done(null, user.id));
-
-passport.deserializeUser(async (id, done) => {
-  try {
-    const user = await genz.findById(id);
-    done(null, user);
-  } catch (err) {
-    done(err, null);
-  }
-});
-
-
-// Routes
-/*router.post("/login", passport.authenticate("local"), (req, res) => {
-  res.json({ success: true, redirectUrl: "/view" });
-});*/
-
-router.post("/login", (req, res, next) => {
-  passport.authenticate("local", async (err, user, info) => {
-    if (err) return next(err);
-    if (!user)
-      return res.status(400).json({
-        success: false,
-        message: info?.message || "Invalid credentials",
-      });
-
-    req.logIn(user, async (err) => {
-      if (err) return next(err);
-
-      try {
-        // Store session in express-session
-        req.session.userId = user._id;
-        req.session.username = user.name;
-        req.session.email = user.email;
-
-        // Store in session collection
-        await Session.create({
-          name: user.name,
-          username: user.username || "",
-          college: user.college || "",
-          email: user.email,
-          userId: user._id,           // ✔ correct userId reference
-          sessionId: req.sessionID,   // express-session ID
-          createdAt: new Date(),
-          expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
-        });
-
-        return res.json({ success: true, redirectUrl: "/" });
-      } catch (err) {
-        console.error("Login session save error:", err);
-        return res.status(500).json({ success: false, message: "Server error" });
-      }
-    });
-  })(req, res, next);
-});
-
-router.get("/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
-
-
-router.get(
-  "/auth/google/callback",
-  passport.authenticate("google", { failureRedirect: "/signup" }),
-  (req, res) => {
-    req.session.userId = req.user._id; // ✅ store userId in session for profile access
-    res.redirect("/");
-  }
-);
 
 // ----------------------
 // Share Script
@@ -1653,7 +1324,7 @@ app.delete("/deletepost/:id", async (req, res) => {
 });
 
  
-app.get("/profile", async (req, res) => {
+/*app.get("/profile", async (req, res) => {
   try {
     const userId = req.session?.userId;
     if (!userId) return res.redirect("/login");
@@ -1683,13 +1354,13 @@ app.get("/profile", async (req, res) => {
   width: 100%;
   display: flex;
   justify-content: center;
-  padding: 40px 20px; /* good for mobile + desktop */
+  padding: 40px 20px; 
   box-sizing: border-box;
 }
 
 .profile-container {
   width: 100%;
-  max-width: 450px;  /* perfect card width */
+  max-width: 450px; 
   background: white;
   padding: 30px;
   border-radius: 20px;
@@ -1722,7 +1393,7 @@ app.get("/profile", async (req, res) => {
             font-size: 0.9rem;
           }
 
-    /* Edit button */
+   
     .btn-edit,
     .btn-save {
       background: #228B22;
@@ -1741,7 +1412,7 @@ app.get("/profile", async (req, res) => {
       background: #1b6f1b;
     }
 
-    /* Edit section sliding */
+   
     #editSection {
       max-height: 0;
       overflow: hidden;
@@ -1762,7 +1433,6 @@ app.get("/profile", async (req, res) => {
       margin-bottom: 15px;
     }
       
-/* === Sidebar (Default: Desktop layout) === */
 .sidebar {
   width: 60px;
   background: #f1f1f1;
@@ -1794,11 +1464,10 @@ app.get("/profile", async (req, res) => {
   transition: transform 0.2s ease;
 }
 
-/* Slight zoom effect on hover */
 .sidebar img:hover {
   transform: scale(1.1);
 }
-/* === Tablet Size (medium screens) === */
+
 @media (max-width: 992px) {
   .sidebar img {
     width: 45px;
@@ -1806,11 +1475,11 @@ app.get("/profile", async (req, res) => {
   }
 }
 
-/* === Mobile Layout: Sidebar becomes bottom nav === */
+
 @media (max-width: 768px) {
   .sidebar {
     width: 100%;
-    height: 55px; /* slightly smaller bottom nav */
+    height: 55px; 
     flex-direction: row;
     justify-content: center;
     align-items: center;
@@ -1827,27 +1496,27 @@ app.get("/profile", async (req, res) => {
     flex-direction: row;
     justify-content: space-around;
     width: 100%;
-    gap: 2rem; /* more spacing between icons */
+    gap: 2rem; 
     margin-top: 0;
-    padding: 0 0.5rem; /* side padding */
+    padding: 0 0.5rem; 
   }
 
   .sidebar img {
-    width: 45px; /* smaller icons for mobile */
+    width: 45px; 
     height: 45px;
   }
 
   header {
     margin-right: 0;
-    margin-bottom: 65px; /* space for bottom nav */
-    padding: 0.8rem 1rem; /* slightly smaller header*/
+    margin-bottom: 65px; 
+    padding: 0.8rem 1rem; 
   }
 }
 
-/* === Extra Small Screens (very small phones) === */
+
 @media (max-width: 480px) {
   .sidebar .icon {
-    flex-wrap: wrap; /* allow icons to wrap if too many */
+    flex-wrap: wrap; 
   }
 
   .sidebar img {
@@ -1889,8 +1558,8 @@ app.get("/profile", async (req, res) => {
 
 .account-row {
   padding: 15px 0;
-  text-align: center; /* CENTER the text */
-  border: none !important; /* REMOVE the line */
+  text-align: center;
+  border: none !important; 
   margin-top: 10px;
 }
 
@@ -1898,7 +1567,7 @@ app.get("/profile", async (req, res) => {
   color: #228B22;
   font-size: 17px;
   font-weight: 500;
-  display: inline-block;   /* Keep it centered */
+  display: inline-block;   
 }
 
 #accountTypeMenu {
@@ -1912,7 +1581,7 @@ app.get("/profile", async (req, res) => {
 }
 
 #accountTypeMenu a {
-  display: block;              /* 👈 IMPORTANT */
+  display: block;            
   padding: 12px 15px;
   text-decoration: none;
   color: black;
@@ -2257,7 +1926,7 @@ app.post("/updateProfile", upload.single("picture"), async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 });
-
+*/
 
 app.get("/get-profile/:id", async (req, res) => {
   try {
@@ -2748,9 +2417,9 @@ Sitemap: https://collegenz.in/sitemap.xml`);
 });
 
 
-app.get("/", async (req, res) => {
+/*app.get("/", async (req, res) => {
 
-try {
+/ry {
 
     const { filter } = req.query;
     let posts;
@@ -2801,6 +2470,7 @@ const currentUser = res.locals.currentUser ?? null;     // User info if logged i
 const currentUserId = currentUser ? currentUser._id.toString() : null;
 const loginSession = res.locals.loginSession ?? null;   // Session info if logged in
 const isLoggedIn = Boolean(currentUser);                // true if logged in
+console.log("Featured posts:", posts.filter(p => p.isFeatured));
 const friendIds = currentUser
   ? currentUser.friends.map(id => id.toString())
   : [];
@@ -2946,7 +2616,6 @@ const updatedPosts = posts.map((p) => {
   <style>
 
 
-/* HEADER BASE */
 .header {
   position: sticky;
   top: 0;
@@ -2954,9 +2623,9 @@ const updatedPosts = posts.map((p) => {
   background: #228B22;
 }
 
-/* TOP HEADER */
-.top-header {
-  height: 120px;              /* big logo space */
+
+.top-head
+  height: 120px;             
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2964,7 +2633,7 @@ const updatedPosts = posts.map((p) => {
   transition: height 0.25s ease;
 }
 
-/* BOTTOM HEADER */
+
 .bottom-header {
   display: flex;
   align-items: center;
@@ -2974,13 +2643,11 @@ const updatedPosts = posts.map((p) => {
   border-bottom: 1px solid #ddd;
 }
 
-/* 🔥 WHEN TOP HEADER HIDES */
 .header.hide-top .top-header {
   height: 0;
 }
 
 
-/* LOGO */
 .top-header .logo {
   height: 100px;
   display: block;
@@ -3004,14 +2671,12 @@ const updatedPosts = posts.map((p) => {
   }
 }
 
-/* Z LOGO */
 .z-logo {
   font-weight: 700;
   font-size: 18px;
   color: #fff;
 }
 
-/* SEARCH */
 .search-bar {
   flex: 1;
   background: #f1f3f4;
@@ -3026,14 +2691,36 @@ const updatedPosts = posts.map((p) => {
   background: transparent;
 }
 
-/* ACTIONS */
 .header-actions {
   display: flex;
   gap: 16px;
   font-size: 22px;
 }
 
+.featured-slider {
+  display: flex;
+  flex-direction: row;
+  gap: 14px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 10px 12px;
+  scroll-snap-type: x mandatory;
+}
 
+.featured
+  flex: 0 0 240px;  
+  border-radius: 14px;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+  scroll-snap-align: start;
+}
+
+.featured-card img {
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+}
 
 
 
@@ -3044,16 +2731,12 @@ const updatedPosts = posts.map((p) => {
   padding: 0;
   box-sizing: border-box;
 }
-
-
-/* LOGO */
 .doodle {
   margin-bottom: 0px;
   transition: all 0.3s ease;
 }
 
 
-/* SEARCH ROW */
 .header-row {
   width: 100%;
   display: flex;
@@ -3075,8 +2758,6 @@ const updatedPosts = posts.map((p) => {
   font-size: 26px;
   cursor: pointer;
 }
-
-/* 🔥 MINI HEADER STATE */
 .header.shrink {
   padding: 6px 12px;
 }
@@ -3088,14 +2769,10 @@ const updatedPosts = posts.map((p) => {
   overflow: hidden;
 }
 
-.header.shrink .logo {
-  height: 0;
-}
-
-/* FILTER BAR*/ 
+.header.shrink .logo 
 .filter-bar {
   position: sticky;
-  top: 70px; /* adjust to header height */
+  top: 70px; 
   transition: transform 0.25s ease, opacity 0.25s ease;
 }
 
@@ -3125,15 +2802,15 @@ const updatedPosts = posts.map((p) => {
 }
 
 .featured-wrapper {
-  max-width: 900px;
-  margin: 15px auto;
+  background: #fff;
+  padding-top: 10px;
 }
 
 .featured-slider {
   display: flex;
-  overflow-x: auto;
   gap: 12px;
-  padding: 10px;
+  overflow-x: auto;
+  padding: 10px 12px;
   scroll-snap-type: x mandatory;
 }
 
@@ -3142,32 +2819,31 @@ const updatedPosts = posts.map((p) => {
 }
 
 .featured-card {
-  min-width: 240px;
-  max-width: 240px;
-  border-radius: 14px;
+  min-width: 90px;
+  height: 140px;
+  border-radius: 16px;
   overflow: hidden;
-  background: white;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  background: #eee;
   scroll-snap-align: start;
-  cursor: pointer;
+  text-align: center;
 }
 
 .featured-card img {
   width: 100%;
-  height: 150px;
+  height: 110px;
   object-fit: cover;
 }
 
-.featured-card-body {
-  padding: 8px;
-  font-size: 14px;
-  text-align: left;
+.featured-card span {
+  font-size: 12px;
+  display: block;
+  margin-top: 4px;
 }
 
 
 
 .common-btn {
-  width: 100%;           /* full width on mobile */
+  width: 100%;         
   display: block;
   text-align: center;
   text-decoration: none;
@@ -3191,51 +2867,9 @@ const updatedPosts = posts.map((p) => {
   }
 }
 
-/* Desktop and large screens */
-@media (min-width: 768px) {
-  .common-btn {
-    width: auto;        /* shrink to content size */
-    display: inline-block;
-    padding-left: 5px;
-    padding-right: 5px;
-  }
-}
-
-/* Optional: Even better styling for large desktops */
-@media (min-width: 1024px) {
-  .common-btn {
-    max-width: 300px;   /* or any size you prefer */
-  }
-}
-
-/*welcome container*/
-.font-style {
-  font-family: inter, sans-serif;
-}
-
-/* hide scrollbar */
-.filter-bar::-webkit-scrollbar {
-  display: none;
-}
-
-/* hidden default 
-.hidden-bar {
-  transform: translateY(-100%);
-  opacity: 0;
-  pointer-events: none;
-}
-
-/* visible 
-.visible-bar {
-  transform: translateY(0);
-  opacity: 1;
-  pointer-events: auto;
-}*/
+shrink to content size 
 
 
-/* ===========================
-   MAIN CONTENT PUSH DOWN
-=========================== */
 main {
   padding-top: 100px;
 }
@@ -3250,7 +2884,7 @@ main {
 .logo-link:hover {
   opacity: 0.8;
 }
-/* === Sidebar (Default: Desktop layout) === */
+/* === Sidebar (Default: Desktop layout) === 
 .sidebar {
   width: 60px;
   background: #f1f1f1;
@@ -3282,7 +2916,7 @@ main {
   transition: transform 0.2s ease;
 }
 
-/* Slight zoom effect on hover */
+/* Slight zoom effect on hover 
 .sidebar img:hover {
   transform: scale(1.1);
 }
@@ -3321,7 +2955,7 @@ main {
   margin-top: 8px;
 }
 
-/* === Tablet Size (medium screens) === */
+/* === Tablet Size (medium screens) === 
 @media (max-width: 992px) {
   .sidebar img {
     width: 45px;
@@ -3329,11 +2963,11 @@ main {
   }
 }
 
-/* === Mobile Layout: Sidebar becomes bottom nav === */
+/* === Mobile Layout: Sidebar becomes bottom nav === 
 @media (max-width: 768px) {
   .sidebar {
     width: 100%;
-    height: 55px; /* slightly smaller bottom nav */
+    height: 55px; /* slightly smaller bottom nav 
     flex-direction: row;
     justify-content: center;
     align-items: center;
@@ -3350,27 +2984,27 @@ main {
     flex-direction: row;
     justify-content: space-around;
     width: 100%;
-    gap: 2rem; /* more spacing between icons */
+    gap: 2rem; /* more spacing between icons 
     margin-top: 0;
-    padding: 0 0.5rem; /* side padding */
+    padding: 0 0.5rem; /* side padding 
   }
 
   .sidebar img {
-    width: 45px; /* smaller icons for mobile */
+    width: 45px; /* smaller icons for mobile 
     height: 45px;
   }
 
   header {
     margin-right: 0;
-    margin-bottom: 65px; /* space for bottom nav */
-    padding: 0.8rem 1rem; /* slightly smaller header*/ 
+    margin-bottom: 65px; /* space for bottom nav 
+    padding: 0.8rem 1rem; /* slightly smaller header*
   }
 }
 
-/* === Extra Small Screens (very small phones) === */
+/* === Extra Small Screens (very small phones) === 
 @media (max-width: 480px) {
   .sidebar .icon {
-    flex-wrap: wrap; /* allow icons to wrap if too many */
+    flex-wrap: wrap; /* allow icons to wrap if too many 
   }
 
   .sidebar img {
@@ -3391,11 +3025,11 @@ main {
   }
 
 
-/* Slide-in Navbar */
+/* Slide-in Navbar 
 .slide-nav {
   position: fixed;
   top: 0;
-  right: -260px; /* hidden initially */
+  right: -260px; /* hidden initially 
   width: 240px;
   height: 100vh;
   background-color: #ffffff;
@@ -3421,28 +3055,28 @@ main {
   background-color: #f6f6f6;
 }
 
-/* Active state (visible) */
+/* Active state (visible) 
 .slide-nav.active {
   right: 0;
 }
 
-/* Overlay for mobile */
+/* Overlay for mobile 
 .overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.15); /* ✏️ make it lighter */
+  background: rgba(0, 0, 0, 0.15); /* ✏️ make it lighter 
   display: none;
-  z-index: 700; /* ✏️ lower than navbar */
+  z-index: 700; /* ✏️ lower than navbar 
 }
 
 .overlay.active {
   display: block;
 }
 
-/* Optional: Hide hamburger on large desktop if not needed */
+/* Optional: Hide hamburger on large desktop if not needed 
 @media (min-width: 992px) {
   .hamburger {
     display: block;
@@ -3461,10 +3095,10 @@ main {
 .user-info .profile-pic {
   width: 120px;
   height: 120px;
-  border-radius: 50%;         /* Circle shape */
-  border: 2px solid #228B22;  /* Green border */
-  object-fit: cover;          /* Fit the image */
-  margin-bottom: 10px;        /* Space below image */
+  border-radius: 50%;         /* Circle shape 
+  border: 2px solid #228B22;  /* Green border 
+  object-fit: cover;          /* Fit the image
+  margin-bottom: 10px;        /* Space below image 
 }
 
 .user-info h3 {
@@ -3481,8 +3115,8 @@ main {
 .profile-pic {
   width: 120px;
   height: 120px;
-  border-radius: 50%;      /* makes it circular */
-  object-fit: cover;       /* ensures it fits perfectly */
+  border-radius: 50%;      /* makes it circular 
+  object-fit: cover;       /* ensures it fits perfectly 
 }
 
 
@@ -3548,25 +3182,25 @@ main {
 }
 
 .post-options {
-    margin-left: auto;     /* Pushes dots all the way right */
+    margin-left: auto;     /* Pushes dots all the way right 
     position: relative;
     top: 0;
     left: 0;
 }
 
 
-/* Hover (desktop only applies) */
+/* Hover (desktop only applies) 
 .follow-btn:hover {
     background: #0069d9;
 }
 
 
 .follow-btn:active {
-    transform: scale(0.96);     /* Click effect */
+    transform: scale(0.96);     /* Click effect 
 }
 
 .following-btn {
-    background: #e5e5e5;        /* Grey for following */
+    background: #e5e5e5;        /* Grey for following 
     color: #333;
 }
 
@@ -3581,9 +3215,9 @@ main {
 
 .follow-container {
     display: flex;
-    justify-content: flex-end; /* keep button right inside this div */
+    justify-content: flex-end; /* keep button right inside this div 
     width: auto;
-    padding-left:50px;              /* auto size */
+    padding-left:50px;              /* auto size 
 }
 
 .postprofile-pic {
@@ -3597,7 +3231,7 @@ main {
     display: flex;
     flex-direction: column;
     margin-left: 8px;
-    flex-grow: 1;        /* username stays left */
+    flex-grow: 1;        /* username stays left 
 }
 
 .follow-btn {
@@ -3610,12 +3244,12 @@ main {
     cursor: pointer;
     transition: 0.2s;
     
-    /* Default (not following) */
+    /* Default (not following) 
     background: #228B22;
     color: white;
 }
 
-/* After following */
+/* After following 
 .following {
     background: white;
     color: #228B22;
@@ -3640,7 +3274,7 @@ main {
 
 
 .details-caption table {
-    line-height: 1.3 !important; /* restore readable table */
+    line-height: 1.3 !important; /* restore readable table 
     margin: 0 !important;
 }
 
@@ -3662,12 +3296,12 @@ main {
   position: absolute;
   top: 8px;
   left: 8px;
-  background-color: #228B22; /* green */
-  color: white;            /* text + star are white */
+  background-color: #228B22; /* green 
+  color: white;            /* text + star are white 
   padding: 3px 10px;
   font-size: 0.65rem;
   font-weight: 700;
-  border-radius: 14px;     /* smooth round */
+  border-radius: 14px;     /* smooth round 
   box-shadow: 0 2px 4px rgba(0,0,0,0.2);
   letter-spacing: 0.3px;
 }
@@ -3676,12 +3310,12 @@ main {
   position: absolute;
   top: 8px;
   left: 8px;
-  background-color: #228B22; /* green */
-  color: white;            /* text + star are white */
+  background-color: #228B22; /* green *
+  color: white;            /* text + star are white 
   padding: 3px 10px;
   font-size: 0.65rem;
   font-weight: 700;
-  border-radius: 14px;     /* smooth round */
+  border-radius: 14px;     /* smooth round 
   box-shadow: 0 2px 4px rgba(0,0,0,0.2);
   letter-spacing: 0.3px;
 }
@@ -3709,13 +3343,13 @@ main {
     margin: 0 !important;
 }
 
-/* Remove border under first row when hidden */
+/* Remove border under first row when hidden *
 .details-table tr:first-child td,
 .details-table tr:first-child th {
     border-bottom: none !important;
 }
 
-/* When expanded -> restore border */
+/* When expanded -> restore border 
 .details-expanded tr:first-child td,
 .details-expanded tr:first-child th {
     border-bottom: 1px solid #dee2e6 !important;
@@ -3812,10 +3446,10 @@ main {
   background: #f0f0f0;
 }
 
-/* Floating Action Button */
+/* Floating Action Button 
 .post-fab {
   position: fixed;
-  bottom: 70px;        /* 🔥 FIXED position (above bottom nav) */
+  bottom: 70px;        /* 🔥 FIXED position (above bottom nav) 
   right: 20px;
 
   width: 46px;
@@ -3836,13 +3470,13 @@ main {
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-/* Hover effect (NO movement) */
+/* Hover effect (NO movement) 
 .post-fab:hover {
   transform: scale(1.06);
   box-shadow: 0 8px 22px rgba(0,0,0,0.35);
 }
 
-/* Mobile spacing */
+/* Mobile spacing 
 @media (max-width: 480px) {
   .post-fab {
     bottom: 70px;
@@ -3920,58 +3554,74 @@ main {
 
 <div class="overlay" id="overlay" onclick="closeNav()"></div>
 
-<!-- 🔹 Horizontal Featured Posts -->
-<div class="featured-wrapper">
-  <h5 class="px-3 mb-2">🔥 Featured Posts</h5>
-  <div id="featuredSlider" class="featured-slider"></div>
-</div>
 
 
 `;
 
+const featuredSlider = document.getElementById("featuredSlider");
+const postContainer = document.getElementById("postContainer");
 
+featuredSlider.innerHTML = "";
+postContainer.innerHTML = "";
 
-
-// 🔹 Display all posts
 posts.forEach((p, index) => {
+
+  const isFeatured = p.isFeatured === true;
   const isCurrentUser = currentUser && currentUser.email === p.userEmail;
   const images = Array.isArray(p.imageurl) ? p.imageurl : [p.imageurl];
 
-  // Carousel Indicators (bottom dots)
+  /* --------------------------------------------------
+     🔥 FEATURED POSTS (HORIZONTAL STORIES)
+  -------------------------------------------------- 
+  if (isFeatured) {
+    featuredSlider.insertAdjacentHTML("beforeend", `
+      <div class="featured-card">
+        <img src="${images[0]}" alt="Featured">
+        <p class="featured-name">${p.username || "User"}</p>
+      </div>
+    `);
+    return; // ⛔ do NOT render as normal post
+  }
+
+  /* --------------------------------------------------
+     🎠 CAROUSEL INDICATORS
+  -------------------------------------------------- 
   let indicators = "";
   images.forEach((_, i) => {
     indicators += `
-
-
-      <button type="button" data-bs-target="#carousel-${index}" data-bs-slide-to="${i}"
-        ${i === 0 ? "class='active' aria-current='true'" : ""}
-        aria-label="Slide ${i + 1}"></button>
+      <button type="button"
+              data-bs-target="#carousel-${index}"
+              data-bs-slide-to="${i}"
+              ${i === 0 ? "class='active' aria-current='true'" : ""}
+              aria-label="Slide ${i + 1}">
+      </button>
     `;
   });
 
-  // Carousel Items
+  /* --------------------------------------------------
+     🎠 CAROUSEL ITEMS
+  -------------------------------------------------- 
   let carouselItems = "";
   images.forEach((img, i) => {
     carouselItems += `
       <div class="carousel-item ${i === 0 ? "active" : ""}">
         <div class="position-relative">
 
-
           ${p.postType === "event" ? `
-  <div class="event-badge">
-    Event ★
-  </div>
-` : p.postType === "hiring" ? `
-  <div class="hiring-badge">
-    Hiring ★
-  </div>
-` : ""}
+            <div class="event-badge">Event ★</div>
+          ` : p.postType === "hiring" ? `
+            <div class="hiring-badge">Hiring ★</div>
+          ` : ""}
 
-          <img src="${img}" class="d-block mx-auto img-fluid"
-          style="border-radius:10px; width:100%; height:auto; max-height:600px; object-fit:contain; background:#f8f9fa;" alt="Post image">
+          <img src="${img}"
+               class="d-block mx-auto img-fluid"
+               style="border-radius:10px;max-height:600px;
+                      object-fit:contain;background:#f8f9fa;">
 
           ${images.length > 1 ? `
-            <div class="position-absolute top-0 end-0 bg-dark text-white px-2 py-1 m-2 rounded small opacity-75">
+            <div class="position-absolute top-0 end-0
+                        bg-dark text-white px-2 py-1 m-2
+                        rounded small opacity-75">
               ${i + 1} / ${images.length}
             </div>
           ` : ""}
@@ -3980,62 +3630,86 @@ posts.forEach((p, index) => {
     `;
   });
 
-  // Carousel Structure
-  let carousel = `
-    <div id="carousel-${index}" class="carousel slide" data-bs-ride="carousel">
-      ${images.length > 1 ? `<div class="carousel-indicators">${indicators}</div>` : ""}
+  /* --------------------------------------------------
+     🎠 CAROUSEL WRAPPER
+  -------------------------------------------------- 
+  const carousel = `
+    <div id="carousel-${index}"
+         class="carousel slide"
+         data-bs-ride="carousel">
+
+      ${images.length > 1
+        ? `<div class="carousel-indicators">${indicators}</div>`
+        : ""}
+
       <div class="carousel-inner">${carouselItems}</div>
+
       ${images.length > 1 ? `
-        <button class="carousel-control-prev" type="button" data-bs-target="#carousel-${index}" data-bs-slide="prev">
-          <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-          <span class="visually-hidden">Previous</span>
+        <button class="carousel-control-prev"
+                type="button"
+                data-bs-target="#carousel-${index}"
+                data-bs-slide="prev">
+          <span class="carousel-control-prev-icon"></span>
         </button>
-        <button class="carousel-control-next" type="button" data-bs-target="#carousel-${index}" data-bs-slide="next">
-          <span class="carousel-control-next-icon" aria-hidden="true"></span>
-          <span class="visually-hidden">Next</span>
+
+        <button class="carousel-control-next"
+                type="button"
+                data-bs-target="#carousel-${index}"
+                data-bs-slide="next">
+          <span class="carousel-control-next-icon"></span>
         </button>
       ` : ""}
     </div>
   `;
 
-  // ✅ Move this part *inside* the loop
-  html += `
-       <div class="card mb-3 p-3 text-center" style="max-width: 700px; margin: 20px auto; border-radius: 15px;">
-    <div class="postuser-info">
-      
-        <img src="${p.picture || '/uploads/profilepic.jpg'}" class="postprofile-pic">
-        <div class="user-details">
-          <strong 
-  class="open-profile" 
-  data-user="${p.userId}" 
-  style="cursor:pointer; color:black;">
-  ${p.username ? p.username : p.userEmail}
-</strong>
-          <p class="mb-0">${p.college ? p.college : p.name}</p>
+  /* --------------------------------------------------
+     📰 NORMAL POST CARD
+  -------------------------------------------------- 
+  postContainer.insertAdjacentHTML("beforeend", `
+    <div class="card mb-3 p-3 text-center"
+         style="max-width:700px;margin:20px auto;border-radius:15px;">
+
+      <div class="postuser-info d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center">
+          <img src="${p.picture || '/uploads/profilepic.jpg'}"
+               class="postprofile-pic">
+
+          <div class="user-details ms-2">
+            <strong class="open-profile"
+                    data-user="${p.userId}">
+              ${p.username || p.userEmail}
+            </strong>
+            <p class="mb-0">${p.college || ""}</p>
+          </div>
         </div>
-      
-      <!-- Three Dots Menu (only for the post owner) -->
-      
-      
-      ${isCurrentUser ? `
-  <div class="dropdown post-options">
-    <button class="btn btn-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-      <i class="bi bi-three-dots-vertical"></i>
-    </button>
-    <ul class="dropdown-menu dropdown-menu-end">
-      <li><button class="dropdown-item delete-post-btn" data-id="${p._id}">🗑 Delete Post</button></li>
-    </ul>
-  </div>
-` : `
-  <!-- Follow Button -->
-<button class="follow-btn"
-        data-target="${p.userId}">
-    Follow
-</button>
-`}
+
+        ${isCurrentUser ? `
+          <div class="dropdown post-options">
+            <button class="btn btn-sm" data-bs-toggle="dropdown">
+              <i class="bi bi-three-dots-vertical"></i>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+              <li>
+                <button class="dropdown-item delete-post-btn"
+                        data-id="${p._id}">
+                  🗑 Delete Post
+                </button>
+              </li>
+            </ul>
+          </div>
+        ` : `
+          <button class="follow-btn"
+                  data-target="${p.userId}">
+            Follow
+          </button>
+        `}
+      </div>
+
+      ${carousel}
     </div>
+  `);
 
-
+    
 
 
     <!-- Post Images -->
@@ -4314,8 +3988,6 @@ posts.forEach((p, index) => {
   
 <script>
 
-
-
 const hamburger = document.querySelector(".hamburger");
 const slideNav = document.getElementById("slideNav");
 const overlay = document.getElementById("overlay");
@@ -4528,3 +4200,4 @@ const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
 });
+*/
