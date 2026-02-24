@@ -37,6 +37,7 @@ const currentUser = require("./middlewares/currentUser");
 const profileRoutes = require("./routes/profile.routes");
 const postActions = require("./routes/postActions");
 const postsRoute = require("./routes/posts");
+const shareRoutes = require("./routes/share.routes");
 // --------------------
 // DB CONNECT
 // --------------------
@@ -106,6 +107,9 @@ app.use("/", require("./routes/featured-api"));
 app.use("/", require("./routes/profile"));
 app.use("/", profileRoutes);
 app.use("/", require("./routes/home"));
+app.use("/", shareRoutes);
+app.use("/", require("./routes/share.routes.js"));
+
 // --------------------
 // SERVER START
 // --------------------
@@ -707,7 +711,7 @@ app.get("/updateOldUsers", async (req, res) => {
     res.locals.loginSession = null;
   }
   next();
-});*/
+});
 
 
 app.post("/posts/:id/like", async (req, res) => {
@@ -822,7 +826,7 @@ app.post("/posts/:id/share", async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
-});
+});*/
 
 //Friend Details
 
@@ -1242,7 +1246,7 @@ passport.use(
 // ----------------------
 // Share Script
 // ----------------------
-app.get("/share-script.js", (req, res) => {
+/*app.get("/share-script.js", (req, res) => {
   res.setHeader("Content-Type", "application/javascript");
   res.send(`
     document.addEventListener("click", function(e) {
@@ -1278,7 +1282,7 @@ app.get("/share-script.js", (req, res) => {
     });
   `);
 });
-
+*/
 
 // ----------------------
 // API: Fetch Post Data

@@ -6,7 +6,7 @@ const genz = require("../models/primary/User");
 
 /* ================= LIKE ================= */
 
-router.post("/posts/:id/like", async (req, res) => {
+router.post("/:id/like", async (req, res) => {
 
   if (!req.session.userId)
     return res.json({ error: "login" });
@@ -39,10 +39,9 @@ router.post("/posts/:id/like", async (req, res) => {
   }
 });
 
-
 /* ================= SAVE ================= */
 
-router.post("/posts/:id/save", async (req, res) => {
+router.post("/:id/save", async (req, res) => {
 
   if (!req.session.userId)
     return res.json({ error: "login" });
@@ -81,10 +80,9 @@ router.post("/posts/:id/save", async (req, res) => {
   }
 });
 
-
 /* ================= SHARE ================= */
 
-router.post("/posts/:id/share", async (req, res) => {
+router.post("/:id/share", async (req, res) => {
 
   if (!req.session.userId)
     return res.json({ error: "login" });

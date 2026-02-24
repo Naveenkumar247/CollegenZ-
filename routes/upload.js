@@ -48,14 +48,6 @@ router.post(
         });
       }
 
-      // ❌ TEXT MODERATION
-      if (hasBannedText(data)) {
-        return res.status(400).json({
-          success: false,
-          type: "CONTENT",
-          message: "Your post violates community guidelines."
-        });
-      }
 
       // ❌ AUTH CHECK
       const currentUser = res.locals.currentUser;
