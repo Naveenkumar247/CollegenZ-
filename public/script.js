@@ -280,6 +280,7 @@ console.error(e);
    
 
 /* ================= LIKE / SAVE / SHARE ================= */
+if(e.target.closest(".like-btn")?.dataset.loading) return;
 document.addEventListener("click", async e => {
 
 const like=e.target.closest(".like-btn");
@@ -288,30 +289,52 @@ const share=e.target.closest(".share-btn");
 
 /* LIKE */
 if(like){
-const id=like.dataset.id;
-const r=await fetch(`/posts/${id}/like`,{
+
+const id = like.dataset.id;
+const icon = like.querySelector("i");
+const countEl = document.getElementById("like-"+id);
+
+/* ✅ instant UI toggle */
+icon.classList.toggle("bi-heart");
+icon.classList.toggle("bi-heart-fill");
+icon.classList.toggle("text-success");
+
+countEl.textContent =
+  Number(countEl.textContent) +
+  (icon.classList.contains("bi-heart-fill") ? 1 : -1);
+
+try{
+const r = await fetch(`/posts/${id}/like`,{
   method:"POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ userId: CURRENT_USER?._id })
+  headers:{ "Content-Type":"application/json" },
+  body:JSON.stringify({ userId: CURRENT_USER?._id })
 });
-const d=await r.json();
-if(d.error)return alert("Login first");
-document.getElementById("like-count-"+id).textContent=d.likes;
-like.querySelector("i").className=d.liked?"bi bi-heart-fill":"bi bi-heart";
+await r.json();
+}catch(err){
+console.log("Like sync failed");
+}
 }
 
 /* SAVE */
 if(save){
-const id=save.dataset.id;
-const r=await fetch(`/posts/${id}/save`,{
+
+const id = save.dataset.id;
+const icon = save.querySelector("i");
+const countEl = document.getElementById("save-"+id);
+
+icon.classList.toggle("bi-bookmark");
+icon.classList.toggle("bi-bookmark-fill");
+icon.classList.toggle("text-success");
+
+countEl.textContent =
+  Number(countEl.textContent) +
+  (icon.classList.contains("bi-bookmark-fill") ? 1 : -1);
+
+await fetch(`/posts/${id}/save`,{
   method:"POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ userId: CURRENT_USER?._id })
+  headers:{ "Content-Type":"application/json" },
+  body:JSON.stringify({ userId: CURRENT_USER?._id })
 });
-const d=await r.json();
-if(d.error)return alert("Login first");
-document.getElementById("save-count-"+id).textContent=d.saves;
-save.querySelector("i").className=d.saved?"bi bi-bookmark-fill":"bi bi-bookmark";
 }
 
 /* SHARE */

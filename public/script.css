@@ -456,3 +456,7 @@ float:right;
 font-size:22px;
 cursor:pointer;
 }
+
+.text-success{
+color:#198754 !important;
+}
