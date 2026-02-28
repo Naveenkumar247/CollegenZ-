@@ -8,10 +8,9 @@ router.get("/", async (req, res) => {
 
   try {
 
-    const count = await Post.countDocuments();
-    console.log("TOTAL POSTS IN DB:", count);
-
-    const posts = await Post.find({});
+    const posts = await Post.find({})
+      .populate("userId", "username") // 🔥 THIS LINE FIXES EVERYTHING
+      .sort({ createdAt: -1 });
 
     console.log("POSTS FETCHED:", posts.length);
 

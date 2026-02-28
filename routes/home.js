@@ -99,6 +99,15 @@ router.get("/", async (req, res) => {
   </div>
 </div>
 
+<div id="profilePopup" class="profile-popup">
+  <div class="profile-popup-content">
+    <span class="close-popup">&times;</span>
+    <div id="profileData" style="text-align:center;padding:10px">
+      Loading...
+    </div>
+  </div>
+</div>
+
 <!-- ================= SCRIPTS ================= -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="/script.js" defer></script>

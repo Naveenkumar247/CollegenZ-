@@ -66,7 +66,12 @@ const img=Array.isArray(p.imageurl)?p.imageurl[0]:p.imageurl;
 featuredSlider.innerHTML+=`
 <div class="featured-card">
 <img src="${img}">
-<p>${p.username||"User"}</p>
+<strong
+ class="open-profile"
+ data-user="${p.userId?._id}"
+ style="cursor:pointer;color:#0d6efd;">
+${p.userId?.username || "User"}
+</strong>
 </div>`;
 });
 
@@ -212,8 +217,16 @@ postContainer.insertAdjacentHTML("beforeend",`
 <div class="ig-post">
 
 <div class="ig-header">
+
 <img src="${p.picture||"/uploads/profilepic.jpg"}" class="ig-avatar">
-<strong>${p.username||"User"}</strong>
+
+<strong
+ class="open-profile"
+ data-user="${p.userId?._id}"
+ style="cursor:pointer;color:#0d6efd;margin-left:8px;">
+${p.userId?.username || "User"}
+</strong>
+
 </div>
 
 <div id="carousel-${index}" class="carousel slide" data-bs-touch="true">
@@ -364,3 +377,42 @@ const btn=document.querySelector(`[onclick="toggleCaption('${id}')"]`);
 if(btn) btn.remove();
 
 }
+/* ================= MINI PROFILE POPUP ================= */
+
+document.addEventListener("click", async e => {
+
+const user = e.target.closest(".open-profile");
+if(!user) return;
+
+const userId = user.dataset.user;
+
+document.getElementById("profilePopup").style.display="flex";
+document.getElementById("profileData").innerHTML="Loading...";
+
+try{
+  const res = await fetch(`/api/user/${userId}`);
+  const u = await res.json();
+
+  document.getElementById("profileData").innerHTML=`
+    <img src="${u.picture||'/uploads/profilepic.jpg'}"
+         style="width:80px;height:80px;border-radius:50%"><br>
+
+    <strong>${u.username}</strong><br>
+    <small>${u.email||""}</small><br><br>
+
+    <p>${u.bio||"No bio"}</p>
+
+    <a href="/profile/${u._id}" class="btn btn-success btn-sm">
+      View Profile
+    </a>
+  `;
+}catch(err){
+  document.getElementById("profileData").innerHTML="Failed to load";
+}
+
+});
+
+/* CLOSE POPUP */
+document.querySelector(".close-popup").onclick=()=>{
+document.getElementById("profilePopup").style.display="none";
+};

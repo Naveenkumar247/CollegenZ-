@@ -109,6 +109,8 @@ app.use("/", profileRoutes);
 app.use("/", require("./routes/home"));
 app.use("/", shareRoutes);
 app.use("/", require("./routes/share.routes.js"));
+app.use("/", require("./routes/user.api"));
+
 
 // --------------------
 // SERVER START
