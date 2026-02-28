@@ -280,21 +280,24 @@ console.error(e);
    
 
 /* ================= LIKE / SAVE / SHARE ================= */
-if(e.target.closest(".like-btn")?.dataset.loading) return;
 document.addEventListener("click", async e => {
 
-const like=e.target.closest(".like-btn");
-const save=e.target.closest(".save-btn");
-const share=e.target.closest(".share-btn");
+const like = e.target.closest(".like-btn");
+const save = e.target.closest(".save-btn");
+const share = e.target.closest(".share-btn");
 
-/* LIKE */
+/* ================= LIKE ================= */
 if(like){
+
+// prevent spam clicking
+if(like.dataset.loading) return;
+like.dataset.loading = "true";
 
 const id = like.dataset.id;
 const icon = like.querySelector("i");
 const countEl = document.getElementById("like-"+id);
 
-/* ✅ instant UI toggle */
+/* instant UI update */
 icon.classList.toggle("bi-heart");
 icon.classList.toggle("bi-heart-fill");
 icon.classList.toggle("text-success");
@@ -304,19 +307,24 @@ countEl.textContent =
   (icon.classList.contains("bi-heart-fill") ? 1 : -1);
 
 try{
-const r = await fetch(`/posts/${id}/like`,{
+await fetch(`/posts/${id}/like`,{
   method:"POST",
   headers:{ "Content-Type":"application/json" },
   body:JSON.stringify({ userId: CURRENT_USER?._id })
 });
-await r.json();
-}catch(err){
+}catch{
 console.log("Like sync failed");
 }
+
+setTimeout(()=> like.dataset.loading="",300);
 }
 
-/* SAVE */
+
+/* ================= SAVE ================= */
 if(save){
+
+if(save.dataset.loading) return;
+save.dataset.loading="true";
 
 const id = save.dataset.id;
 const icon = save.querySelector("i");
@@ -335,19 +343,26 @@ await fetch(`/posts/${id}/save`,{
   headers:{ "Content-Type":"application/json" },
   body:JSON.stringify({ userId: CURRENT_USER?._id })
 });
+
+setTimeout(()=> save.dataset.loading="",300);
 }
 
-/* SHARE */
+
+/* ================= SHARE ================= */
 if(share){
-const id=share.dataset.id;
-const r=await fetch(`/posts/${id}/share`,{
+
+const id = share.dataset.id;
+
+const r = await fetch(`/posts/${id}/share`,{
   method:"POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ userId: CURRENT_USER?._id })
+  headers:{ "Content-Type":"application/json" },
+  body:JSON.stringify({ userId: CURRENT_USER?._id })
 });
-const d=await r.json();
-if(d.error)return alert("Login first");
-document.getElementById("share-count-"+id).textContent=d.shares;
+
+const d = await r.json();
+
+/* FIXED ID */
+document.getElementById("share-"+id).textContent = d.shares;
 }
 
 });
