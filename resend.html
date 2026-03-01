@@ -123,118 +123,226 @@ document.body.innerHTML="<h3>Post not found</h3>";
 return;
 }
 
-const container=document.getElementById("postContainer");
+const container = document.getElementById("postContainer");
 
-const images=Array.isArray(p.imageurl)?p.imageurl:[p.imageurl];
+const images = Array.isArray(p.imageurl)
+  ? p.imageurl
+  : [p.imageurl];
 
 /* ================= CAROUSEL ================= */
 
-let indicators="";
-images.forEach((_,i)=>{
-indicators+=`
-<button type="button"
-data-bs-target="#carousel-${p._id}"
-data-bs-slide-to="${i}"
-${i===0?"class='active'":""}></button>`;
+let indicators = "";
+images.forEach((_, i) => {
+  indicators += `
+  <button type="button"
+    data-bs-target="#carousel-${p._id}"
+    data-bs-slide-to="${i}"
+    ${i === 0 ? "class='active'" : ""}>
+  </button>`;
 });
 
-let slides="";
-images.forEach((img,i)=>{
-slides+=`
-<div class="carousel-item ${i===0?"active":""}">
-<div class="position-relative">
+let slides = "";
+images.forEach((img, i) => {
+  slides += `
+  <div class="carousel-item ${i === 0 ? "active" : ""}">
+    <div class="position-relative">
 
-<img src="${img}"
-class="d-block w-100 img-fluid"
-style="max-height:600px;object-fit:contain;background:#f8f9fa">
+      <img src="${img}"
+        class="d-block w-100 img-fluid"
+        style="max-height:600px;object-fit:contain;background:#f8f9fa">
 
-${images.length>1?`
-<div class="position-absolute top-0 end-0 bg-dark text-white px-2 py-1 m-2 rounded small opacity-75">
-${i+1}/${images.length}
-</div>`:""}
+      ${
+        images.length > 1
+          ? `
+        <div class="position-absolute top-0 end-0
+            bg-dark text-white px-2 py-1 m-2 rounded small opacity-75">
+            ${i + 1}/${images.length}
+        </div>`
+          : ""
+      }
 
-</div>
-</div>`;
+    </div>
+  </div>`;
 });
 
-const carouselHTML=`
-<div id="carousel-${p._id}" class="carousel slide" data-bs-touch="true">
+const carouselHTML = `
+<div id="carousel-${p._id}"
+     class="carousel slide"
+     data-bs-touch="true">
 
-${images.length>1?`<div class="carousel-indicators">${indicators}</div>`:""}
+  ${
+    images.length > 1
+      ? `<div class="carousel-indicators">${indicators}</div>`
+      : ""
+  }
 
-<div class="carousel-inner">${slides}</div>
+  <div class="carousel-inner">
+    ${slides}
+  </div>
 
 </div>
 `;
 
-/* ================= DESCRIPTION ================= */
 
-const short=p.data?.slice(0,120)||"";
-const rest=p.data?.slice(120)||"";
 
-const captionHTML=`
-<p id="caption-${p._id}">
-${short}
-${rest?`
-<span id="dots-${p._id}">...</span>
-<span id="more-${p._id}" style="display:none;">${rest}</span>
-<a class="see-more" onclick="expandText('${p._id}')"> more</a>
-`:""}
-</p>
-`;
+/* ================= DESCRIPTION TYPE ================= */
+
+let caption = "";
+
+/* ---------- GENERAL POST ---------- */
+if (p.postType === "general") {
+
+  const short = p.data?.slice(0, 120) || "";
+  const rest = p.data?.slice(120) || "";
+
+  caption = `
+  <p id="caption-${p._id}">
+    ${short}
+    ${
+      rest
+        ? `
+        <span id="dots-${p._id}">...</span>
+        <span id="more-${p._id}" style="display:none;">${rest}</span>
+        <a class="see-more" onclick="expandText('${p._id}')"> more</a>
+        `
+        : ""
+    }
+  </p>`;
+}
+
+
+/* ---------- EVENT POST ---------- */
+else if (p.postType === "event") {
+
+  caption = `
+  <div class="details-box">
+
+    <div class="row-${p._id}"
+         style="font-weight:600;text-align:center">
+      ${p.data || "-"}
+    </div>
+
+    <table class="table details-table row-${p._id}" style="display:none">
+      <tbody>
+
+        <tr><th>Date</th><td>${p.event_date || "-"}</td></tr>
+        <tr><th>Time</th><td>${p.event_time || "-"}</td></tr>
+        <tr><th>Mode</th><td>${p.event_mode || "-"}</td></tr>
+        <tr><th>Location</th><td>${p.event_location || "-"}</td></tr>
+        <tr><th>Contact</th><td>${p.event_contact || "-"}</td></tr>
+
+        <tr>
+          <th>Description</th>
+          <td>${p.event_description || "-"}</td>
+        </tr>
+
+        <tr>
+          <th>Register</th>
+          <td>
+            <a href="${
+              p.event_link?.startsWith("http")
+                ? p.event_link
+                : "https://" + p.event_link
+            }" target="_blank">
+              Open Link
+            </a>
+          </td>
+        </tr>
+
+      </tbody>
+    </table>
+
+    <a class="see-more"
+       onclick="toggleDetails('${p._id}')">
+       View details
+    </a>
+
+  </div>`;
+}
+
+
+/* ---------- HIRING POST ---------- */
+else {
+
+  caption = `
+  <div class="details-box">
+
+    <div class="row-${p._id}"
+         style="font-weight:600;text-align:center">
+      ${p.data || "-"}
+    </div>
+
+    <table class="table details-table row-${p._id}" style="display:none">
+      <tbody>
+
+        <tr><th>Location</th><td>${p.job_location || "-"}</td></tr>
+        <tr><th>Mode</th><td>${p.job_mode || "-"}</td></tr>
+        <tr><th>Contact</th><td>${p.job_contact || "-"}</td></tr>
+
+        <tr>
+          <th>Description</th>
+          <td>${p.job_description || "-"}</td>
+        </tr>
+
+        <tr><th>Deadline</th><td>${p.job_deadline || "-"}</td></tr>
+
+        <tr>
+          <th>Apply</th>
+          <td>
+            <a href="${
+              p.job_link?.startsWith("http")
+                ? p.job_link
+                : "https://" + p.job_link
+            }" target="_blank">
+              Apply
+            </a>
+          </td>
+        </tr>
+
+      </tbody>
+    </table>
+
+    <a class="see-more"
+       onclick="toggleDetails('${p._id}')">
+       View details
+    </a>
+
+  </div>`;
+}
+
+
 
 /* ================= UI BUILD ================= */
 
-container.innerHTML=`
+container.innerHTML = `
 
 <div class="postuser-info">
-<img src="${p.picture||'/uploads/profilepic.jpg'}" class="postprofile-pic">
+  <img src="${p.picture || "/uploads/profilepic.jpg"}"
+       class="postprofile-pic">
 
-<div class="user-details text-start">
-<strong>${p.username||p.userEmail}</strong>
-<p>${p.college||""}</p>
-</div>
-</div>
-
-<div class="my-3">${carouselHTML}</div>
-
-<div class="action-bar">
-
-<div class="action-left">
-
-<div class="action-btn">
-<i class="bi bi-heart"></i>
-<span>${p.likes||0}</span>
+  <div class="user-details text-start">
+    <strong>${p.username || p.userEmail}</strong>
+    <p>${p.college || ""}</p>
+  </div>
 </div>
 
-<div class="action-btn">
-<i class="bi bi-bookmark"></i>
-<span>${p.saves||0}</span>
+<div class="my-3">
+  ${carouselHTML}
 </div>
 
-<div class="action-btn" onclick="sharePost('${p._id}')">
-<i class="bi bi-share"></i>
-<span>${p.shares||0}</span>
-</div>
-
-</div>
-
-</div>
-
-${captionHTML}
+${caption}
 
 <div class="brand-box">
 
-<h3>CollegenZ</h3>
-<p>A new world for productive people</p>
+  <h3>CollegenZ</h3>
 
-<p style="color:#666;font-size:.9rem;">
-For more information visit <strong>CollegenZ</strong>
-</p>
+  <p style="color:#666;font-size:.9rem;">
+    For more information visit <strong>CollegenZ</strong>
+  </p>
 
-<a href="https://collegenz.in" class="join-btn">
-Join Now
-</a>
+  <a href="https://collegenz.in" class="join-btn">
+    Join Now
+  </a>
 
 </div>
 `;
@@ -249,6 +357,20 @@ document.getElementById("more-"+id).style.display="inline";
 }
 
 /* ================= SHARE ================= */
+
+function expandText(id){
+  document.getElementById("dots-"+id).style.display="none";
+  document.getElementById("more-"+id).style.display="inline";
+}
+
+function toggleDetails(id){
+  document.querySelectorAll(".row-"+id).forEach(r=>{
+    r.style.display="table-row";
+  });
+
+  const btn=document.querySelector(`[onclick="toggleDetails('${id}')"]`);
+  if(btn) btn.remove();
+}
 
 function sharePost(id){
 
