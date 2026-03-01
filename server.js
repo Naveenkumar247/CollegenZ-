@@ -110,7 +110,7 @@ app.use("/", require("./routes/home"));
 app.use("/", shareRoutes);
 app.use("/", require("./routes/share.routes.js"));
 app.use("/", require("./routes/user.api"));
-
+require("./services/autoDelete");
 
 // --------------------
 // SERVER START
