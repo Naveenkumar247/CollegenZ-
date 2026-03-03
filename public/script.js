@@ -229,7 +229,7 @@ postContainer.insertAdjacentHTML("beforeend",`
 <strong
  class="open-profile"
  data-user="${p.userId?._id}"
- style="cursor:pointer;color:#0d6efd;margin-left:8px;">
+ style="cursor:pointer;color:black;margin-left:8px;">
 ${p.userId?.username || "User"}
 </strong>
 
