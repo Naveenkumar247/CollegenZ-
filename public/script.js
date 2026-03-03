@@ -154,9 +154,15 @@ ${p.data||"-"}
 <tr>
 <th>Register</th>
 <td>
-<a href="${p.job_link?.startsWith("http")?p.job_link:"https://"+p.job_link}" target="_blank">
-Open Link
-</a>
+  ${
+    p.job_link && p.job_link.trim() !== ""
+      ? `<a href="${
+          p.job_link.startsWith("http")
+            ? p.job_link
+            : "https://" + p.job_link
+        }" target="_blank">Open Link</a>`
+      : "No Link Available"
+  }
 </td>
 </tr>
 

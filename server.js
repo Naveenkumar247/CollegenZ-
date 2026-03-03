@@ -531,7 +531,9 @@ app.get("/notifications",(req,res) => {
 app.get("/admin/certificate", (req, res) => {
   res.sendFile(path.join(__dirname, "views", "admin.html"));
 });
-
+app.get("/admin/featured", (req, res) => {
+  res.sendFile(path.join(__dirname, "featured-submit.html"));
+});
 
 app.use(async (req, res, next) => {
   if (req.session?.userId) {
