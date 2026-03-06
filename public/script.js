@@ -428,19 +428,48 @@ if(share){
 
 const id = share.dataset.id;
 
+try{
+
 const r = await fetch(`/posts/${id}/share`,{
-  method:"POST",
-  headers:{ "Content-Type":"application/json" },
-  body:JSON.stringify({ userId: CURRENT_USER?._id })
+method:"POST",
+headers:{ "Content-Type":"application/json" },
+body:JSON.stringify({ userId: CURRENT_USER?._id })
 });
 
 const d = await r.json();
 
-/* FIXED ID */
+/* update share count */
 document.getElementById("share-"+id).textContent = d.shares;
+
+/* share URL */
+const url = window.location.origin + "/share/" + id;
+
+/* open share dialog */
+if(navigator.share){
+
+navigator.share({
+title:"CollegenZ",
+text:"Check out this post on CollegenZ 🌱",
+url:url
+}).catch(()=>{});
+
+}else{
+
+window.open(
+"https://wa.me/?text=" + encodeURIComponent(url),
+"_blank"
+);
+
+}
+
+}catch(err){
+console.log("Share failed");
+}
+
 }
 
 });
+
 
 /* ================= FILTER ================= */
 document.querySelectorAll(".filter-btn").forEach(b=>{
