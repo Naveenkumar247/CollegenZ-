@@ -24,6 +24,30 @@ window.addEventListener("scroll", () => {
 /* ================= GLOBAL USER ================= */
 let CURRENT_USER = null;
 let IS_LOGGED_IN = false;
+let FEATURED_DATA = [];
+
+function openStory(index){
+
+const story = FEATURED_DATA[index];
+
+const img = Array.isArray(story.imageurl)
+? story.imageurl[0]
+: story.imageurl;
+
+document.getElementById("storyImage").src = img;
+
+document.getElementById("storyUsername").textContent =
+story.userId?.username || "User";
+
+document.getElementById("storyUserPic").src =
+story.picture || "/uploads/profilepic.jpg";
+
+document.getElementById("storyViewer").style.display = "flex";
+}
+
+function closeStory(){
+document.getElementById("storyViewer").style.display = "none";
+}
 
 /* ================= LOAD USER ================= */
 async function loadUser() {
@@ -53,6 +77,7 @@ const featuredRes=await fetch("/api/featured");
 
 const {posts=[]}=await postRes.json();
 const {featured=[]}=await featuredRes.json();
+FEATURED_DATA = featured;
 
 const postContainer=document.getElementById("postContainer");
 const featuredSlider=document.getElementById("featuredSlider");
@@ -61,18 +86,26 @@ featuredSlider.innerHTML="";
 postContainer.innerHTML="";
 
 /* FEATURED */
-featured.forEach(p=>{
-const img=Array.isArray(p.imageurl)?p.imageurl[0]:p.imageurl;
-featuredSlider.innerHTML+=`
-<div class="featured-card">
+featured.forEach((p,i)=>{
+
+const img = Array.isArray(p.imageurl) ? p.imageurl[0] : p.imageurl;
+
+featuredSlider.innerHTML += `
+<div class="featured-card"
+onclick="openStory(${i})">
+
 <img src="${img}">
+
 <strong
- class="open-profile"
- data-user="${p.userId?._id}"
- style="cursor:pointer;color:#0d6efd;">
+class="open-profile"
+data-user="${p.userId?._id}"
+style="cursor:pointer;color:#0d6efd;">
 ${p.userId?.username || "User"}
 </strong>
-</div>`;
+
+</div>
+`;
+
 });
 
 /* POSTS */
@@ -202,7 +235,7 @@ ${p.data||"-"}
 <tr>
 <th>Apply</th>
 <td>
-<a href="${p.job_link?.startsWith("http")?p.job_link:"https://"+p.job_link}" target="_blank">
+<a href="${p.job_link ? (p.job_link.startsWith("http") ? p.job_link : "https://" + p.job_link) : "#"}" target="_blank">
 Apply
 </a>
 </td>
@@ -224,22 +257,42 @@ postContainer.insertAdjacentHTML("beforeend",`
 
 <div class="ig-header">
 
-<img src="${p.picture||"/uploads/profilepic.jpg"}" class="ig-avatar">
+<div class="ig-user">
+
+<img src="${p.picture || "/uploads/profilepic.jpg"}" class="ig-avatar">
 
 <strong
- class="open-profile"
- data-user="${p.userId?._id}"
- style="cursor:pointer;color:black;margin-left:8px;">
+class="open-profile"
+data-user="${p.userId?._id}"
+style="cursor:pointer;color:black;margin-left:8px;">
 ${p.userId?.username || "User"}
 </strong>
+
+${CURRENT_USER && CURRENT_USER._id !== p.userId?._id ? `
+<span class="follow-btn" data-user="${p.userId?._id}">
+Follow
+</span>
+` : ""}
+
+</div>
+
+<div class="post-menu">
+<i class="bi bi-three-dots" data-id="${p._id}"></i>
+</div>
 
 </div>
 
 <div id="carousel-${index}" class="carousel slide" data-bs-touch="true">
 
-${images.length>1?`<div class="carousel-indicators">${indicators}</div>`:""}
+${images.length > 1 ? `
+<div class="carousel-indicators">
+${indicators}
+</div>
+` : ""}
 
-<div class="carousel-inner">${slides}</div>
+<div class="carousel-inner">
+${slides}
+</div>
 
 </div>
 
@@ -249,38 +302,54 @@ ${images.length>1?`<div class="carousel-indicators">${indicators}</div>`:""}
 
 <span class="like-btn" data-id="${p._id}">
 <i class="bi bi-heart"></i>
-<small id="like-${p._id}">${p.likes||0}</small>
+<small id="like-${p._id}">${p.likes || 0}</small>
 </span>
 
 <span class="share-btn" data-id="${p._id}">
 <i class="bi bi-send"></i>
-<small id="share-${p._id}">${p.shares||0}</small>
+<small id="share-${p._id}">${p.shares || 0}</small>
 </span>
 
 </div>
 
 <span class="save-btn" data-id="${p._id}">
 <i class="bi bi-bookmark"></i>
-<small id="save-${p._id}">${p.saves||0}</small>
+<small id="save-${p._id}">${p.saves || 0}</small>
 </span>
 
 </div>
 
-<div class="ig-caption">${caption}</div>
+<div class="ig-caption">
+${caption}
+</div>
 
 </div>
+
 `);
 
+}); // end posts loop
+
+
+/* ================= ENABLE SWIPE AFTER POSTS RENDER ================= */
+document.querySelectorAll(".carousel").forEach(c => {
+
+if (!c.dataset.loaded) {
+
+new bootstrap.Carousel(c,{
+interval:false,
+touch:true
 });
 
-/* enable swipe */
-document.querySelectorAll(".carousel").forEach(c=>{
-new bootstrap.Carousel(c,{interval:false,touch:true});
+c.dataset.loaded="true";
+
+}
+
 });
 
 }catch(e){
-console.error(e);
+console.error("POST LOAD ERROR:", e);
 }
+
 }
 
    
@@ -460,3 +529,39 @@ try{
 document.querySelector(".close-popup").onclick=()=>{
 document.getElementById("profilePopup").style.display="none";
 };
+
+
+/* ================= FEATURED STORY ================= */
+
+let CURRENT_STORY = 0;
+
+function openStory(index){
+
+CURRENT_STORY = index;
+showStory();
+
+document.getElementById("storyViewer").style.display="flex";
+
+}
+
+function showStory(){
+
+const story = FEATURED_DATA[CURRENT_STORY];
+
+const img = Array.isArray(story.imageurl)
+? story.imageurl[0]
+: story.imageurl;
+
+document.getElementById("storyImage").src = img;
+
+document.getElementById("storyUsername").textContent =
+story.userId?.username || "User";
+
+document.getElementById("storyUserPic").src =
+story.picture || "/uploads/profilepic.jpg";
+
+}
+
+function closeStory(){
+document.getElementById("storyViewer").style.display="none";
+}

@@ -229,6 +229,25 @@ router.get("/", async (req, res) => {
   </div>
 </div>
 
+
+<div id="storyViewer" class="story-viewer">
+
+<button class="story-close" onclick="closeStory()">✕</button>
+
+<div class="story-content">
+
+<img id="storyImage">
+
+<div class="story-user">
+<img id="storyUserPic">
+<span id="storyUsername"></span>
+</div>
+
+</div>
+
+</div>
+
+
 <!-- ================= SCRIPTS ================= -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="/script.js" defer></script>

@@ -110,7 +110,9 @@ app.use("/", require("./routes/home"));
 app.use("/", shareRoutes);
 app.use("/", require("./routes/share.routes.js"));
 app.use("/", require("./routes/user.api"));
+app.use("/", require("./routes/me.api"));
 require("./services/autoDelete");
+require("./services/eventReminder");
 
 // --------------------
 // SERVER START
@@ -1043,12 +1045,12 @@ app.get("/api/user/:id", async (req, res) => {
   }
 });
 
-app.get("/api/me", (req, res) => {
+/*app.get("/api/me", (req, res) => {
   if (!res.locals.currentUser) {
     return res.status(401).json({ error: "Not logged in" });
   }
   res.json({ id: res.locals.currentUser._id.toString() });
-});
+});*/
 
 router.get("/api/messages/:friendId", async (req, res) => {
   try {
@@ -1099,7 +1101,7 @@ app.get("/admin/certificate", (req, res) => {
 app.use("/api/collegenz/certificate", collegenzCertificateRoutes);
 app.use("/api/admin/certificate", adminRoutes);
 
-const transporter = nodemailer.createTransport({
+/*const transporter = nodemailer.createTransport({
   host: "smtp.zoho.in", // ✅ Use this for India data center
   port: 465,
   secure: true, // true for 465
@@ -1153,7 +1155,7 @@ cron.schedule("0 9 * * *", async () => {
   } catch (err) {
     console.error("❌ Reminder cron job failed:", err.message);
   }
-});
+});*/
 
 
 router.get("/api/events", async (req, res) => {
@@ -1207,7 +1209,7 @@ router.get("/featured", async (req, res) => {
   res.json(posts);
 });
 
-passport.use(
+/*passport.use(
   new LocalStrategy(
     { usernameField: "login", passwordField: "password" },
     async (login, password, done) => {
@@ -1250,7 +1252,7 @@ passport.use(
 // ----------------------
 // Share Script
 // ----------------------
-/*app.get("/share-script.js", (req, res) => {
+app.get("/share-script.js", (req, res) => {
   res.setHeader("Content-Type", "application/javascript");
   res.send(`
     document.addEventListener("click", function(e) {
