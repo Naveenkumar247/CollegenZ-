@@ -208,7 +208,9 @@ router.get("/", async (req, res) => {
 <div id="postContainer"></div>
 
 <!-- ================= FLOATING POST BUTTON ================= -->
-<a href="/upload" class="post-fab"></a>
+<a href="/upload" class="post-fab">
+  <img src="/uploads/add.png" alt="Post">
+</a>
 
 <div class="sidebar">
   <div class="icon">

@@ -455,10 +455,7 @@ url:url
 
 }else{
 
-window.open(
-"https://wa.me/?text=" + encodeURIComponent(url),
-"_blank"
-);
+window.location.href="/?post=${post._id}";
 
 }
 

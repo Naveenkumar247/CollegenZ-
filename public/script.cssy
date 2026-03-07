@@ -198,8 +198,6 @@ z-index:999;
 .post-fab img{
 width:26px;
 height:26px;
-border-radius:70%;
-object-fit:cover;
 }
 
 /* ================= SIDEBAR ================= */
