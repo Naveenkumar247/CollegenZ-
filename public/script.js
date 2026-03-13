@@ -1,25 +1,45 @@
 console.log("🔥 SCRIPT LOADED");
 
-/* ================= HEADER COLLAPSE ================= */
-let lastScroll = 0;
 
-window.addEventListener("scroll", () => {
-  const topHeader = document.getElementById("topHeader");
-  if (!topHeader) return;
+/* ================= INIT ================= */
+async function initApp() {
+  await loadUser();  // 1. Gets the 'following' list from /api/me
+  await loadPosts(); // 2. Uses that list to draw "Following" or "Follow"
+}
 
-  const current = window.scrollY;
+initApp();
 
-  if (current > 80 && current > lastScroll) {
-    topHeader.style.height = "0";
-    topHeader.style.overflow = "hidden";
+
+const header = document.getElementById('mainHeader');
+const filterBar = document.getElementById('filterBar');
+
+window.addEventListener('scroll', () => {
+  if (window.scrollY > 50) {
+    // 1. Squish the green header
+    header.classList.add('shrink');
+    // 2. Slide the filter bar down from behind the header
+    filterBar.classList.add('show-bar'); 
+  } else {
+    // 1. Expand the green header
+    header.classList.remove('shrink');
+    // 2. Slide the filter bar back up to hide it
+    filterBar.classList.remove('show-bar'); 
   }
-
-  if (current < 40) {
-    topHeader.style.height = "110px";
-  }
-
-  lastScroll = current;
 });
+
+
+/* ================= FILTER ================= */
+document.querySelectorAll(".filter-btn").forEach(b => {
+  b.onclick = () => {
+    document.querySelectorAll(".filter-btn").forEach(x => x.classList.remove("active"));
+    b.classList.add("active");
+    // Assuming loadPosts is defined elsewhere in your code
+    if (typeof loadPosts === 'function') {
+        loadPosts(b.dataset.type);
+    }
+  };
+});
+
 
 /* ================= GLOBAL USER ================= */
 let CURRENT_USER = null;
@@ -86,27 +106,36 @@ featuredSlider.innerHTML="";
 postContainer.innerHTML="";
 
 /* FEATURED */
-featured.forEach((p,i)=>{
+featured.forEach((p, i) => {
 
-const img = Array.isArray(p.imageurl) ? p.imageurl[0] : p.imageurl;
+  // 1. Extract the data safely
+  const img = Array.isArray(p.imageurl) ? p.imageurl[0] : (p.imageurl || '');
+  const userPic = p.userId?.picture || p.picture || "/uploads/profilepic.jpg";
+  const userName = p.userId?.username || "User";
+  
+  // Grab the text/data of the post (fallback to "Featured" if empty)
+  const postData = p.data || p.caption || "Featured Story"; 
 
-featuredSlider.innerHTML += `
-<div class="featured-card"
-onclick="openStory(${i})">
+  // 2. Build the new layout
+  featuredSlider.innerHTML += `
+  <div class="story-thumb-card" onclick="openStory(${i})">
+    <img src="${img}" class="story-thumb-bg" alt="Story">
 
-<img src="${img}">
+    <div class="story-thumb-top">
+      <img src="${userPic}" class="story-thumb-avatar" alt="User">
+      <span class="story-thumb-username">${userName}</span>
+    </div>
 
-<strong
-class="open-profile"
-data-user="${p.userId?._id}"
-style="cursor:pointer;color:#0d6efd;">
-${p.userId?.username || "User"}
-</strong>
-
-</div>
-`;
+    <div class="story-thumb-bottom">
+      <span class="story-thumb-data">${postData}</span>
+    </div>
+  </div>
+  `;
 
 });
+
+
+
 
 /* POSTS */
 posts.forEach((p,index)=>{
@@ -269,10 +298,14 @@ ${p.userId?.username || "User"}
 </strong>
 
 ${CURRENT_USER && CURRENT_USER._id !== p.userId?._id ? `
-<span class="follow-btn" data-user="${p.userId?._id}">
-Follow
-</span>
+  <button class="follow-btn" 
+          onclick="toggleFollow(this, '${p.userId?._id}')"
+          style="background:none; border:none; font-weight:600; cursor:pointer; font-size:14px; padding:4px 8px; color: ${CURRENT_USER.following && CURRENT_USER.following.includes(p.userId?._id) ? '#888' : '#0d6efd'};">
+    ${CURRENT_USER.following && CURRENT_USER.following.includes(p.userId?._id) ? 'Following' : 'Follow'}
+  </button>
 ` : ""}
+
+
 
 </div>
 
@@ -453,11 +486,14 @@ text:"Check out this post on CollegenZ 🌱",
 url:url
 }).catch(()=>{});
 
-}else{
-
-window.location.href="/?post=${post._id}";
-
+} else {
+  // ✅ FIX: Fallback to opening WhatsApp with the link
+  window.open(`https://wa.me/?text=${encodeURIComponent(url)}`, "_blank");
+  
+  // OR, if you just want to redirect them to the share page itself:
+  // window.location.href = url; 
 }
+
 
 }catch(err){
 console.log("Share failed");
@@ -467,15 +503,6 @@ console.log("Share failed");
 
 });
 
-
-/* ================= FILTER ================= */
-document.querySelectorAll(".filter-btn").forEach(b=>{
-b.onclick=()=>{
-document.querySelectorAll(".filter-btn").forEach(x=>x.classList.remove("active"));
-b.classList.add("active");
-loadPosts(b.dataset.type);
-};
-});
 
 /* ================= SIDEBAR ================= */
 const hamburger=document.getElementById("hamburger");
@@ -517,77 +544,253 @@ if(btn) btn.remove();
 
 }
 /* ================= MINI PROFILE POPUP ================= */
-
 document.addEventListener("click", async e => {
+  const user = e.target.closest(".open-profile");
+  if(!user) return;
 
-const user = e.target.closest(".open-profile");
-if(!user) return;
+  const userId = user.dataset.user;
 
-const userId = user.dataset.user;
+  document.getElementById("profilePopup").style.display="flex";
+  document.getElementById("profileData").innerHTML="Loading...";
 
-document.getElementById("profilePopup").style.display="flex";
-document.getElementById("profileData").innerHTML="Loading...";
+  try {
+    const res = await fetch(`/api/user/${userId}`);
+    const u = await res.json();
 
-try{
-  const res = await fetch(`/api/user/${userId}`);
-  const u = await res.json();
+    // Check if it's our own profile so we don't try to add ourselves
+    const isMe = CURRENT_USER && CURRENT_USER._id === u._id;
 
-  document.getElementById("profileData").innerHTML=`
-    <img src="${u.picture||'/uploads/profilepic.jpg'}"
-         style="width:80px;height:80px;border-radius:50%"><br>
+    document.getElementById("profileData").innerHTML=`
+      <img src="${u.picture||'/uploads/profilepic.jpg'}"
+           style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:2px solid #228B22;"><br>
 
-    <strong>${u.username}</strong><br>
-    <small>${u.email||""}</small><br><br>
+      <strong>${u.username}</strong><br>
+      <small>${u.email||""}</small><br><br>
 
-    <p>${u.bio||"No bio"}</p>
+      <p>${u.bio||"No bio"}</p>
 
-    <a href="/profile/${u._id}" class="btn btn-success btn-sm">
-      View Profile
-    </a>
-  `;
-}catch(err){
-  document.getElementById("profileData").innerHTML="Failed to load";
-}
-
+      ${!isMe ? `
+        <button class="btn btn-success btn-sm" onclick="sendFriendRequest('${u._id}', this)">
+          Add Friend
+        </button>
+      ` : `<span class="badge bg-secondary">This is you</span>`}
+    `;
+  } catch(err) {
+    document.getElementById("profileData").innerHTML="Failed to load";
+  }
 });
 
 /* CLOSE POPUP */
 document.querySelector(".close-popup").onclick=()=>{
-document.getElementById("profilePopup").style.display="none";
+  document.getElementById("profilePopup").style.display="none";
 };
 
 
-/* ================= FEATURED STORY ================= */
-
+/* ================= ADVANCED FEATURED STORY VIEWER ================= */
 let CURRENT_STORY = 0;
+let CURRENT_SLIDE = 0;
+let storyTimer;
 
-function openStory(index){
-
-CURRENT_STORY = index;
-showStory();
-
-document.getElementById("storyViewer").style.display="flex";
-
+function openStory(index) {
+  CURRENT_STORY = index;
+  CURRENT_SLIDE = 0;
+  document.getElementById("storyViewer").style.display = "flex";
+  showStory();
 }
 
-function showStory(){
+function showStory() {
+  clearTimeout(storyTimer);
+  const story = FEATURED_DATA[CURRENT_STORY];
+  if (!story) { closeStory(); return; }
 
-const story = FEATURED_DATA[CURRENT_STORY];
+  const images = Array.isArray(story.imageurl) ? story.imageurl : [story.imageurl];
+  
+  // 1. Update UI Content
+  document.getElementById("storyImage").src = images[CURRENT_SLIDE];
+  document.getElementById("storyUsername").textContent = story.userId?.username || "User";
+  document.getElementById("storyUserPic").src = story.picture || "/uploads/profilepic.jpg";
+  document.getElementById("storyLikes").textContent = story.likes || 0;
+  document.getElementById("storyShares").textContent = story.shares || 0;
+  
+  // NEW: Inject the text data
+  document.getElementById("storyDataText").textContent = story.data || story.caption || "";
 
-const img = Array.isArray(story.imageurl)
-? story.imageurl[0]
-: story.imageurl;
+  // ... (rest of your progress bar code stays exactly the same)
 
-document.getElementById("storyImage").src = img;
 
-document.getElementById("storyUsername").textContent =
-story.userId?.username || "User";
+  // 2. Render Progress Bars
+  const progressContainer = document.getElementById("storyProgressContainer");
+  progressContainer.innerHTML = "";
+  
+  images.forEach((_, i) => {
+    const bar = document.createElement("div");
+    bar.className = "story-progress-bar";
+    const fill = document.createElement("div");
+    fill.className = "story-progress-fill";
+    
+    if (i < CURRENT_SLIDE) {
+      fill.style.width = "100%"; // Passed slides are fully white
+    } else if (i === CURRENT_SLIDE) {
+      fill.style.width = "0%";
+      // Slight delay ensures CSS transition fires properly
+      setTimeout(() => fill.style.width = "100%", 50); 
+    }
+    
+    bar.appendChild(fill);
+    progressContainer.appendChild(bar);
+  });
 
-document.getElementById("storyUserPic").src =
-story.picture || "/uploads/profilepic.jpg";
-
+  // 3. Set Auto-Advance Timer (5 seconds)
+  storyTimer = setTimeout(() => nextSlide(), 5000);
 }
 
-function closeStory(){
-document.getElementById("storyViewer").style.display="none";
+function nextSlide() {
+  const story = FEATURED_DATA[CURRENT_STORY];
+  const images = Array.isArray(story.imageurl) ? story.imageurl : [story.imageurl];
+  
+  // If there are more images in THIS story, go to next image
+  if (CURRENT_SLIDE < images.length - 1) {
+    CURRENT_SLIDE++;
+    showStory();
+  } 
+  // If no more images, move to the NEXT user's story
+  else if (CURRENT_STORY < FEATURED_DATA.length - 1) {
+    CURRENT_STORY++;
+    CURRENT_SLIDE = 0;
+    showStory();
+  } 
+  // If it's the absolute end of all stories, close the viewer
+  else {
+    closeStory();
+  }
+}
+
+function prevSlide() {
+  // Go back an image in the current story
+  if (CURRENT_SLIDE > 0) {
+    CURRENT_SLIDE--;
+    showStory();
+  } 
+  // Go back to the PREVIOUS user's story
+  else if (CURRENT_STORY > 0) {
+    CURRENT_STORY--;
+    const prevStory = FEATURED_DATA[CURRENT_STORY];
+    const prevImages = Array.isArray(prevStory.imageurl) ? prevStory.imageurl : [prevStory.imageurl];
+    CURRENT_SLIDE = prevImages.length - 1; // Start at their last image
+    showStory();
+  }
+}
+
+function closeStory() {
+  clearTimeout(storyTimer);
+  document.getElementById("storyViewer").style.display = "none";
+}
+
+
+/* FEATURED */
+featured.forEach((p, i) => {
+
+  // 1. Extract the data safely from the database
+  const img = Array.isArray(p.imageurl) ? p.imageurl[0] : (p.imageurl || '');
+  const userPic = p.userId?.picture || p.picture || "/uploads/profilepic.jpg";
+  const username = p.userId?.username || "User"; 
+
+  // 2. Build the split layout (Avatar on top, Name on bottom)
+  featuredSlider.innerHTML += `
+  <div class="story-thumb-card" onclick="openStory(${i})">
+    <img src="${img}" class="story-thumb-bg" alt="Story">
+
+    <div class="story-thumb-top">
+      <img src="${userPic}" class="story-thumb-avatar" alt="User">
+    </div>
+
+    <div class="story-thumb-bottom">
+      <span class="story-thumb-name">${username}</span>
+    </div>
+  </div>
+  `;
+
+});
+
+
+/* ================= INSTANT FOLLOW BUTTON (Optimistic UI) ================= */
+async function toggleFollow(btn, targetId) {
+  if (btn.disabled) return;
+  btn.disabled = true; // Prevent double-clicking
+
+  const originalText = btn.textContent.trim();
+  const isCurrentlyFollowing = originalText === "Following";
+
+  // 1. INSTANTLY UPDATE THE UI (Don't wait for the database!)
+  if (isCurrentlyFollowing) {
+    btn.textContent = "Follow";
+    btn.style.color = "#0d6efd"; // Blue
+  } else {
+    btn.textContent = "Following";
+    btn.style.color = "#888"; // Gray
+  }
+
+  try {
+    // 2. SEND TO MONGODB IN THE BACKGROUND
+    const res = await fetch(`/follow/${targetId}`, { 
+      method: "POST",
+      headers: { "Content-Type": "application/json" }
+    });
+    
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.error || "Database failed to save");
+    }
+
+    // If it succeeds, we do nothing! The UI is already updated.
+
+  } catch (err) {
+    // 3. REVERT THE UI ONLY IF MONGODB FAILS
+    console.error("Follow error:", err);
+    btn.textContent = originalText;
+    btn.style.color = isCurrentlyFollowing ? "#888" : "#0d6efd";
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+
+/* ================= SEND FRIEND REQUEST ================= */
+async function sendFriendRequest(targetId, btn) {
+  // Prevent double-clicking
+  if (btn.disabled) return;
+  btn.disabled = true;
+
+  const originalText = btn.textContent;
+  btn.textContent = "Sending...";
+
+  try {
+    // Hits the new friends.js router we created!
+    const res = await fetch(`/friend/request/${targetId}`, { 
+      method: "POST" 
+    });
+    const data = await res.json();
+
+    if (res.ok) {
+      // Success! Change button appearance
+      btn.textContent = "Request Sent";
+      btn.classList.replace("btn-success", "btn-secondary"); // Turns it gray
+    } else {
+      // Backend rejected it (e.g., "Already friends", "Request already sent")
+      btn.textContent = data.message; // Show the backend error on the button
+      btn.classList.replace("btn-success", "btn-danger"); // Turns it red
+      
+      // Reset button after 2 seconds so they can try again if it was a glitch
+      setTimeout(() => {
+        btn.textContent = originalText;
+        btn.classList.replace("btn-danger", "btn-success");
+        btn.disabled = false;
+      }, 2500);
+    }
+  } catch (err) {
+    console.error("Friend request error:", err);
+    btn.textContent = "Error";
+    btn.disabled = false;
+  }
 }

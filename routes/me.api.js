@@ -19,7 +19,9 @@ router.get("/api/me", (req, res) => {
       _id: req.user._id,
       username: req.user.username,
       email: req.user.email,
-      picture: req.user.picture || "/uploads/profilepic.jpg"
+      picture: req.user.picture || "/uploads/profilepic.jpg",
+      // CRITICAL FIX: Send the following array to the frontend
+      following: req.user.following || [] 
     }
   });
 

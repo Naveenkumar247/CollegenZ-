@@ -2,25 +2,26 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Chat</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chat | CollegenZ</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 
 <style>
 :root {
-  --green: #228B22;
-  --green-light: #e9f7ec;
-  --bg-page: #f8f9fa;
-  --bg-panel: #ffffff;
-  --border: #e5e5e5;
-  --text-dark: #222;
-  --text-muted: #777;
+  --collegenz-green: #228B22;
+  --bg-page: #f0f2f5;
+  --bg-chat: #efeae2; /* Subtle WhatsApp-style background */
+  --msg-me: #dcf8c6; /* Classic green sent bubble */
+  --msg-other: #ffffff;
+  --text-dark: #111b21;
+  --text-muted: #667781;
 }
 
-* { box-sizing: border-box; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-  margin: 0;
-  font-family: system-ui, sans-serif;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   background: var(--bg-page);
   height: 100vh;
   display: flex;
@@ -32,125 +33,176 @@ body {
 .chat-wrapper {
   width: 100%;
   max-width: 480px;
-  height: 100%;
-  background: var(--bg-panel);
+  height: 100dvh; /* Mobile browser friendly */
+  background: var(--bg-chat);
   display: flex;
   flex-direction: column;
+  position: relative;
 }
 
 @media (min-width: 768px) {
   .chat-wrapper {
-    height: 92vh;
-    border-radius: 12px;
-    box-shadow: 0 15px 40px rgba(0,0,0,.15);
+    height: 90vh;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
     overflow: hidden;
   }
 }
 
 /* Header */
 .chat-header {
-  background: var(--green);
+  background: var(--collegenz-green);
   color: white;
   padding: 12px 16px;
   display: flex;
   align-items: center;
   gap: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  z-index: 10;
+}
+
+.back-btn {
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+  text-decoration: none;
 }
 
 .chat-header img {
-  width: 40px;
-  height: 40px;
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid rgba(255,255,255,0.8);
+}
+
+.header-info {
+  display: flex;
+  flex-direction: column;
 }
 
 .chat-header h4 {
   margin: 0;
   font-size: 16px;
+  font-weight: 600;
 }
 
 .chat-header span {
   font-size: 12px;
-  opacity: .85;
+  opacity: 0.9;
+  font-weight: 400;
 }
 
-/* Messages */
+/* Messages Area */
 .messages {
   flex: 1;
-  padding: 16px;
+  padding: 20px 16px;
   overflow-y: auto;
-  background: #fdfdfd;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .date-separator {
-  text-align: center;
-  font-size: 12px;
+  align-self: center;
+  background: rgba(255,255,255,0.9);
   color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 6px 12px;
+  border-radius: 12px;
   margin: 12px 0;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
 }
+
+/* Message Bubbles */
+.msg-row {
+  display: flex;
+  width: 100%;
+}
+
+.msg-row.me { justify-content: flex-end; }
+.msg-row.other { justify-content: flex-start; }
 
 .msg {
   max-width: 75%;
   padding: 8px 12px;
-  margin-bottom: 6px;
-  border-radius: 8px;
-  font-size: 14px;
+  border-radius: 12px;
+  font-size: 15px;
   line-height: 1.4;
+  color: var(--text-dark);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+  position: relative;
+  word-wrap: break-word;
 }
 
-.msg.me {
-  background: var(--green-light);
-  margin-left: auto;
-  border-top-right-radius: 0;
+.msg-row.me .msg {
+  background: var(--msg-me);
+  border-top-right-radius: 4px;
 }
 
-.msg.other {
-  background: #f1f1f1;
-  border-top-left-radius: 0;
+.msg-row.other .msg {
+  background: var(--msg-other);
+  border-top-left-radius: 4px;
 }
 
-.msg .status {
+.status-row {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
   font-size: 11px;
   color: var(--text-muted);
-  text-align: right;
-  margin-top: 2px;
 }
 
-/* Typing */
+.status-row i { font-size: 12px; }
+
+/* Typing Indicator */
 .typing {
-  font-size: 12px;
-  color: var(--text-muted);
-  margin: 6px;
+  font-size: 13px;
+  color: var(--collegenz-green);
+  font-style: italic;
+  font-weight: 500;
+  padding: 0 16px 8px;
 }
 
-/* Input */
-.chat-input {
+/* Input Area */
+.chat-input-wrapper {
+  background: #f0f2f5;
+  padding: 10px 16px;
   display: flex;
+  align-items: center;
   gap: 10px;
-  padding: 10px;
-  border-top: 1px solid var(--border);
 }
 
-.chat-input input {
+.chat-input-wrapper input {
   flex: 1;
-  padding: 10px 14px;
-  border-radius: 20px;
-  border: 1px solid var(--border);
+  padding: 12px 18px;
+  border-radius: 24px;
+  border: none;
   outline: none;
+  font-size: 15px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
 }
 
-.chat-input input:focus {
-  border-color: var(--green);
-}
-
-.chat-input button {
-  background: var(--green);
+.send-btn {
+  background: var(--collegenz-green);
   color: white;
   border: none;
   border-radius: 50%;
-  padding: 10px 14px;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   cursor: pointer;
+  box-shadow: 0 2px 5px rgba(34, 139, 34, 0.3);
+  transition: transform 0.1s;
 }
 
+.send-btn:active { transform: scale(0.95); }
+.send-btn i { font-size: 20px; margin-left: -2px; } /* Adjust paper plane centering */
 
 </style>
 </head>
@@ -159,126 +211,156 @@ body {
 
 <div class="chat-wrapper">
 
-  <!-- Header -->
   <div class="chat-header">
-    <img src="/uploads/profilepic.jpg">
-    <div>
+    <a href="/messages" class="back-btn"><i class="bi bi-arrow-left-short"></i></a>
+    <img src="/uploads/profilepic.jpg" id="headerAvatar">
+    <div class="header-info">
       <h4 id="friendName">Loading...</h4>
-<span id="status">offline</span>
+      <span id="status">Connecting...</span>
     </div>
   </div>
 
-  <!-- Messages -->
   <div class="messages" id="messages"></div>
-  <div class="typing" id="typing" style="display:none;">Typing…</div>
+  <div class="typing" id="typing" style="display:none;">typing...</div>
 
-  <!-- Input -->
-  <form class="chat-input" id="chatForm">
-    <input type="text" id="messageInput" placeholder="Type a message…" autocomplete="off">
-    <button>➤</button>
+  <form class="chat-input-wrapper" id="chatForm">
+    <input type="text" id="messageInput" placeholder="Message" autocomplete="off">
+    <button class="send-btn" type="submit"><i class="bi bi-send-fill"></i></button>
   </form>
 
 </div>
-<script src="/socket.io/socket.io.js"></script>
 
+<script src="/socket.io/socket.io.js"></script>
 <script>
 (async () => {
   const socket = io();
 
-  // ✅ 1. GET friendId FIRST
+  // 1. GET friendId
   const friendId = location.pathname.split("/").pop();
 
-  // ✅ 2. LOAD FRIEND INFO
-  const friendRes = await fetch(`/api/user/${friendId}`);
-  const friend = await friendRes.json();
+  try {
+    // 2. LOAD FRIEND INFO
+    const friendRes = await fetch(`/api/user/${friendId}`);
+    const friend = await friendRes.json();
 
-  document.getElementById("friendName").textContent = friend.name;
-  document.querySelector(".chat-header img").src =
-    friend.picture || "/uploads/profilepic.jpg";
+    // Fixed: Uses username and targets the specific ID
+    document.getElementById("friendName").textContent = friend.username || friend.name || "User";
+    document.getElementById("headerAvatar").src = friend.picture || "/uploads/profilepic.jpg";
 
-  // ✅ 3. LOAD CURRENT USER
-  const me = await fetch("/api/me").then(r => r.json());
-  const myId = me.id;
-
-  // ✅ 4. JOIN ROOM
-  const room = [myId, friendId].sort().join("_");
-  socket.emit("joinRoom", room);
-  socket.emit("online", myId);
-
-  const box = document.getElementById("messages");
-  const input = document.getElementById("messageInput");
-  const typing = document.getElementById("typing");
-
-  // ✅ 5. LOAD MESSAGE HISTORY
-  const history = await fetch(`/api/messages/${friendId}`).then(r => r.json());
-
-  let lastDate = "";
-  history.forEach(m => {
-    const d = new Date(m.createdAt).toDateString();
-    if (d !== lastDate) {
-      addDate(d);
-      lastDate = d;
+    // 3. LOAD CURRENT USER
+    const meRes = await fetch("/api/me");
+    const meData = await meRes.json();
+    
+    // Fixed: Extracts ID from the user object correctly
+    if (!meData.isLoggedIn) {
+      window.location.href = "/login";
+      return;
     }
-    addMessage(m.text, m.sender === myId, m.isRead);
-  });
+    const myId = meData.user._id;
 
-  function addDate(text) {
-    const div = document.createElement("div");
-    div.className = "date-separator";
-    div.textContent = text;
-    box.appendChild(div);
-  }
+    // 4. JOIN ROOM
+    const room = [myId, friendId].sort().join("_");
+    socket.emit("joinRoom", room);
+    socket.emit("online", myId);
 
-  function addMessage(text, isMe, isRead = false) {
-    const div = document.createElement("div");
-    div.className = "msg " + (isMe ? "me" : "other");
-    div.innerHTML = `
-      ${text}
-      ${isMe ? `<div class="status">${isRead ? "✓✓ Seen" : "✓ Sent"}</div>` : ""}
-    `;
-    box.appendChild(div);
-    box.scrollTop = box.scrollHeight;
-  }
+    const box = document.getElementById("messages");
+    const input = document.getElementById("messageInput");
+    const typing = document.getElementById("typing");
 
-  // ✅ 6. SEND MESSAGE
-  document.getElementById("chatForm").onsubmit = e => {
-    e.preventDefault();
-    const text = input.value.trim();
-    if (!text) return;
+    // 5. LOAD MESSAGE HISTORY
+    const historyRes = await fetch(`/api/messages/${friendId}`);
+    if (historyRes.ok) {
+      const history = await historyRes.json();
+      let lastDate = "";
+      
+      history.forEach(m => {
+        const d = new Date(m.createdAt).toDateString();
+        if (d !== lastDate) {
+          addDate(d);
+          lastDate = d;
+        }
+        addMessage(m.text, m.sender === myId, m.isRead);
+      });
+    }
 
-    addMessage(text, true);
+    // Helper functions for UI
+    function addDate(text) {
+      const div = document.createElement("div");
+      div.className = "date-separator";
+      div.textContent = text;
+      box.appendChild(div);
+    }
 
-    socket.emit("sendMessage", {
-      room,
-      sender: myId,
-      receiver: friendId,
-      text
+    function addMessage(text, isMe, isRead = false) {
+      // Formats the time (e.g., 10:42 AM)
+      const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      
+      const row = document.createElement("div");
+      row.className = `msg-row ${isMe ? "me" : "other"}`;
+      
+      row.innerHTML = `
+        <div class="msg">
+          ${text}
+          <div class="status-row">
+            <span>${time}</span>
+            ${isMe ? `<i class="bi ${isRead ? 'bi-check2-all text-primary' : 'bi-check2'}"></i>` : ""}
+          </div>
+        </div>
+      `;
+      box.appendChild(row);
+      box.scrollTop = box.scrollHeight;
+    }
+
+    // 6. SEND MESSAGE
+    document.getElementById("chatForm").onsubmit = e => {
+      e.preventDefault();
+      const text = input.value.trim();
+      if (!text) return;
+
+      addMessage(text, true);
+
+      socket.emit("sendMessage", {
+        room,
+        sender: myId,
+        receiver: friendId,
+        text
+      });
+
+      input.value = "";
+    };
+
+    // 7. TYPING INDICATOR
+    let typingTimeout;
+    input.oninput = () => {
+      socket.emit("typing", room);
+    };
+
+    socket.on("typing", () => {
+      typing.style.display = "block";
+      clearTimeout(typingTimeout);
+      typingTimeout = setTimeout(() => typing.style.display = "none", 1200);
     });
 
-    input.value = "";
-  };
+    // 8. RECEIVE MESSAGE
+    socket.on("newMessage", msg => {
+      if (msg.sender === myId) return;
+      addMessage(msg.text, false);
+    });
 
-  // ✅ 7. TYPING INDICATOR
-  input.oninput = () => socket.emit("typing", room);
+    // 9. ONLINE / OFFLINE STATUS
+    socket.on("online", () => {
+      document.getElementById("status").textContent = "Online";
+    });
 
-  socket.on("typing", () => {
-    typing.style.display = "block";
-    setTimeout(() => typing.style.display = "none", 1200);
-  });
+    socket.on("offline", () => {
+      document.getElementById("status").textContent = "Offline";
+    });
 
-  // ✅ 8. RECEIVE MESSAGE
-  socket.on("newMessage", msg => {
-    if (msg.sender === myId) return;
-    addMessage(msg.text, false);
-  });
-
-  // ✅ 9. ONLINE / OFFLINE STATUS
-  socket.on("online", () => {
-    document.getElementById("status").textContent = "online";
-  });
-
-  socket.on("offline", () => {
-    document.getElementById("status").textContent = "offline";
-  });
+  } catch (err) {
+    console.error("Chat setup failed:", err);
+    document.getElementById("status").textContent = "Error loading chat";
+  }
 })();
 </script>
+</body>
+</html>

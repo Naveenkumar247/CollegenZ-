@@ -48,7 +48,23 @@ const postSchema = new mongoose.Schema({
   createdAt: {
     type: Date,
     default: Date.now
-  }
+  },
+
+    likes: { type: Number, default: 0 },
+  likedBy: {
+    type: [{ type: mongoose.Schema.Types.ObjectId, ref: "logins" }],
+    default: [],
+    set: arr => [...new Set(arr.map(id => id.toString()))]
+  },
+
+  shares: { type: Number, default: 0 },
+  sharedBy: {
+    type: [{ type: mongoose.Schema.Types.ObjectId, ref: "logins" }],
+    default: [],
+    set: arr => [...new Set(arr.map(id => id.toString()))]
+  },
+
+  picture: { type: String, default: null }
 
 });
 

@@ -1,5 +1,4 @@
 /* ================= GLOBAL ================= */
-
 * {
   box-sizing: border-box;
   margin: 0;
@@ -8,20 +7,24 @@
 
 body {
   font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-  background: #f5f6f7;
+  background: #f5f6f7; /* Brought back the off-white background */
   color: #222;
 }
 
-/* ================= HEADER ================= */
+img {
+  max-width: 100%;
+  height: auto;
+}
 
+/* ================= HEADER (Green Theme) ================= */
 .header {
   position: sticky;
   top: 0;
   z-index: 1000;
-  background: #228B22;
+  background: #228B22; /* Green */
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Subtle shadow instead of black line */
 }
 
-/* BIG HEADER */
 .top-header {
   height: 110px;
   display: flex;
@@ -31,527 +34,615 @@ body {
   transition: height 0.3s ease;
 }
 
-.logo {
-  height: 80px;
-}
+.logo { height: 80px; }
 
-/* SHRINK MODE */
 .header.shrink .top-header {
   height: 0;
   overflow: hidden;
 }
 
-/* COMPACT HEADER */
 .bottom-header {
   height: 60px;
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 0 12px;
+  width: 100%;
+  padding: 0 15px;
   background: #228B22;
-  color: white;
 }
 
-/* Left Z */
-.z-logo {
+.sketch-header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.header-profile-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 2px solid #fff; /* White border to pop on green */
+  object-fit: cover;
+}
+
+.header-logo-text {
   font-size: 22px;
-  font-weight: bold;
-  flex-shrink: 0;
-}
-
-/* Search takes remaining space */
-.search-bar {
+  font-weight: bold; /* Made bold again */
+  margin: 0;
+  color: #fff; /* White text */
+  text-align: center;
   flex: 1;
 }
 
-/* Input fills available width */
-.search-bar input {
-  width: 100%;
-  padding: 8px 14px;
-  border-radius: 22px;
-  border: none;
-  outline: none;
-}
-
-/* Right icons */
 .header-actions {
   display: flex;
-  gap: 12px;
-  flex-shrink: 0;
+  gap: 15px;
+  align-items: center;
 }
 
-.header-actions i,
-.hamburger {
-  color: white;
-  font-size: 22px;
+.header-actions i, .hamburger {
+  color: #fff; /* White icons */
+  font-size: 24px;
+  cursor: pointer;
 }
+
+/* Hidden JS elements */
+.z-logo, .search-bar { display: none; }
 
 /* ================= FILTER BAR ================= */
-
-#filterBar {
-  transform: translateY(-100%);
-  transition: 0.3s ease;
-}
+#filterBar { transform: translateY(-100%); transition: 0.3s ease; }
 
 .filter-bar {
-  position: sticky;
-  top: 60px;
-  background: white;
-  padding: 8px;
-  display: flex;
-  gap: 8px;
-  z-index: 999;
+  position: fixed; /* <--- This fixes the gap! */
+  top: 60px; 
+  left: 0;
+  width: 100%;
+  background: white; 
+  padding: 8px 12px;
+  display: flex; 
+  gap: 8px; 
+  z-index: 999; 
   transition: transform 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
 
-.hidden-bar {
-  transform: translateY(-100%);
-}
 
-.show-bar {
-  transform: translateY(0);
-}
+.hidden-bar { transform: translateY(-100%); }
+.show-bar { transform: translateY(0); }
 
-.filter-btn {
-  border: none;
-  padding: 6px 14px;
-  border-radius: 20px;
-  background: #eee;
-}
-
-.filter-btn.active {
-  background: black;
-  color: white;
-}
+.filter-btn { border: none; padding: 6px 14px; border-radius: 20px; background: #eee; color: #222; font-weight: 500;}
+.filter-btn.active { background: #222; color: #fff; }
 
 /* ================= FEATURED ================= */
-
 .featured-wrapper {
-  background: white;
+  background: #f5f6f7; /* Matches body */
+  padding-bottom: 10px;
 }
 
+.section-title {
+  padding: 15px 15px 5px;
+  font-size: 18px;
+  font-weight: 500;
+  margin: 0;
+}
+
+/* ================= FRONT THUMBNAILS (9:16 Vertical) ================= */
 .featured-slider {
   display: flex;
   gap: 12px;
-  padding: 10px;
+  padding: 10px 15px;
   overflow-x: auto;
+  scrollbar-width: none;
 }
+.featured-slider::-webkit-scrollbar { display: none; }
+
+.story-thumb-card {
+  width: 110px; /* Locks the width */
+  height: 195px; /* Magically forces 9:16 ratio */
+  border-radius: 12px;
+  position: relative; /* CRITICAL: Traps the image and gradient inside */
+  overflow: hidden;
+  flex-shrink: 0; /* Stops them from squishing */
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  cursor: pointer;
+  background: #222; /* Black background while loading */
+}
+
+/* Thumbnail Background Image */
+.story-thumb-bg {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  object-fit: cover; /* Covers the whole vertical card */
+  z-index: 1;
+}
+
+/* Bottom 25% Gradient Overlay */
+.story-thumb-overlay {
+  position: absolute;
+  bottom: 0; left: 0;
+  width: 100%; height: 40%; /* Smooth fade */
+  background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 100%);
+  display: flex;
+  align-items: flex-end; /* Pushes content to the bottom */
+  padding: 10px 8px;
+  z-index: 2;
+}
+
+/* User Pic & Name */
+.story-thumb-avatar {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  border: 2px solid #228B22; /* CollegenZ Green */
+  object-fit: cover;
+  margin-right: 6px;
+  flex-shrink: 0;
+}
+
+.story-thumb-name {
+  color: #ffffff !important;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-shadow: 1px 1px 3px rgba(0,0,0,0.9);
+  margin-bottom: 4px;
+}
+
 
 .featured-card {
-  min-width: 90px;
-  height: 140px;
-  border-radius: 14px;
+  width: 110px; /* Hard width keeps it from exploding */
+  flex-shrink: 0; 
+  aspect-ratio: 9 / 16; 
+  border-radius: 12px;
+  position: relative; 
   overflow: hidden;
+  box-shadow: 0 2px 6px rgba(0,0,0,.1);
+  cursor: pointer;
+  background: #333; /* Fallback color while image loads */
 }
 
-.featured-card img {
+/* 1. MAKE IMAGE COVER THE ENTIRE CARD */
+.featured-card img.bg-img {
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
+  object-fit: cover; /* Stretches/crops image to fill perfectly */
+  z-index: 1; /* Puts image in the background */
+}
+
+/* 2. THE GRADIENT OVERLAY (Bottom 25-35%) */
+.featured-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 35%; /* 35% gives a smoother fade, but content sits in bottom 25% */
+  /* Transparent grey/black gradient */
+  background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 50%, transparent 100%);
+  display: flex;
+  align-items: flex-end; /* Pushes content to the bottom */
+  padding: 10px 8px;
+  z-index: 2; /* Sits ON TOP of the image */
+}
+
+/* 3. WHITE TEXT & PROFILE PIC OVERLAY */
+.featured-overlay span {
+  color: #ffffff !important; /* Forces text to be white, overriding that blue */
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis; 
+  text-shadow: 0 1px 3px rgba(0,0,0,0.8); /* Helps readability */
+}
+
+.featured-overlay img.tiny-pic {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1.5px solid #fff; /* White ring looks very clean, or change back to #228B22 */
   object-fit: cover;
+  margin-right: 6px;
+  flex-shrink: 0;
 }
 
 /* ================= POSTS ================= */
+#postContainer { padding: 12px; } /* Brought back spacing on the sides */
 
-#postContainer {
-  padding: 12px;
-}
-
-.card {
+.card, .ig-post {
   background: white;
-  border-radius: 14px;
-  margin-bottom: 12px;
-  padding: 12px;
-  box-shadow: 0 2px 6px rgba(0,0,0,.08);
+  border-radius: 14px; /* Rounded corners */
+  margin-bottom: 15px; /* Spacing between posts */
+  border: none;
+  box-shadow: 0 2px 6px rgba(0,0,0,.08); /* Soft shadows */
+  max-width: 100%;
 }
 
-.postprofile-pic {
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
+.ig-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; }
+.ig-user { display: flex; align-items: center; gap: 8px; font-weight: 600; }
+.ig-avatar { width: 35px; height: 35px; border-radius: 50%; object-fit: cover; }
+.postprofile-pic { width: 42px; height: 42px; border-radius: 50%; }
+
+.follow-btn {
+  margin-left: 8px;
+  color: #0d6efd;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  
+  /* CRITICAL FIXES FOR MOBILE TOUCH */
+  user-select: none; /* Stops the text from being highlighted/selected */
+  -webkit-user-select: none; /* For Safari/iOS */
+  -webkit-tap-highlight-color: transparent; /* Removes the ugly blue flash on mobile tap */
+  padding: 4px 8px; /* Adds a slightly larger touch area */
+  border-radius: 4px; 
 }
 
-/* ================= CAROUSEL ================= */
+.post-menu { cursor: pointer; font-size: 20px; color: #222; }
 
-.carousel img {
-  width: 100%;
-  border-radius: 12px;
-  object-fit: contain;
-}
+.ig-image { width: 100%; display: block; border: none; } /* Removed black lines */
 
-/* ================= FAB ================= */
+.ig-actions { display: flex; justify-content: space-between; padding: 12px 15px; font-size: 20px; align-items: center; }
+.ig-left { display: flex; gap: 18px; }
+.ig-actions span { display: inline-flex; align-items: center; gap: 4px; cursor: pointer; color: #222; }
+.ig-actions small { font-size: 14px; font-weight: 500; }
 
-.post-fab{
-position:fixed;
-bottom:100px;
-right:20px;
-width:55px;
-height:55px;
-background:#228B22;
-border-radius:50%;
-display:flex;
-align-items:center;
-justify-content:center;
-box-shadow:0 6px 20px rgba(0,0,0,.25);
-z-index:999;
-}
+.ig-caption { padding: 0 15px 15px; font-size: 14px; }
 
-.post-fab img{
-width:26px;
-height:26px;
-border-radius:70%;
-object-fit:cover;
-}
-
-/* ================= SIDEBAR ================= */
-
-/* ================= SIDEBAR / BOTTOM NAV ================= */
-
+/* ================= BOTTOM NAV / SIDEBAR ================= */
 .sidebar {
-  width: 60px;
-  background: #f1f1f1;
+  width: 100%;
+  height: 60px;
   position: fixed;
+  bottom: 0;
+  top: auto;
+  left: 0;
   right: 0;
-  top: 0;
-  height: 100vh;
-  display: flex;
-  justify-content: center;
+  background: #f0f0ee;
+  border-top: 1px solid #ddd; /* Soft border */
   z-index: 2000;
+  display: flex;
 }
 
-/* icon container */
 .sidebar .icon {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  gap: 22px;               /* 👈 SPACE BETWEEN ICONS */
-  margin-top: 24px;
-}
-
-/* icon images */
-.sidebar img {
-  width: 38px;
-  height: 38px;
-  object-fit: contain;
-}
-
-/* ================= MOBILE = BOTTOM BAR ================= */
-
-@media (min-width: 992px) {
-
-  .bottom-header {
-    max-width: 900px;
-    margin: auto;
-  }
-
-  .search-bar input {
-    max-width: 500px;
-  }
-}
-
-
-@media (max-width: 768px) {
-
-  .sidebar {
-    width: 100%;
-    height: 60px;
-    bottom: 0;
-    top: auto;
-    left: 0;
-    right: 0;
-    background: #f1f1f1;
-    border-top: 1px solid #ddd;
-  }
-
-  .sidebar .icon {
-    flex-direction: row;
-    justify-content: space-around;
-    width: 100%;
-    margin-top: 0;
-    gap: 0;               /* spacing handled by space-around */
-  }
-
-  .sidebar img {
-    width: 32px;
-    height: 32px;
-  }
-}
-
-/* ================= SLIDE NAV ================= */
-
-.slide-nav {
-  position: fixed;
-  top: 0;
-  left: -280px;
-  width: 260px;
+  justify-content: space-evenly;
+  width: 100%;
   height: 100%;
-  background: white;
-  z-index: 3000;
-  padding: 20px;
-  transition: left 0.3s ease;
-  box-shadow: 2px 0 10px rgba(0,0,0,0.15);
+  margin-top: 0;
+  gap: 0;
 }
 
-.slide-nav.active {
-  left: 0;
+.sidebar img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  /* Removed grayscale filter so your green icons show up normally! */
 }
 
-.slide-nav a {
-  display: block;
-  padding: 10px 0;
-  color: #333;
-  text-decoration: none;
-  font-weight: 500;
-}
+.nav-spacer { width: 60px; }
 
-.slide-nav a:hover {
-  color: #228B22;
-}
-
-.user-info {
+/* ================= CENTERED FAB ================= */
+.post-fab {
+  position: fixed;
+  bottom: 25px; 
+  left: 50%;
+  transform: translateX(-50%);
+  width: 55px;
+  height: 55px;
+  background: #228B22; /* Green Background */
+  border: none; 
+  border-radius: 50%;
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 15px;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(34, 139, 34, 0.4); /* Green glowing shadow */
+  z-index: 2005;
+  text-decoration: none;
+  color: #fff; /* White plus sign */
+  font-size: 34px;
 }
 
-.profile-pic {
-  width: 48px;
-  height: 48px;
+.post-fab::after {
+  content: '+';
+  font-weight: 300;
+  margin-top: -4px;
+}
+
+.post-fab img { display: none; }
+
+/* ================= BADGES & MISC ================= */
+.slide-count { position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.6); color: #fff; padding: 2px 8px; border-radius: 12px; font-size: 12px; font-weight: 500;}
+.event-badge, .hiring-badge { position: absolute; top: 8px; left: 8px; background: #228B22; color: #fff; padding: 4px 8px; border-radius: 10px; font-size: 12px; font-weight: 500;}
+
+.see-more { color: #0d6efd; cursor: pointer; font-weight: 500; text-decoration: none; }
+.see-more:hover { text-decoration: underline; }
+
+.text-success { color: #228B22 !important; font-weight: 600; }
+
+/* ================= OVERLAYS / POPUPS ================= */
+.slide-nav { position: fixed; top: 0; left: -280px; width: 260px; height: 100%; background: white; z-index: 3000; padding: 20px; transition: left 0.3s ease; box-shadow: 2px 0 10px rgba(0,0,0,0.1); }
+.slide-nav.active { left: 0; }
+.slide-nav a { display: block; padding: 10px 0; color: #222; text-decoration: none; font-weight: 500; }
+.slide-nav a:hover { color: #228B22; }
+.user-info { display: flex; align-items: center; gap: 12px; margin-bottom: 15px; }
+.profile-pic { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; }
+#navEmail { display: none; }
+
+.overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: none; z-index: 2500; }
+.overlay.active { display: block; }
+
+.profile-popup { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,.4); display: none; justify-content: center; align-items: center; z-index: 9999; }
+.profile-popup-content { background: #fff; padding: 20px; border-radius: 12px; width: 280px; }
+.close-popup { float: right; font-size: 22px; cursor: pointer; }
+
+ /* ================= FACEBOOK-STYLE STORY VIEWER ================= */
+/* ================= STORY VIEWER STYLES ================= */
+.story-viewer {
+  position: fixed; inset: 0; background: #000;
+  display: none; justify-content: center; align-items: center; z-index: 9999;
+}
+
+.story-content {
+  position: relative; width: 100%; max-width: 420px; height: 100%; max-height: 90vh;
+  background: #111; border-radius: 12px; overflow: hidden;
+}
+
+/* FIX: Forces full image to show, black bars on top/bottom if 16:9 */
+.story-content img#storyImage {
+  width: 100%; height: 100%; object-fit: contain; display: block;
+}
+
+/* Progress Bars at the top */
+.story-progress-container {
+  position: absolute; top: 10px; left: 10px; right: 10px;
+  display: flex; gap: 4px; z-index: 20;
+}
+.story-progress-bar {
+  flex: 1; height: 3px; background: rgba(255,255,255,0.3); border-radius: 2px; overflow: hidden;
+}
+.story-progress-fill {
+  height: 100%; background: #fff; width: 0%;
+  /* 5s transition perfectly matches our JS timer */
+  transition: width 5s linear; 
+}
+
+/* Header */
+.story-header {
+  position: absolute; top: 22px; left: 12px; right: 12px;
+  display: flex; justify-content: space-between; align-items: center; z-index: 20;
+}
+.story-user-info { display: flex; align-items: center; gap: 10px; color: #fff; font-weight: 600; text-shadow: 1px 1px 4px rgba(0,0,0,0.8); }
+.story-user-info img { width: 36px; height: 36px; border-radius: 50%; border: 2px solid #228B22; object-fit: cover;}
+.story-close { background: none; border: none; color: white; font-size: 24px; cursor: pointer; text-shadow: 1px 1px 4px rgba(0,0,0,0.8); }
+
+/* Invisible Navigation Tap Zones */
+.story-nav-left { position: absolute; top: 0; left: 0; width: 30%; height: 100%; z-index: 10; cursor: pointer; }
+.story-nav-right { position: absolute; top: 0; right: 0; width: 70%; height: 100%; z-index: 10; cursor: pointer; }
+
+/* Vertical Action Bar */
+.story-actions-vertical {
+  position: absolute; right: 15px; bottom: 80px; /* Sits on right side */
+  display: flex; flex-direction: column; gap: 24px; z-index: 20; color: white;
+}
+.action-btn {
+  display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 13px; font-weight: 600;
+  text-shadow: 1px 1px 5px rgba(0,0,0,0.9); cursor: pointer;
+}
+.action-btn i { font-size: 26px; filter: drop-shadow(1px 1px 3px rgba(0,0,0,0.8)); }
+
+
+/* Close button - Top right circle */
+.story-close {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: rgba(0,0,0,0.5); 
+  width: 35px;
+  height: 35px;
   border-radius: 50%;
+  border: none;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+  z-index: 10;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  backdrop-filter: blur(4px); /* Slight blur effect on the button */
+}
+
+/* Bottom 25% Gradient Overlay */
+.story-user {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 25%; /* Covers exactly the bottom 25% */
+  background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 50%, transparent 100%);
+  display: flex;
+  align-items: flex-end; /* Pushes profile info to the bottom */
+  padding: 20px;
+  color: white;
+  z-index: 5;
+}
+
+/* Bottom Data Text Overlay */
+.story-data-container {
+  position: absolute;
+  bottom: 30px;
+  left: 15px;
+  right: 70px; /* Leaves room so text doesn't hit the Like/Share buttons */
+  z-index: 20;
+  color: white;
+  text-shadow: 1px 1px 5px rgba(0,0,0,0.9);
+  pointer-events: none; /* Allows taps to pass through to the invisible nav zones */
+}
+
+.story-data-container p#storyDataText {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.4;
+  
+  /* Limit to 3 lines max */
+  display: -webkit-box;
+  -webkit-line-clamp: 3; 
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+
+.story-user img#storyUserPic {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 2px solid #228B22; /* CollegenZ green ring around profile pic */
   object-fit: cover;
+  margin-right: 12px;
 }
 
-#navEmail {
-  display: none;
-}
-
-/* Dark overlay */
-
-.overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.4);
-  display: none;
-  z-index: 2500;
-}
-
-.overlay.active {
-  display: block;
-}
-
-.ig-post{
-max-width:420px;
-margin:auto;
-background:#fff;
-color:#000;
-border-radius:12px;
-overflow:hidden;
-margin-bottom:20px;
-}
-
-.ig-header{
-display:flex;
-justify-content:space-between;
-align-items:center;
-padding:8px 10px;
-}
-
-.ig-user{
-display:flex;
-align-items:center;
-gap:6px;
-}
-
-.ig-avatar{
-width:35px;
-height:35px;
-border-radius:50%;
-object-fit:cover;
-}
-
-.follow-btn{
-margin-left:8px;
-color:#0d6efd;
-font-weight:600;
-cursor:pointer;
-font-size:14px;
-}
-
-.follow-btn:hover{
-text-decoration:underline;
-}
-
-.post-menu{
-cursor:pointer;
-font-size:20px;
-}
-
-.ig-image{
-width:100%;
-display:block;
-}
-
-.ig-actions{
-display:flex;
-justify-content:space-between;
-padding:8px 12px;
-align-items:center;
-}
-
-.ig-left span{
-margin-right:15px;
-}
-
-.ig-actions span{
-display:inline-flex;
-align-items:center;
-gap:4px;
-font-size:18px;
-cursor:pointer;
-}
-
-.ig-actions small{
-font-size:12px;
-}
-
-.ig-caption{
-padding:10px;
-font-size:14px;
+.story-user span#storyUsername {
+  font-weight: 600;
+  font-size: 16px;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.8); /* Ensures text is readable even if gradient fails */
+  margin-bottom: 10px; /* Visually centers it with the profile picture */
 }
 
 
-.ig-actions{
-display:flex;
-justify-content:space-between;
-padding:10px;
-font-size:20px;
+@media (min-width: 992px) {
+  .bottom-header { max-width: 900px; margin: auto; }
 }
 
-.ig-left{
-display:flex;
-gap:18px;
+/* ================= BULLETPROOF STORY CARDS ================= */
+
+.fb-story-card {
+  width: 110px !important;
+  aspect-ratio: 9 / 16 !important;
+  border-radius: 12px !important;
+  position: relative !important; /* Essential for containing the image */
+  overflow: hidden !important;
+  flex-shrink: 0 !important;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1) !important;
+  cursor: pointer !important;
+  background: #222 !important;
+  border: 1px solid #e0e0e0 !important;
 }
 
-.ig-actions span{
-display:flex;
-align-items:center;
-gap:4px;
+/* Forces image to detach and cover the whole card */
+.fb-story-bg {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  z-index: 1 !important;
 }
 
-.slide-count{
-position:absolute;
-top:8px;
-right:8px;
-background:#0008;
-color:#fff;
-padding:2px 6px;
-border-radius:12px;
-font-size:12px;
+/* The transparent gradient wrapper at the bottom */
+.fb-story-overlay {
+  position: absolute !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 45% !important; /* Smooth fade up */
+  background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 100%) !important;
+  z-index: 2 !important;
+  display: flex !important;
+  align-items: flex-end !important; /* Pushes content to the bottom */
+  padding: 10px 8px !important;
 }
 
-.event-badge,.hiring-badge{
-position:absolute;
-top:8px;
-left:8px;
-background:#198754;
-color:#fff;
-padding:4px 8px;
-border-radius:10px;
-font-size:12px;
+/* The tiny profile pic */
+.fb-story-avatar {
+  width: 26px !important;
+  height: 26px !important;
+  border-radius: 50% !important;
+  border: 2px solid #228B22 !important; /* Green ring */
+  object-fit: cover !important;
+  margin-right: 6px !important;
+}
+
+/* The white username */
+.fb-story-overlay span {
+  color: #ffffff !important; /* Overrides the blue text */
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  text-shadow: 1px 1px 3px rgba(0,0,0,0.9) !important;
+  margin-bottom: 3px !important; /* Aligns text with the avatar nicely */
+}
+
+/* Top Area: Flexbox to align Avatar and Username */
+.story-thumb-top {
+  position: absolute !important;
+  top: 8px !important;
+  left: 8px !important;
+  right: 8px !important; /* Prevents text from hitting the right edge */
+  z-index: 3 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important; /* Space between pic and name */
+}
+
+/* New Username styling (Top) */
+.story-thumb-username {
+  color: #ffffff !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  text-shadow: 1px 1px 3px rgba(0,0,0,0.9) !important;
+}
+
+/* Data styling (Bottom) */
+.story-thumb-data {
+  color: #ffffff !important;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  line-height: 1.3 !important;
+  
+  /* Limits text to 2 lines so it doesn't cover the whole image */
+  display: -webkit-box !important;
+  -webkit-line-clamp: 2 !important;
+  -webkit-box-orient: vertical !important;
+  overflow: hidden !important;
+  text-shadow: 1px 1px 3px rgba(0,0,0,0.9) !important;
 }
 
 
-.see-more{
-color:#0095f6;
-cursor:pointer;
-font-weight:500;
+/* Avatar Styling */
+.story-thumb-avatar {
+  width: 32px !important; /* Slightly larger since it sits alone */
+  height: 32px !important;
+  border-radius: 50% !important;
+  border: 2px solid #228B22 !important; /* CollegenZ Green */
+  object-fit: cover !important;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.4) !important; /* Helps it pop off light images */
+  display: block !important;
 }
 
-.see-more:hover{
-text-decoration:underline;
+/* Bottom Area for Name and Gradient */
+.story-thumb-bottom {
+  position: absolute !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 35% !important; /* Smooth dark fade */
+  background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 100%) !important;
+  display: flex !important;
+  align-items: flex-end !important; /* Pushes text to the bottom */
+  padding: 10px 10px !important;
+  z-index: 2 !important;
 }
 
-.profile-popup{
-position:fixed;
-top:0;
-left:0;
-width:100%;
-height:100%;
-background:rgba(0,0,0,.4);
-display:none;
-justify-content:center;
-align-items:center;
-z-index:9999;
-}
-
-.profile-popup-content{
-background:#fff;
-padding:20px;
-border-radius:12px;
-width:280px;
-}
-
-.close-popup{
-float:right;
-font-size:22px;
-cursor:pointer;
-}
-
-.text-success{
-color:#198754 !important;
-}
-
-
-/*featured story*/
-
-.story-viewer{
-position:fixed;
-top:0;
-left:0;
-width:100%;
-height:100%;
-background:#000;
-display:none;
-justify-content:center;
-align-items:center;
-z-index:9999;
-}
-
-.story-content{
-position:relative;
-max-width:500px;
-width:100%;
-}
-
-.story-content img{
-width:100%;
-height:auto;
-border-radius:8px;
-}
-
-.story-close{
-position:absolute;
-top:20px;
-right:20px;
-background:none;
-border:none;
-color:white;
-font-size:24px;
-cursor:pointer;
-}
-
-.story-user{
-position:absolute;
-top:10px;
-left:10px;
-display:flex;
-align-items:center;
-gap:8px;
-color:white;
-}
-
-.story-user img{
-width:35px;
-height:35px;
-border-radius:50%;
-}

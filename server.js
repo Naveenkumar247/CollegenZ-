@@ -38,6 +38,11 @@ const profileRoutes = require("./routes/profile.routes");
 const postActions = require("./routes/postActions");
 const postsRoute = require("./routes/posts");
 const shareRoutes = require("./routes/share.routes");
+const friendRoutes = require("./routes/friends");
+const followRoutes = require("./routes/follows");
+
+
+
 // --------------------
 // DB CONNECT
 // --------------------
@@ -111,6 +116,8 @@ app.use("/", shareRoutes);
 app.use("/", require("./routes/share.routes.js"));
 app.use("/", require("./routes/user.api"));
 app.use("/", require("./routes/me.api"));
+app.use("/friend", friendRoutes);
+app.use("/follow", followRoutes);
 require("./services/autoDelete");
 require("./services/eventReminder");
 
@@ -832,7 +839,7 @@ app.post("/posts/:id/share", async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
-});*/
+});
 
 //Friend Details
 
@@ -998,7 +1005,7 @@ router.post("/friend/remove/:userId", async (req, res) => {
   }
 });
 
-/*router.get("/api/notifications", requireLogin, async (req, res) => {
+router.get("/api/notifications", requireLogin, async (req, res) => {
   const userId = res.locals.currentUser._id;
 
   const notifications = await Notification.find({ userId })
@@ -1198,7 +1205,7 @@ router.get("/calender", async (req, res) => {
 });
 
 
-router.get("/featured", async (req, res) => {
+/*router.get("/featured", async (req, res) => {
   const posts = await Post.find({
     isFeatured: true,
     status: "APPROVED"
@@ -1209,7 +1216,7 @@ router.get("/featured", async (req, res) => {
   res.json(posts);
 });
 
-/*passport.use(
+passport.use(
   new LocalStrategy(
     { usernameField: "login", passwordField: "password" },
     async (login, password, done) => {
@@ -2293,7 +2300,7 @@ app.get("/friends", async (req, res) => {
 });
 
 
-app.post("/follow/:targetId", async (req, res) => {
+/*app.post("/follow/:targetId", async (req, res) => {
   try {
     if (!req.session.userId) {
       return res.status(401).json({ error: "Not logged in" });
@@ -2341,7 +2348,7 @@ app.get("/follow-status/:targetId", async (req, res) => {
   const following = currentUser.following.includes(targetId);
 
   res.json({ following });
-});
+});*/
 
 app.get("/posts/filter", async (req, res) => {
   try {

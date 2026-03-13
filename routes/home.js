@@ -153,36 +153,41 @@ router.get("/", async (req, res) => {
 
 <body>
 
+<!-- ================= HEADER ================= -->
 <header class="header" id="mainHeader">
-
-  <a href="/" class="top-header" id="topHeader">
+  <!-- Hidden to preserve JS -->
+  <a href="/" class="top-header" id="topHeader" style="display:none;">
     <img src="Doodle.png" class="logo" alt="CollegenZ" />
   </a>
 
   <div class="bottom-header" id="bottomHeader">
-    <div class="z-logo">Z</div>
-
-    <div class="search-bar">
+    <!-- Hidden to preserve JS -->
+    <div class="z-logo" style="display:none;">Z</div>
+    <div class="search-bar" style="display:none;">
       <input type="text" placeholder="Search" />
     </div>
 
-    <div class="header-actions">
-      <a href="/notifications">
-        <i class="bi bi-bell-fill"></i>
-      </a>
-      <div class="hamburger" id="hamburger">&#9776;</div>
+    <!-- New Sketch Header Layout -->
+    <div class="sketch-header-content">
+      <img src="/uploads/profilepic.jpg" class="header-profile-icon" id="headerProfilePic" alt="Profile" />
+      <h1 class="header-logo-text">CollegenZ</h1>
+      <div class="header-actions">
+        <a href="/notifications"><i class="bi bi-bell"></i></a>
+        <div class="hamburger" id="hamburger">&#9776;</div>
+      </div>
     </div>
   </div>
 </header>
 
-<div id="filterBar" class="filter-bar hidden-bar">
+<!-- Keeping Filter Bar for JS, but you can hide it via CSS if you don't want it -->
+<div id="filterBar" class="filter-bar">
   <button class="filter-btn active" data-type="all">All</button>
   <button class="filter-btn" data-type="event">Event</button>
   <button class="filter-btn" data-type="hiring">Hiring</button>
   <button class="filter-btn" data-type="general">General</button>
 </div>
 
-<!-- ================= SIDEBAR ================= -->
+<!-- ================= SIDEBAR (Slide Nav) ================= -->
 <nav id="slideNav" class="slide-nav">
   <div class="user-info">
     <img id="navProfilePic" class="profile-pic" src="/uploads/profilepic.jpg" />
@@ -200,28 +205,30 @@ router.get("/", async (req, res) => {
 
 <!-- ================= FEATURED ================= -->
 <div class="featured-wrapper">
-  <h5 class="px-3 mb-2">🔥 Featured Posts</h5>
+  <h3 class="section-title">Featured post</h3>
   <div id="featuredSlider" class="featured-slider"></div>
 </div>
 
 <!-- ================= POSTS ================= -->
 <div id="postContainer"></div>
 
-<!-- ================= FLOATING POST BUTTON ================= -->
-<a href="/upload" class="post-fab">
-  <img src="/uploads/add.png" alt="Post">
-</a>
-
+<!-- ================= BOTTOM NAVIGATION & FAB ================= -->
 <div class="sidebar">
   <div class="icon">
-
     <a href="/"><img src="/uploads/home.png" alt="Home" ></a>
-    <a href="/profile"><img src="/uploads/settings.png" alt="Settings" ></a>
-    <a href="/friends"><img src="/chaticon.png" alt="post"></a>
+    <a href="/profile"><img src="/uploads/settings.png" alt="Profile" ></a>
+    <div class="nav-spacer"></div> <!-- Pushes chat and calendar to the right -->
+    <a href="/friends"><img src="/chaticon.png" alt="Chat"></a>
     <a href="/calender"><img src="/uploads/calender.png" alt="Calendar" ></a>
   </div>
 </div>
 
+<!-- Centered Floating Post Button -->
+<a href="/upload" class="post-fab center-fab">
+  <!-- CSS will generate the + icon to match the sketch -->
+</a>
+
+<!-- Profile Popup & Story Viewer remain unchanged below -->
 <div id="profilePopup" class="profile-popup">
   <div class="profile-popup-content">
     <span class="close-popup">&times;</span>
@@ -231,23 +238,42 @@ router.get("/", async (req, res) => {
   </div>
 </div>
 
-
 <div id="storyViewer" class="story-viewer">
+  <div class="story-content">
+    
+    <div id="storyProgressContainer" class="story-progress-container"></div>
+    
+    <div class="story-header">
+      <div class="story-user-info">
+        <img id="storyUserPic" src="" alt="User">
+        <span id="storyUsername">User</span>
+      </div>
+      <button class="story-close" onclick="closeStory()"><i class="bi bi-x-lg"></i></button>
+    </div>
 
-<button class="story-close" onclick="closeStory()">✕</button>
+    <img id="storyImage" src="" alt="Story">
 
-<div class="story-content">
+    <div class="story-data-container">
+      <p id="storyDataText"></p>
+    </div>
 
-<img id="storyImage">
+    <div class="story-nav-left" onclick="prevSlide()"></div>
+    <div class="story-nav-right" onclick="nextSlide()"></div>
 
-<div class="story-user">
-<img id="storyUserPic">
-<span id="storyUsername"></span>
+    <div class="story-actions-vertical">
+      <div class="action-btn">
+        <i class="bi bi-heart"></i>
+        <span id="storyLikes">0</span>
+      </div>
+      <div class="action-btn">
+        <i class="bi bi-send"></i>
+        <span id="storyShares">0</span>
+      </div>
+    </div>
+
+  </div>
 </div>
 
-</div>
-
-</div>
 
 
 <!-- ================= SCRIPTS ================= -->
@@ -255,8 +281,8 @@ router.get("/", async (req, res) => {
 <script src="/script.js" defer></script>
 <script src="/share-script.js"></script>
 
-
 </body>
+
 </html>
 `);
   } catch (err) {
