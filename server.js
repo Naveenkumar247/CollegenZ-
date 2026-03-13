@@ -646,6 +646,13 @@ app.get("/updateOldUsers", async (req, res) => {
 });
 
 
+// Paste this in your EXPRESS Backend file, NOT in the HTML!
+router.get("/post/:postId", (req, res) => {
+  const path = require("path");
+  
+  // This tells the server to send the HTML file you just showed me
+  res.sendFile(path.join(__dirname, "resend.html")); 
+});
    
 
 
