@@ -646,15 +646,6 @@ app.get("/updateOldUsers", async (req, res) => {
 });
 
 
-// Paste this in your EXPRESS Backend file, NOT in the HTML!
-router.get("/post/:postId", (req, res) => {
-  const path = require("path");
-  
-  // This tells the server to send the HTML file you just showed me
-  res.sendFile(path.join(__dirname, "resend.html")); 
-});
-   
-
 
 /*router.post("/save/:id", async (req, res) => {
   try {
@@ -1322,9 +1313,68 @@ app.get("/api/post/:postId", async (req, res) => {
 // ----------------------
 // Share Page (HTML)
 // ----------------------
-app.get("/share/:postId", (req, res) => {
+// ----------------------
+// 1. Share Page (Shows Loading UI & Meta Tags for WhatsApp)
+// ----------------------
+app.get("/share/:postId", async (req, res) => {
+  try {
+    // Note: Make sure 'Post' is imported at the top of server.js!
+    const post = await Post.findById(req.params.postId);
+
+    if (!post) {
+      return res.status(404).send("Post not found");
+    }
+
+    const image = Array.isArray(post.imageurl) ? post.imageurl[0] : post.imageurl;
+    const caption = post.data ? post.data.substring(0, 150) + "..." : "Check this post on CollegenZ";
+    const url = "https://collegenz.in/share/" + post._id;
+
+    res.send(`
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+          <meta property="og:title" content="CollegenZ">
+          <meta property="og:description" content="${caption}">
+          <meta property="og:image" content="${image}">
+          <meta property="og:url" content="${url}">
+          <meta name="twitter:card" content="summary_large_image">
+          <style>
+              body { margin: 0; display: flex; align-items: center; justify-content: center; min-height: 100vh; background-color: #f4f6f9; font-family: sans-serif; }
+              .loader-card { background: white; padding: 40px; border-radius: 20px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+              .spinner { width: 40px; height: 40px; border: 4px solid #e2e8f0; border-top-color: #007bff; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px auto; }
+              @keyframes spin { to { transform: rotate(360deg); } }
+          </style>
+          <script>
+              // This smoothly redirects to the actual post viewer page!
+              setTimeout(() => {
+                  window.location.href = "/view/${post._id}"; 
+              }, 1500);
+          </script>
+      </head>
+      <body>
+          <div class="loader-card">
+              <div class="spinner"></div>
+              <h2>CollegenZ</h2>
+              <p>Taking you to the post...</p>
+          </div>
+      </body>
+      </html>
+    `);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Error generating share link");
+  }
+});
+
+// ----------------------
+// 2. View Post Page (Serves resend.html)
+// ----------------------
+app.get("/view/:postId", (req, res) => {
+  const path = require("path");
   res.sendFile(path.join(process.cwd(), "resend.html"));
 });
+
 
 app.delete("/deletepost/:id", async (req, res) => {
   try {
