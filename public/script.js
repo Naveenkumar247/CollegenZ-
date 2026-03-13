@@ -1,6 +1,5 @@
 console.log("🔥 SCRIPT LOADED");
 
-
 /* ================= INIT ================= */
 async function initApp() {
   await loadUser();  // 1. Gets the 'following' list from /api/me

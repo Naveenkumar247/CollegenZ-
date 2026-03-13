@@ -152,11 +152,11 @@ router.get("/share/:postId", async (req, res) => {
     </style>
 
     <script>
-        // FIXED: Redirects to the actual post viewer instead of the home page
-        setTimeout(() => {
-            window.location.href = "/?post=${post._id}"; 
-        }, 1500);
-    </script>
+    setTimeout(() => {
+        window.location.href = "/view/${post._id}";   // ✅ This goes to your View route
+    }, 1500);
+</script>
+
 </head>
 <body>
 
