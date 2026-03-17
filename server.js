@@ -709,6 +709,13 @@ io.on("connection", socket => {
 });
 
 
+// Add this near your other routes
+app.get("/api/config", (req, res) => {
+  res.json({
+    vapidPublicKey: process.env.VAPID_PUBLIC_KEY
+  });
+});
+
 
 
 /*router.post("/save/:id", async (req, res) => {
