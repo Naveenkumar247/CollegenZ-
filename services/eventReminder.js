@@ -1,110 +1,68 @@
 const cron = require("node-cron");
-const nodemailer = require("nodemailer");
-const genz = require("../models/primary/User"); // adjust path if needed
-
-/* ================= EMAIL TRANSPORT ================= */
-
-const transporter = nodemailer.createTransport({
-  host: "smtp.zoho.in",
-  port: 465,
-  secure: true,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
-  }
-});
-
-/* ================= VERIFY EMAIL ================= */
-
-transporter.verify((error) => {
-  if (error) {
-    console.error("❌ Email transporter error:", error);
-  } else {
-    console.log("✅ Email transporter ready to send messages!");
-  }
-});
-
+const genz = require("../models/primary/User");
+const { resend } = require("./mailService"); // Import the resend instance from your mail service
 
 console.log("📨 Event reminder service started");
 
-
 /* ================= CRON JOB ================= */
 /* Runs every day at 9:00 AM */
-
 cron.schedule("0 9 * * *", async () => {
-
   console.log("🔍 Checking for next-day event reminders...");
 
   try {
-
+    // 1. Find users who have events saved
     const users = await genz.find({
       "savedPosts.event_date": { $exists: true }
     });
 
+    // 2. Define "Tomorrow" range
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
-
-    const start = new Date(tomorrow.setHours(0,0,0,0));
-    const end = new Date(tomorrow.setHours(23,59,59,999));
+    const start = new Date(tomorrow.setHours(0, 0, 0, 0));
+    const end = new Date(tomorrow.setHours(23, 59, 59, 999));
 
     for (const user of users) {
-
       for (const post of user.savedPosts) {
-
+        
+        // 3. Check if any saved post happens tomorrow
         if (
           post.event_date &&
           post.event_date >= start &&
           post.event_date <= end
         ) {
-
-          const mailOptions = {
-            from: process.env.EMAIL_USER,
-            to: user.email,
-            subject: `Reminder: "${post.data}" is happening tomorrow!`,
-            text:
-`Hey ${user.name},
-
-Just a reminder that your saved event "${post.data}" is happening tomorrow.
-
-📅 Date: ${new Date(post.event_date).toDateString()}
-
-Visit CollegenZ to see more details:
-https://collegenz.in
-
-Best,
-CollegenZ Team`
-          };
-
+          
           try {
+            // 4. Send via Resend API (No SMTP timeouts!)
+            const { data, error } = await resend.emails.send({
+              from: "CollegenZ <notifications@collegenz.in>",
+              to: user.email,
+              subject: `Reminder: "${post.data}" is happening tomorrow!`,
+              html: `
+                <div style="font-family: sans-serif; line-height: 1.5;">
+                  <h3 style="color: #228B22;">Event Reminder</h3>
+                  <p>Hey ${user.name || 'Student'},</p>
+                  <p>Just a reminder that your saved event "<b>${post.data}</b>" is happening tomorrow.</p>
+                  <p>📅 <b>Date:</b> ${new Date(post.event_date).toDateString()}</p>
+                  <br>
+                  <a href="https://collegenz.in" style="background: #228B22; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">View on CollegenZ</a>
+                  <p style="margin-top: 20px; font-size: 12px; color: #888;">Best, <br> CollegenZ Team</p>
+                </div>
+              `
+            });
 
-            await transporter.sendMail(mailOptions);
+            if (error) {
+              console.error(`❌ Resend error for ${user.email}:`, error);
+            } else {
+              console.log(`✅ Reminder sent to ${user.email} (ID: ${data.id})`);
+            }
 
-            console.log(
-              `✅ Reminder sent to ${user.email} for "${post.data}"`
-            );
-
-          } catch (err) {
-
-            console.error(
-              `❌ Failed to send reminder to ${user.email}:`,
-              err.message
-            );
-
+          } catch (sendErr) {
+            console.error(`❌ Failed to trigger Resend for ${user.email}:`, sendErr.message);
           }
-
         }
-
       }
-
     }
-
   } catch (err) {
-
-    console.error(
-      "❌ Reminder cron job failed:",
-      err.message
-    );
-
+    console.error("❌ Reminder cron job failed:", err.message);
   }
-
 });
