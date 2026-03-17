@@ -476,28 +476,38 @@ router.post(
 );
 */
 
-io.on("connection", socket => {
+io.on("connection", (socket) => {
+  console.log("New Socket Connection:", socket.id);
 
-  socket.on("joinRoom", room => {
+  socket.on("joinRoom", (room) => {
     socket.join(room);
-    console.log("Joined room:", room);
   });
 
-  socket.on("sendMessage", async data => {
-    console.log("MESSAGE RECEIVED:", data);
+  socket.on("sendMessage", async (data) => {
+    try {
+      // 1. Save to DB
+      const newMessage = await Message.create({
+        sender: data.sender,
+        receiver: data.receiver,
+        text: data.text
+      });
 
-    // save to DB
-    await Message.create({
-      sender: data.sender,
-      receiver: data.receiver,
-      text: data.text
-    });
-
-    // send to both users
-    io.to(data.room).emit("newMessage", data);
+      // 2. Emit to the room (includes the database ID and Timestamp)
+      io.to(data.room).emit("newMessage", {
+        ...data,
+        _id: newMessage._id,
+        createdAt: newMessage.createdAt
+      });
+    } catch (err) {
+      console.error("Socket Message Error:", err);
+    }
   });
 
+  socket.on("typing", (room) => {
+    socket.to(room).emit("typing");
+  });
 });
+
 
 // Routes
 
@@ -633,7 +643,8 @@ app.get("/updateOldUsers", async (req, res) => {
         $set: {
           friends: [],
           friendRequestsSent: [],
-          friendRequestsReceived: []
+          friendRequestsReceived: [],
+          pushSubscription: null
         }
       }
     );
@@ -644,6 +655,59 @@ app.get("/updateOldUsers", async (req, res) => {
     res.status(500).send("❌ Error updating users");
   }
 });
+
+
+io.on("connection", socket => {
+  console.log("✅ User connected to socket:", socket.id);
+
+  socket.on("joinRoom", room => {
+    socket.join(room);
+    console.log("Room Joined:", room);
+  });
+
+  socket.on("sendMessage", async data => {
+    try {
+      // 1. Save to Database
+      const newMessage = await Message.create({
+        sender: data.sender,
+        receiver: data.receiver,
+        text: data.text
+      });
+
+      // 2. Real-time emit to the specific room
+      // We include the timestamp and ID from the DB
+      io.to(data.room).emit("newMessage", {
+        ...data,
+        createdAt: newMessage.createdAt,
+        _id: newMessage._id
+      });
+
+      // 3. Trigger Web Push Notification
+      const receiver = await genz.findById(data.receiver);
+      
+      // Only send if the user has a subscription stored
+      if (receiver && receiver.pushSubscription) {
+        const payload = JSON.stringify({
+          title: "CollegenZ",
+          body: `New message: ${data.text.substring(0, 30)}${data.text.length > 30 ? '...' : ''}`,
+          url: `/chat/${data.sender}`
+        });
+
+        const webpush = require('web-push'); // Ensure this is required at the top
+        webpush.sendNotification(receiver.pushSubscription, payload)
+          .catch(err => console.error("❌ Push Notification Error:", err));
+      }
+
+    } catch (err) {
+      console.error("🔥 Error saving/sending message:", err);
+    }
+  });
+
+  socket.on("typing", (room) => {
+    socket.to(room).emit("typing");
+  });
+});
+
 
 
 
@@ -1057,7 +1121,31 @@ app.get("/api/user/:id", async (req, res) => {
   res.json({ id: res.locals.currentUser._id.toString() });
 });*/
 
-router.get("/api/messages/:friendId", async (req, res) => {
+// Add this near your other routes in server.js
+app.get("/api/messages/:friendId", async (req, res) => {
+  try {
+    // res.locals.currentUser comes from your existing middleware
+    if (!res.locals.currentUser) return res.status(401).json([]);
+
+    const myId = res.locals.currentUser._id;
+    const friendId = req.params.friendId;
+
+    const history = await Message.find({
+      $or: [
+        { sender: myId, receiver: friendId },
+        { sender: friendId, receiver: myId }
+      ]
+    }).sort({ createdAt: 1 }); // Oldest first
+
+    res.json(history);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to load messages" });
+  }
+});
+
+
+/*router.get("/api/messages/:friendId", async (req, res) => {
   try {
     if (!res.locals.currentUser) {
       return res.status(401).json({ error: "Not logged in" });
@@ -1087,7 +1175,7 @@ router.get("/api/messages/:friendId", async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: "Failed to load messages" });
   }
-});
+});*/
 
 /* ---------------- CERTIFICATE PAGE (IMPORTANT: FIRST) ---------------- */
 app.get("/certificate/:code", (req, res) => {

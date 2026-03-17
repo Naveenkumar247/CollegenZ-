@@ -7,7 +7,7 @@
 
 body {
   font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-  background: #f5f6f7; /* Brought back the off-white background */
+  background:#f5f6f7; /* Brought back the off-white background */
   color: #222;
 }
 
@@ -115,7 +115,7 @@ img {
 
 /* ================= FEATURED ================= */
 .featured-wrapper {
-  background: #f5f6f7; /* Matches body */
+  background:#f5f6f7; /* Matches body */
   padding-bottom: 10px;
 }
 
@@ -251,16 +251,23 @@ img {
 }
 
 /* ================= POSTS ================= */
-#postContainer { padding: 12px; } /* Brought back spacing on the sides */
+#postContainer { 
+  padding: 0; /* Removes left/right gaps so posts touch the screen edges */
+  background: #f3f2ef; /* LinkedIn's exact background divider color */
+} 
 
 .card, .ig-post {
   background: white;
-  border-radius: 14px; /* Rounded corners */
-  margin-bottom: 15px; /* Spacing between posts */
+  border-radius: 0; /* Removes rounded corners for a flush look */
+  margin-top: 0;
+  margin-bottom: 8px; /* Creates the thick divider line between posts (LinkedIn style) */
   border: none;
-  box-shadow: 0 2px 6px rgba(0,0,0,.08); /* Soft shadows */
+  border-top: 1px solid #e0e0e0; /* Subtle top border */
+  border-bottom: 1px solid #e0e0e0; /* Subtle bottom border */
+  box-shadow: none; /* Removes the floating card effect */
   max-width: 100%;
 }
+
 
 .ig-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; }
 .ig-user { display: flex; align-items: center; gap: 8px; font-weight: 600; }
