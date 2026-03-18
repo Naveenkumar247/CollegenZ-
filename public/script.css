@@ -250,27 +250,89 @@ img {
   flex-shrink: 0;
 }
 
-/* ================= POSTS ================= */
-#postContainer { 
-  padding: 0; /* Removes left/right gaps so posts touch the screen edges */
-  background: #f3f2ef; /* LinkedIn's exact background divider color */
-} 
+/* ================= POSTS (Desktop Optimized) ================= */
 
-.card, .ig-post {
+#postContainer {
+  /* On desktop, we want a gray background to make the white cards "pop" */
+  background: #f0f2f5; 
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Centers the cards on desktop */
+  padding: 10px 0;
+}
+
+.ig-post {
   background: white;
-  border-radius: 0; /* Removes rounded corners for a flush look */
-  margin-top: 0;
-  margin-bottom: 8px; /* Creates the thick divider line between posts (LinkedIn style) */
-  border: none;
-  border-top: 1px solid #e0e0e0; /* Subtle top border */
-  border-bottom: 1px solid #e0e0e0; /* Subtle bottom border */
-  box-shadow: none; /* Removes the floating card effect */
-  max-width: 100%;
+  width: 100%;
+  max-width: 600px; /* 🔥 CRITICAL: Prevents stretching on desktop */
+  margin: 0 auto 16px auto; /* Centers card and adds bottom spacing */
+  border: 1px solid #dbdbdb;
+  border-radius: 8px; /* Rounded corners for desktop feel */
+  overflow: hidden;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+/* Mobile Override: Keeps it full-width on phones */
+@media (max-width: 600px) {
+  .ig-post {
+    max-width: 100%;
+    margin-bottom: 8px;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+  }
+  #postContainer {
+    padding: 0;
+  }
+}
+
+/* ================= THE IMAGE (The "Disaster" Fix) ================= */
+
+.ig-image-container {
+  width: 100%;
+  background: #000; /* Black background for portrait images */
+  display: flex;
+  justify-content: center;
+}
+
+.ig-image {
+  width: 100%;
+  /* 🔥 FIX: Prevents the image from being taller than the screen */
+  max-height: 75vh; 
+  object-fit: contain; /* Shows the whole poster without cropping */
+  display: block;
+}
+
+/* ================= HEADER & ACTIONS ================= */
+
+.ig-header {
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ig-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+}
+
+.ig-actions {
+  padding: 12px 16px;
+  display: flex;
+  gap: 16px;
+  font-size: 22px;
+}
+
+.ig-caption {
+  padding: 0 16px 16px;
+  font-size: 14px;
+  line-height: 1.4;
 }
 
 
-.ig-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; }
-.ig-user { display: flex; align-items: center; gap: 8px; font-weight: 600; }
 .ig-avatar { width: 35px; height: 35px; border-radius: 50%; object-fit: cover; }
 .postprofile-pic { width: 42px; height: 42px; border-radius: 50%; }
 
@@ -291,9 +353,6 @@ img {
 
 .post-menu { cursor: pointer; font-size: 20px; color: #222; }
 
-.ig-image { width: 100%; display: block; border: none; } /* Removed black lines */
-
-.ig-actions { display: flex; justify-content: space-between; padding: 12px 15px; font-size: 20px; align-items: center; }
 .ig-left { display: flex; gap: 18px; }
 .ig-actions span { display: inline-flex; align-items: center; gap: 4px; cursor: pointer; color: #222; }
 .ig-actions small { font-size: 14px; font-weight: 500; }
@@ -652,4 +711,3 @@ img {
   padding: 10px 10px !important;
   z-index: 2 !important;
 }
-
