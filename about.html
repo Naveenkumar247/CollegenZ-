@@ -259,7 +259,7 @@
             try {
                 // IMPORTANT: Replace this with your actual backend URL if running on different ports
                 // Example: 'http://localhost:3000/news'
-                const response = await fetch('/news'); 
+                const response = await fetch('/api/news'); 
                 const articles = await response.json();
                 
                 container.innerHTML = ''; // Clear loading text
