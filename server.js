@@ -40,7 +40,8 @@ const postsRoute = require("./routes/posts");
 const shareRoutes = require("./routes/share.routes");
 const friendRoutes = require("./routes/friends");
 const followRoutes = require("./routes/follows");
-
+const newsRoutes = require("./routes/news");
+app.use("/api", newsRoutes);
 
 
 // --------------------

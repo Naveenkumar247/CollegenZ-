@@ -1,195 +1,316 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>About | Terms | Contact - Collegenz</title>
-  <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CollegenZ</title>
+    <style>
+        /* --- Color Palette --- */
+        :root {
+            --primary-green: #157e28; 
+            --light-green: #eaf5eb; 
+            --text-dark: #333333;
+            --bg-color: #f0f2f5;
+            --card-bg: #ffffff;
+        }
 
-    body {
-      font-family: "Poppins", Arial, sans-serif;
-      background: #f8fafc;
-      color: #0f172a;
-      line-height: 1.6;
-    }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
 
-    header {
-      background: linear-gradient(135deg, #228B22, #006400);
-      color: white;
-      padding: 20px;
-      text-align: center;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-    }
+        body {
+            background-color: var(--bg-color);
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
 
-    header h1 {
-      font-size: 26px;
-      margin-bottom: 8px;
-    }
+        /* Simulates mobile screen wrapper */
+        .mobile-container {
+            width: 100%;
+            max-width: 420px;
+            background-color: var(--bg-color);
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
 
-    nav {
-      display: flex;
-      justify-content: center;
-      gap: 20px;
-      margin-top: 10px;
-    }
+        /* --- Header & Navigation --- */
+        .header {
+            background-color: var(--primary-green);
+            padding: 20px 0 0 0;
+            text-align: center;
+            color: white;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
 
-    nav a {
-      color: #fff;
-      text-decoration: none;
-      font-weight: 500;
-      transition: opacity 0.3s;
-    }
+        .logo {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            letter-spacing: 0.5px;
+        }
 
-    nav a:hover {
-      opacity: 0.8;
-      text-decoration: underline;
-    }
+        .tabs-nav {
+            display: flex;
+            justify-content: space-around;
+            padding: 0 10px;
+        }
 
-    main {
-      max-width: 900px;
-      margin: 30px auto;
-      padding: 20px;
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.05);
-    }
+        .tab-btn {
+            background: transparent;
+            border: none;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 15px;
+            font-weight: 500;
+            padding: 10px 5px;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+        }
 
-    section {
-      margin-bottom: 40px;
-    }
+        .tab-btn.active {
+            color: #ffffff;
+            border-bottom: 3px solid #ffffff; 
+        }
 
-    section h2 {
-      font-size: 22px;
-      margin-bottom: 12px;
-      color:#228B22 ;
-      border-left: 5px solid #228B22;
-      padding-left: 10px;
-    }
+        /* --- Content Area --- */
+        .main-content {
+            background-color: var(--card-bg);
+            flex-grow: 1;
+            margin: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            padding: 25px 20px;
+        }
 
-    p {
-      margin-bottom: 12px;
-    }
+        .content-section {
+            display: none; 
+            animation: fadeIn 0.4s ease;
+        }
 
-    /* Contact section form */
-    form {
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
-    }
+        .content-section.active-content {
+            display: block; 
+        }
 
-    input, textarea {
-      padding: 10px 12px;
-      border: 1px solid #cbd5e1;
-      border-radius: 6px;
-      font-size: 15px;
-      width: 100%;
-    }
+        .content-section h2 {
+            color: var(--primary-green);
+            font-size: 20px;
+            margin-bottom: 15px;
+            padding-left: 10px;
+            border-left: 4px solid var(--primary-green);
+        }
+        
+        .content-section p {
+            color: var(--text-dark);
+            line-height: 1.6;
+            margin-bottom: 15px;
+            font-size: 15px;
+        }
 
-    textarea {
-      resize: vertical;
-      min-height: 100px;
-    }
+        /* --- Chrome Style News Feed Styling --- */
+        #news-container {
+            display: flex;
+            flex-direction: column;
+            gap: 25px; /* Space between news cards */
+            margin-top: 10px;
+        }
 
-    button {
-      background: linear-gradient(135deg, #228B22, #006400);
-      color: #fff;
-      border: none;
-      border-radius: 8px;
-      padding: 10px 16px;
-      font-size: 15px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: 0.3s;
-    }
+        .news-card {
+            display: flex;
+            flex-direction: column;
+            text-decoration: none;
+            border-bottom: 1px solid #eaeaea;
+            padding-bottom: 20px;
+        }
 
-    button:hover {
-      opacity: 0.9;
-      transform: translateY(-1px);
-    }
+        .news-card:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
 
-    footer {
-      background: linear-gradient(135deg, #228B22, #006400);
-      color: #cbd5e1;
-      text-align: center;
-      padding: 15px;
-      font-size: 14px;
-      margin-top: 40px;
-    }
+        .news-image {
+            width: 100%;
+            height: 190px;
+            object-fit: cover;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            background-color: #e0e0e0;
+        }
 
-    @media (max-width: 600px) {
-      nav {
-        flex-wrap: wrap;
-      }
-      main {
-        margin: 15px;
-        padding: 15px;
-      }
-    }
-  </style>
+        .news-title {
+            font-size: 18px;
+            font-weight: 500;
+            color: var(--text-dark);
+            line-height: 1.3;
+            margin-bottom: 10px;
+        }
+
+        .news-meta {
+            font-size: 13px;
+            color: #70757a; /* Chrome grey color */
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .news-source {
+            font-weight: 600;
+            color: #3c4043;
+            text-transform: capitalize;
+        }
+
+        .loader {
+            text-align: center;
+            color: #777;
+            font-style: italic;
+            padding: 20px 0;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+    </style>
 </head>
 <body>
-  <header>
-    <h1>Collegenz</h1>
-    <nav>
-      <a href="#about">About Us</a>
-      <a href="#terms">Terms & Conditions</a>
-      <a href="#contact">Contact Us</a>
-    </nav>
-  </header>
 
-  <main>
-    <!-- ABOUT US -->
-    <section id="about">
-      <h2>About Us</h2>
-      <p>
-        Welcome to <strong>Collegenz</strong> — a student-driven platform built to connect learners,
-        opportunities, and ideas. Our goal is to make college communities smarter by sharing
-        information, internships, and creative projects through a single hub.
-      </p>
-      <p>
-        We believe in empowering students through collaboration and digital innovation. Collegenz is
-        constantly evolving to bring you better networking, verified opportunities, and a creative
-        space to showcase your talents.
-      </p>
-    </section>
+    <div class="mobile-container">
+        
+        <div class="header">
+            <h1 class="logo">Collegenz</h1>
+            <div class="tabs-nav">
+                <button class="tab-btn" data-target="news-section">News</button>
+                <button class="tab-btn active" data-target="about-section">About Us</button>
+                <button class="tab-btn" data-target="contact-section">Contact Us</button>
+            </div>
+        </div>
 
-    <!-- TERMS AND CONDITIONS -->
-    <section id="terms">
-      <h2>Terms & Conditions</h2>
-      <p>
-        By using our website and services, you agree to the following terms:
-      </p>
-      <ul>
-        <li>All information shared on Collegenz must be accurate and respectful.</li>
-        <li>Users are responsible for maintaining the privacy of their login credentials.</li>
-        <li>Collegenz is not liable for third-party links or external content shared by users.</li>
-        <li>We reserve the right to update or modify these terms without prior notice.</li>
-      </ul>
-      <p>
-        Continued use of our website constitutes acceptance of any updates to these terms.
-      </p>
-    </section>
+        <div class="main-content">
+            
+            <!-- NEWS SECTION -->
+            <div id="news-section" class="content-section">
+                <h2>Campus & Tech News</h2>
+                <div id="news-container">
+                    <!-- News cards will be injected here via JavaScript -->
+                </div>
+            </div>
 
-    <!-- CONTACT US -->
-    <section id="contact">
-      <h2>Contact Us</h2>
-      <p>Have questions, feedback, or partnership ideas? We’d love to hear from you!</p>
-      <form>
-        <input type="text" placeholder="Your Name" required />
-        <input type="email" placeholder="Your Email" required />
-        <textarea placeholder="Your Message..." required></textarea>
-        <button type="submit">Send Message</button>
-      </form>
-    </section>
-  </main>
+            <!-- ABOUT SECTION -->
+            <div id="about-section" class="content-section active-content">
+                <h2>About Us</h2>
+                <p>Welcome to <strong>Collegenz</strong> — a student-driven platform built to connect learners, opportunities, and ideas. Our goal is to make college communities smarter by sharing information, internships, and creative projects through a single hub.</p>
+                <p>We believe in empowering students through collaboration and digital innovation. Collegenz is constantly evolving to bring you better networking, verified opportunities, and a creative space to showcase your talents.</p>
+                
+                <h2 style="margin-top: 30px;">Our Mission</h2>
+                <p>Built by students. For students. Because your college life deserves its own dedicated, noise-free space.</p>
+            </div>
 
-  <footer>
-    &copy; 2025 Collegenz. All rights reserved.
-  </footer>
+            <!-- CONTACT SECTION -->
+            <div id="contact-section" class="content-section">
+                <h2>Contact Us</h2>
+                <p>Have questions or want to collaborate with us? We'd love to hear from you.</p>
+                <p><strong>Email:</strong><br>naveenkumar@collegenz.in</p>
+                <p><strong>Website:</strong><br>www.collegenz.in</p>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // --- TAB TOGGLE LOGIC ---
+        const tabButtons = document.querySelectorAll('.tab-btn');
+        const contentSections = document.querySelectorAll('.content-section');
+
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                contentSections.forEach(section => section.classList.remove('active-content'));
+
+                button.classList.add('active');
+                const targetId = button.getAttribute('data-target');
+                document.getElementById(targetId).classList.add('active-content');
+
+                // If News tab is clicked, fetch the news
+                if (targetId === 'news-section') {
+                    fetchNews();
+                }
+            });
+        });
+
+        // --- FETCH NEWS LOGIC ---
+        let newsLoaded = false;
+
+        async function fetchNews() {
+            // Prevent fetching again if already loaded
+            if (newsLoaded) return; 
+
+            const container = document.getElementById('news-container');
+            container.innerHTML = '<div class="loader">Loading latest news...</div>';
+
+            try {
+                // IMPORTANT: Replace this with your actual backend URL if running on different ports
+                // Example: 'http://localhost:3000/news'
+                const response = await fetch('/news'); 
+                const articles = await response.json();
+                
+                container.innerHTML = ''; // Clear loading text
+
+                if (!articles || articles.length === 0) {
+                    container.innerHTML = '<p>No news updates found at the moment.</p>';
+                    return;
+                }
+
+                articles.forEach(article => {
+                    // Extract data from NewsData.io response format
+                    const title = article.title || 'No Title';
+                    const link = article.link || '#';
+                    const source = article.source_id || 'News Source';
+                    const imageUrl = article.image_url; 
+                    
+                    // Format Date (e.g., "12h" or "1d" logic simplified to local date)
+                    const pubDate = new Date(article.pubDate);
+                    const dateFormatted = pubDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+                    // Create the Card HTML
+                    const card = document.createElement('a');
+                    card.href = link;
+                    card.target = "_blank"; // Opens news in a new tab
+                    card.className = "news-card";
+                    
+                    // Only add image tag if image URL exists (NewsData.io sometimes omits images)
+                    let imageHTML = '';
+                    if (imageUrl) {
+                        imageHTML = `<img src="${imageUrl}" alt="News image" class="news-image" onerror="this.style.display='none'">`;
+                    }
+
+                    card.innerHTML = `
+                        ${imageHTML}
+                        <div class="news-title">${title}</div>
+                        <div class="news-meta">
+                            <span class="news-source">${source}</span> • <span>${dateFormatted}</span>
+                        </div>
+                    `;
+
+                    container.appendChild(card);
+                });
+
+                newsLoaded = true; // Mark as loaded so it doesn't refetch on every tab click
+
+            } catch (error) {
+                console.error("Error fetching news:", error);
+                container.innerHTML = '<p style="color: red; text-align: center;">Failed to load news. Please try again later.</p>';
+            }
+        }
+    </script>
+
 </body>
 </html>
