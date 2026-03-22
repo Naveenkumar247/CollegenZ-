@@ -257,15 +257,25 @@
             container.innerHTML = '<div class="loader">Loading latest news...</div>';
 
             try {
-                // IMPORTANT: Replace this with your actual backend URL if running on different ports
-                // Example: 'http://localhost:3000/news'
-                const response = await fetch('/api/news'); 
+                // IMPORTANT: Replace this with your actual backend URL if running on different ports!
+                // Example: 'http://localhost:3000/news' or 'https://your-api.com/news'
+                const backendUrl = '/api/news'; 
+                
+                const response = await fetch(backendUrl); 
+                
+                // NEW: Catch HTTP errors (like 404 or 500) before trying to parse JSON
+                if (!response.ok) {
+                    throw new Error(`Server returned status: ${response.status} - ${response.statusText}`);
+                }
+
                 const articles = await response.json();
                 
                 container.innerHTML = ''; // Clear loading text
 
-                if (!articles || articles.length === 0) {
+                // NEW: Ensure articles is actually an array before using .forEach
+                if (!Array.isArray(articles) || articles.length === 0) {
                     container.innerHTML = '<p>No news updates found at the moment.</p>';
+                    console.warn("Backend response was not an array:", articles);
                     return;
                 }
 
@@ -276,7 +286,7 @@
                     const source = article.source_id || 'News Source';
                     const imageUrl = article.image_url; 
                     
-                    // Format Date (e.g., "12h" or "1d" logic simplified to local date)
+                    // Format Date
                     const pubDate = new Date(article.pubDate);
                     const dateFormatted = pubDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
@@ -286,7 +296,7 @@
                     card.target = "_blank"; // Opens news in a new tab
                     card.className = "news-card";
                     
-                    // Only add image tag if image URL exists (NewsData.io sometimes omits images)
+                    // Only add image tag if image URL exists
                     let imageHTML = '';
                     if (imageUrl) {
                         imageHTML = `<img src="${imageUrl}" alt="News image" class="news-image" onerror="this.style.display='none'">`;
@@ -306,8 +316,9 @@
                 newsLoaded = true; // Mark as loaded so it doesn't refetch on every tab click
 
             } catch (error) {
-                console.error("Error fetching news:", error);
-                container.innerHTML = '<p style="color: red; text-align: center;">Failed to load news. Please try again later.</p>';
+                // NEW: This will now output the EXACT reason for failure to your console
+                console.error("Critical Error fetching news:", error);
+                container.innerHTML = `<p style="color: red; text-align: center;">Failed to load news. Reason: ${error.message}</p>`;
             }
         }
     </script>

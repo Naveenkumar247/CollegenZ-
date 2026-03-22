@@ -41,7 +41,9 @@ const shareRoutes = require("./routes/share.routes");
 const friendRoutes = require("./routes/friends");
 const followRoutes = require("./routes/follows");
 const newsRoutes = require("./routes/news");
-app.use("/api", newsRoutes);
+const chatFriendsRouter = require("./routes/chatfriends"); 
+
+
 
 
 // --------------------
@@ -119,6 +121,8 @@ app.use("/", require("./routes/user.api"));
 app.use("/", require("./routes/me.api"));
 app.use("/friend", friendRoutes);
 app.use("/follow", followRoutes);
+app.use("/", chatFriendsRouter);
+app.use("/api", newsRoutes);
 require("./services/autoDelete");
 require("./services/eventReminder");
 
@@ -554,6 +558,10 @@ app.get("/admin/certificate", (req, res) => {
 app.get("/admin/featured", (req, res) => {
   res.sendFile(path.join(__dirname, "featured-submit.html"));
 });
+app.get("/messages", (req, res) => {
+  res.sendFile(path.join(__dirname, "chatfriends.html")); 
+});
+
 
 app.use(async (req, res, next) => {
   if (req.session?.userId) {
@@ -1104,6 +1112,12 @@ router.post("/notifications/read/:id", requireLogin, async (req, res) => {
 
   res.json({ success: true });
 });*/
+
+app.get("/friends", (req, res) => {
+  // IMPORTANT: Adjust the path below based on where you saved chatfriends.html!
+  // If it's in a folder called 'public' or 'views', add that to the path.join.
+  res.sendFile(path.join(__dirname, "chatfriends.html")); 
+});
 
 app.get("/api/user/:id", async (req, res) => {
   try {
@@ -2143,7 +2157,7 @@ app.get("/get-profile/:id", async (req, res) => {
 });
 
 
-app.get("/friends", async (req, res) => {
+/*app.get("/friends", async (req, res) => {
   const currentUser = res.locals.currentUser;
   if (!currentUser) return res.redirect("/login");
 
@@ -2294,7 +2308,7 @@ app.get("/friends", async (req, res) => {
       color: #777;
     }
 
-        /* === Sidebar (Default: Desktop layout) === */
+        /* === Sidebar (Default: Desktop layout) === 
 .sidebar {
   width: 60px;
   background: #f1f1f1;
@@ -2326,11 +2340,11 @@ app.get("/friends", async (req, res) => {
   transition: transform 0.2s ease;
 }
 
-/* Slight zoom effect on hover */
+/* Slight zoom effect on hover 
 .sidebar img:hover {
   transform: scale(1.1);
 }
-/* === Tablet Size (medium screens) === */
+/* === Tablet Size (medium screens) === 
 @media (max-width: 992px) {
   .sidebar img {
     width: 45px;
@@ -2338,11 +2352,11 @@ app.get("/friends", async (req, res) => {
   }
 }
 
-/* === Mobile Layout: Sidebar becomes bottom nav === */
+/* === Mobile Layout: Sidebar becomes bottom nav === 
 @media (max-width: 768px) {
   .sidebar {
     width: 100%;
-    height: 35px; /* slightly smaller bottom nav */
+    height: 35px; /* slightly smaller bottom nav 
     flex-direction: row;
     justify-content: center;
     align-items: center;
@@ -2359,27 +2373,27 @@ app.get("/friends", async (req, res) => {
     flex-direction: row;
     justify-content: space-around;
     width: 100%;
-    gap: 2rem; /* more spacing between icons */
+    gap: 2rem; /* more spacing between icons 
     margin-top: 0;
-    padding: 0 0.5rem; /* side padding */
+    padding: 0 0.5rem; /* side padding *
   }
 
   .sidebar img {
-    width: 45px; /* smaller icons for mobile */
+    width: 45px; /* smaller icons for mobile *
     height: 45px;
   }
 
   header {
     margin-right: 0;
-    margin-bottom: 65px; /* space for bottom nav */
-    padding: 0.8rem 1rem; /* slightly smaller header*/
+    margin-bottom: 65px; /* space for bottom nav *
+    padding: 0.8rem 1rem; /* slightly smaller header
   }
 }
 
-/* === Extra Small Screens (very small phones) === */
+/* === Extra Small Screens (very small phones) === *
 @media (max-width: 480px) {
   .sidebar .icon {
-    flex-wrap: wrap; /* allow icons to wrap if too many */
+    flex-wrap: wrap; /* allow icons to wrap if too many *
   }
 
   .sidebar img {
@@ -2450,7 +2464,7 @@ app.get("/friends", async (req, res) => {
 `;
 
   res.send(html);
-});
+});*/
 
 
 /*app.post("/follow/:targetId", async (req, res) => {

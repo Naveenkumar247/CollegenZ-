@@ -169,8 +169,14 @@ router.get("/", async (req, res) => {
 
     <!-- New Sketch Header Layout -->
     <div class="sketch-header-content">
-      <img src="/uploads/profilepic.jpg" class="header-profile-icon" id="headerProfilePic" alt="Profile" />
-      <h1 class="header-logo-text">CollegenZ</h1>
+      <a href="/profile">
+  <img src="/uploads/profilepic.jpg" class="header-profile-icon" id="headerProfilePic" alt="Profile" />
+</a>
+
+      <h1 class="header-logo-text">
+  <a href="https://collegenz.in/aboutus" style="text-decoration: none; color: inherit;">CollegenZ</a>
+</h1>
+
       <div class="header-actions">
         <a href="/notifications"><i class="bi bi-bell"></i></a>
         <div class="hamburger" id="hamburger">&#9776;</div>
