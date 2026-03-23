@@ -20,3 +20,22 @@ self.addEventListener('notificationclick', function(event) {
         clients.openWindow(event.notification.data.url)
     );
 });
+
+// Listen for the push event from the backend
+self.addEventListener("push", (event) => {
+  const data = event.data ? event.data.json() : {};
+
+  event.waitUntil(
+    self.registration.showNotification(data.title || "CollegenZ", {
+      body: data.body || "You have a new notification!",
+      icon: "/favicon.ico", // Change this to your actual logo path
+      data: { url: data.url || "/" }
+    })
+  );
+});
+
+// Make the notification clickable
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  event.waitUntil(clients.openWindow(event.notification.data.url));
+});

@@ -322,15 +322,36 @@ img {
 .ig-actions {
   padding: 12px 16px;
   display: flex;
-  gap: 16px;
+  justify-content: space-between; /* 🔥 Pushes the Save button to the far right */
+  align-items: center; /* Keeps them vertically centered */
   font-size: 22px;
 }
 
+/* Update your existing ig-caption */
 .ig-caption {
-  padding: 0 16px 16px;
+  padding: 0 15px 15px; 
   font-size: 14px;
   line-height: 1.4;
 }
+
+/* 🔥 Add this rule: Forces any paragraphs/divs inside the caption to stay on the same line */
+.ig-caption p, 
+.ig-caption div {
+  display: inline;
+  margin: 0;
+  padding: 0;
+}
+
+/* Update your see-more class to add a little breathing room */
+.see-more { 
+  color: #0d6efd; 
+  cursor: pointer; 
+  font-weight: 500; 
+  text-decoration: none; 
+  display: inline-block;
+  margin-left: 6px; /* Adds a space between the last word and "View details" */
+}
+
 
 
 .ig-avatar { width: 35px; height: 35px; border-radius: 50%; object-fit: cover; }
@@ -427,8 +448,6 @@ img {
 .slide-count { position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.6); color: #fff; padding: 2px 8px; border-radius: 12px; font-size: 12px; font-weight: 500;}
 .event-badge, .hiring-badge { position: absolute; top: 8px; left: 8px; background: #228B22; color: #fff; padding: 4px 8px; border-radius: 10px; font-size: 12px; font-weight: 500;}
 
-.see-more { color: #0d6efd; cursor: pointer; font-weight: 500; text-decoration: none; }
-.see-more:hover { text-decoration: underline; }
 
 .text-success { color: #228B22 !important; font-weight: 600; }
 
