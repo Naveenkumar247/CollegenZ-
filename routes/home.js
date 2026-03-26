@@ -11,31 +11,23 @@ router.get("/", async (req, res) => {
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>CollegenZ – AI Powered Student Platform</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- ================= BOOTSTRAP ================= -->
-  <link
-    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
-    rel="stylesheet"
-  />
+  <title>CollegenZ – AI Powered Student Platform</title>
+  <meta name="description" content="CollegenZ is an AI-powered platform helping students explore colleges, events, hackathons, internships, and opportunities to accelerate their careers." />
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+  <link rel="canonical" href="https://collegenz.in/" />
 
-  <!-- Bootstrap Icons -->
-  <link
-    href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
-    rel="stylesheet"
-  />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 
-  <!-- ================= GOOGLE FONTS ================= -->
-  <link
-    href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Open+Sans:wght@300;400;500;600;700&display=swap"
-    rel="stylesheet"
-  />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
 
-  <!-- ================= APP CSS ================= -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Open+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
   <link rel="stylesheet" href="/script.css" />
 
-  <!-- ================= FAVICONS ================= -->
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png" />
   <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -43,43 +35,22 @@ router.get("/", async (req, res) => {
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
   <link rel="manifest" href="/site.webmanifest" />
 
-  <!-- Mobile Theme -->
   <meta name="theme-color" content="#1f7a1f" />
   <meta name="apple-mobile-web-app-title" content="CollegenZ" />
 
-  <!-- ================= SEO ================= -->
-  <meta
-    name="description"
-    content="CollegenZ is an AI-powered platform helping students explore colleges, events, hackathons, internships and opportunities worldwide."
-  />
-
-  <meta
-    name="keywords"
-    content="CollegenZ, student platform, college community, AI education, internships, hackathon, events, courses, startup students"
-  />
-
-  <link rel="canonical" href="https://collegenz.in/" />
-
-  <!-- ================= OPEN GRAPH (SOCIAL SHARE) ================= -->
+  <meta property="og:locale" content="en_IN" />
+  <meta property="og:site_name" content="CollegenZ" />
   <meta property="og:title" content="CollegenZ – AI Powered College Platform" />
-  <meta
-    property="og:description"
-    content="Discover colleges, events, hackathons and opportunities powered by AI."
-  />
+  <meta property="og:description" content="Discover colleges, events, hackathons and opportunities powered by AI." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://collegenz.in/" />
   <meta property="og:image" content="https://collegenz.in/logo.png" />
 
-  <!-- ================= TWITTER CARD ================= -->
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="CollegenZ – AI Powered College Platform" />
-  <meta
-    name="twitter:description"
-    content="Explore colleges, hackathons, events and opportunities with CollegenZ."
-  />
+  <meta name="twitter:description" content="Explore colleges, hackathons, events and opportunities with CollegenZ." />
   <meta name="twitter:image" content="https://collegenz.in/logo.png" />
 
-  <!-- ================= ORGANIZATION SCHEMA ================= -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -95,7 +66,6 @@ router.get("/", async (req, res) => {
   }
   </script>
 
-  <!-- ================= WEBSITE SEARCH SCHEMA ================= -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -109,7 +79,6 @@ router.get("/", async (req, res) => {
   }
   </script>
 
-  <!-- ================= FAQ SCHEMA ================= -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -120,7 +89,7 @@ router.get("/", async (req, res) => {
         "name": "What is CollegenZ?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "CollegenZ is an AI-powered platform helping students explore colleges, events, hackathons, courses and opportunities worldwide."
+          "text": "CollegenZ is an AI-powered platform helping students explore colleges, events, hackathons, courses, and opportunities."
         }
       },
       {
@@ -135,7 +104,6 @@ router.get("/", async (req, res) => {
   }
   </script>
 
-  <!-- ================= BREADCRUMB SCHEMA ================= -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -148,8 +116,8 @@ router.get("/", async (req, res) => {
     }]
   }
   </script>
-
 </head>
+ 
 
 <body>
 
@@ -169,9 +137,27 @@ router.get("/", async (req, res) => {
 
     <!-- New Sketch Header Layout -->
     <div class="sketch-header-content">
-      <a href="/profile">
-  <img src="/uploads/profilepic.jpg" class="header-profile-icon" id="headerProfilePic" alt="Profile" />
+      <a href="/profile" aria-label="Profile">
+  
+  <div id="headerProfilePic" class="header-profile-icon" style="width: 32px; height: 32px; border-radius: 50%; overflow: hidden; display: inline-block; vertical-align: middle;">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" width="100%" height="100%">
+      <circle cx="20" cy="20" r="18" fill="#e0e0e0" stroke="#ffffff" stroke-width="2"/>
+      
+      <clipPath id="header-avatar-clip">
+        <circle cx="20" cy="20" r="17.5" />
+      </clipPath>
+      
+      <g clip-path="url(#header-avatar-clip)" fill="#f5f5f5">
+        <circle cx="20" cy="14" r="6.5" />
+        <path d="M7 34c0-8 6.5-12 13-12s13 4 13 12" />
+      </g>
+    </svg>
+
+  </div>
+
 </a>
+
 
       <h1 class="header-logo-text">
   <a href="https://collegenz.in/aboutus" style="text-decoration: none; color: inherit;">CollegenZ</a>
@@ -194,9 +180,23 @@ router.get("/", async (req, res) => {
 </div>
 
 <!-- ================= SIDEBAR (Slide Nav) ================= -->
+
 <nav id="slideNav" class="slide-nav">
   <div class="user-info">
-    <img id="navProfilePic" class="profile-pic" src="/uploads/profilepic.jpg" />
+    
+    <div id="navProfilePic" class="profile-pic" style="width: 48px; height: 48px; flex-shrink: 0; border-radius: 50%; overflow: hidden;">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" width="100%" height="100%">
+        <circle cx="20" cy="20" r="18" fill="#e0e0e0" stroke="#ffffff" stroke-width="2"/>
+        <clipPath id="avatar-clip">
+          <circle cx="20" cy="20" r="17.5" />
+        </clipPath>
+        <g clip-path="url(#avatar-clip)" fill="#f5f5f5">
+          <circle cx="20" cy="14" r="6.5" />
+          <path d="M7 34c0-8 6.5-12 13-12s13 4 13 12" />
+        </g>
+      </svg>
+    </div>
+
     <div>
       <h6 id="navUsername"></h6>
       <p id="navEmail"></p>
@@ -206,6 +206,9 @@ router.get("/", async (req, res) => {
   <a href="/login">Log In</a>
   <a href="/logout">Log Out</a>
 </nav>
+
+
+
 
 <div class="overlay" id="overlay"></div>
 
@@ -221,11 +224,90 @@ router.get("/", async (req, res) => {
 <!-- ================= BOTTOM NAVIGATION & FAB ================= -->
 <div class="sidebar">
   <div class="icon">
-    <a href="/"><img src="/uploads/home.png" alt="Home" ></a>
-    <a href="/profile"><img src="/uploads/settings.png" alt="Profile" ></a>
-    <div class="nav-spacer"></div> <!-- Pushes chat and calendar to the right -->
-    <a href="/friends"><img src="/chaticon.png" alt="Chat"></a>
-    <a href="/calender"><img src="/uploads/calender.png" alt="Calendar" ></a>
+    
+   <a href="/home" aria-label="Home">
+  <div class="nav-icon-container">
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+      <path d="M12 3L2 12h3v8h6v-6h2v6h6v-8h3L12 3z" fill="#228B22"/>
+    </svg>
+
+    </div>
+</a>
+
+
+    <a href="/shorts" aria-label="Shorts">
+  <div class="nav-icon-container">
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+      <defs>
+        <mask id="reels-cutout">
+          <rect width="24" height="24" fill="white" />
+          
+          <path d="M10 10.5v5l4.5-2.5z" fill="black" />
+          
+          <rect x="0" y="7" width="24" height="1.5" fill="black" />
+          
+          <path d="M7.5 2l-2.5 5h2l2.5-5z" fill="black" />
+          <path d="M14.5 2l-2.5 5h2l2.5-5z" fill="black" />
+          <path d="M21.5 2l-2.5 5h2l2.5-5z" fill="black" />
+        </mask>
+      </defs>
+
+      <rect x="2" y="2" width="20" height="20" rx="4" fill="#228B22" mask="url(#reels-cutout)" />
+    </svg>
+  </div>
+</a>
+
+
+    <div class="nav-spacer"></div> <a href="/friends" aria-label="Chat">
+  <div class="nav-icon-container" style="position: relative; display: inline-flex; width: 24px; height: 24px;">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+      <path d="M12 3c5.5 0 10 3.58 10 8 0 2.5-1.4 4.74-3.55 6.15.3.92 1.05 2.22 1.05 2.22s-1.7.13-3.65-.9c-1.2.35-2.5.53-3.85.53-5.5 0-10-3.58-10-8s4.5-8 10-8z" fill="#2e7d32"/>
+      <circle cx="7.5" cy="11" r="1.5" fill="#ffffff"/>
+      <circle cx="12" cy="11" r="1.5" fill="#ffffff"/>
+      <circle cx="16.5" cy="11" r="1.5" fill="#ffffff"/>
+    </svg>
+
+    <span class="notification-badge" style="position: absolute; top: -6px; right: -8px; background-color: #ff3b30; color: white; font-size: 10px; font-weight: bold; font-family: sans-serif; border-radius: 50%; min-width: 16px; height: 16px; display: flex; align-items: center; justify-content: center; padding: 0 4px; border: 2px solid #ffffff;">2</span>
+  
+  </div>
+</a>
+
+
+<a href="/calendar" aria-label="Calendar">
+  <div class="nav-icon-container" style="position: relative; display: inline-flex; width: 24px; height: 24px;">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+      <defs>
+        <linearGradient id="calendarGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stop-color="#6fc258" />  <stop offset="100%" stop-color="#1c6827" /> </linearGradient>
+      </defs>
+
+      <rect x="3" y="5" width="18" height="17" rx="2" ry="2" fill="url(#calendarGrad)" />
+      <rect x="6.5" y="3" width="2.5" height="4" rx="1" fill="url(#calendarGrad)" />
+      <rect x="15" y="3" width="2.5" height="4" rx="1" fill="url(#calendarGrad)" />
+
+      <rect x="5" y="9.5" width="2.5" height="2.5" fill="#ffffff" />
+      <rect x="8.5" y="9.5" width="2.5" height="2.5" fill="#ffffff" />
+      <rect x="12" y="9.5" width="2.5" height="2.5" fill="#ffffff" />
+      <rect x="15.5" y="9.5" width="2.5" height="2.5" fill="#ffffff" />
+
+      <rect x="5" y="13" width="2.5" height="2.5" fill="#ffffff" />
+      <rect x="8.5" y="13" width="2.5" height="2.5" fill="#ffffff" />
+      <rect x="12" y="13" width="2.5" height="2.5" fill="#ffffff" />
+      <rect x="15.5" y="13" width="2.5" height="2.5" fill="#ffffff" />
+
+      <rect x="5" y="16.5" width="2.5" height="2.5" fill="#ffffff" />
+      <rect x="8.5" y="16.5" width="2.5" height="2.5" fill="#ffffff" />
+      <rect x="12" y="16.5" width="6" height="2.5" fill="#ffffff" />
+    </svg>
+
+    <span class="notification-badge" style="position: absolute; top: -6px; right: -8px; background-color: #ff3b30; color: white; font-size: 10px; font-weight: bold; font-family: sans-serif; border-radius: 50%; min-width: 16px; height: 16px; display: flex; align-items: center; justify-content: center; padding: 0 4px; border: 2px solid #ffffff;">5</span>
+    
+  </div>
+</a>
+
+
   </div>
 </div>
 

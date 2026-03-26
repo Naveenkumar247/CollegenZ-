@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>CollegenZ Shorts Feed</title>
+  <style>
+    /* --- RESETS & FULLSCREEN SETUP --- */
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: system-ui, sans-serif; }
+    body, html { width: 100%; height: 100%; background-color: #000; overflow: hidden; }
+
+    /* --- GLOBAL BACK BUTTON --- */
+    .back-btn {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      width: 44px;
+      height: 44px;
+      background: rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: white;
+      cursor: pointer;
+      z-index: 100; /* Stays above all videos */
+      transition: transform 0.2s ease, background 0.2s ease;
+    }
+
+    .back-btn:active { transform: scale(0.9); }
+    .back-btn:hover { background: rgba(0, 0, 0, 0.6); }
+
+    .back-btn svg {
+      width: 24px;
+      height: 24px;
+      fill: currentColor;
+    }
+
+    /* --- THE SCROLL SNAP CONTAINER --- */
+    .reels-container {
+      width: 100%; height: 100dvh; overflow-y: scroll;
+      scroll-snap-type: y mandatory; scroll-behavior: smooth;
+      -ms-overflow-style: none; scrollbar-width: none;
+    }
+    .reels-container::-webkit-scrollbar { display: none; }
+
+    /* --- INDIVIDUAL VIDEO WRAPPER --- */
+    .reel {
+      width: 100%; height: 100dvh; scroll-snap-align: start;
+      position: relative; display: flex; justify-content: center; align-items: center; background: #111;
+    }
+    
+    .reel iframe { width: 100%; height: 100%; border: none; pointer-events: auto; }
+
+    /* --- CENTERED SOUND LOGO --- */
+    .center-sound-btn {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 70px;
+      height: 70px;
+      background: rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: white;
+      cursor: pointer;
+      z-index: 10;
+      transition: opacity 0.4s ease, transform 0.2s ease;
+      pointer-events: auto;
+    }
+
+    .center-sound-btn:active { transform: translate(-50%, -50%) scale(0.9); }
+    .center-sound-btn svg { width: 32px; height: 32px; fill: currentColor; }
+
+    /* Class to hide the button smoothly */
+    .hidden { opacity: 0; pointer-events: none; }
+
+    /* --- UI OVERLAY (Bottom Text) --- */
+    .overlay {
+      position: absolute; bottom: 0; left: 0; width: 100%; padding: 20px 15px 40px 15px;
+      background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 100%);
+      color: white; display: flex; justify-content: flex-start; align-items: flex-end; pointer-events: none;
+    }
+    
+    .reel-info h3 { margin-bottom: 5px; font-size: 16px; font-weight: 600; text-shadow: 0 1px 3px rgba(0,0,0,0.8); }
+  </style>
+</head>
+<body>
+
+  <div class="back-btn" onclick="window.history.back()">
+    <svg viewBox="0 0 24 24">
+      <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+    </svg>
+  </div>
+
+  <div class="reels-container" id="reels-container"></div>
+
+  <script>
+    // ==========================================
+    // 1. VIDEO DATA & DECK LOGIC
+    // ==========================================
+    const videoIDs = ["8cFSb98nmLQ", "mB1U5W8nwTg", "jMRLsvqKGsQ", "od3DQZql-kA", "ZYw7WEC9N-g"];
+    const container = document.getElementById('reels-container');
+    let videoQueue = [];
+
+    function shuffleDeck() {
+      videoQueue = [...videoIDs].sort(() => Math.random() - 0.5);
+    }
+
+    function getNextVideoID() {
+      if (videoQueue.length === 0) shuffleDeck();
+      return videoQueue.pop(); 
+    }
+
+    // ==========================================
+    // 2. SOUND CONTROL LOGIC
+    // ==========================================
+    let isMuted = true; 
+
+    function enableSound() {
+      isMuted = false; 
+      
+      const soundBtns = document.querySelectorAll('.center-sound-btn');
+      soundBtns.forEach(btn => btn.classList.add('hidden'));
+
+      const iframes = document.querySelectorAll('.reel iframe');
+      iframes.forEach(iframe => {
+        iframe.contentWindow.postMessage(JSON.stringify({ event: "command", func: 'unMute', args: [] }), "*");
+      });
+    }
+
+    // ==========================================
+    // 3. MOTION SENSOR (Autoplay on swipe)
+    // ==========================================
+    const playObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        const iframe = entry.target.querySelector('iframe');
+        if (!iframe) return;
+        
+        if (entry.isIntersecting) {
+          iframe.contentWindow.postMessage(JSON.stringify({ event: "command", func: 'playVideo', args: [] }), "*");
+          const muteAction = isMuted ? 'mute' : 'unMute';
+          iframe.contentWindow.postMessage(JSON.stringify({ event: "command", func: muteAction, args: [] }), "*");
+        } else {
+          iframe.contentWindow.postMessage(JSON.stringify({ event: "command", func: 'pauseVideo', args: [] }), "*");
+        }
+      });
+    }, { root: container, threshold: 0.6 });
+
+    // ==========================================
+    // 4. INFINITE SCROLL SENSOR
+    // ==========================================
+    const infiniteObserver = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting) {
+        loadMoreVideos(3); 
+      }
+    }, { root: container, rootMargin: '100px' }); 
+
+    // ==========================================
+    // 5. VIDEO GENERATOR
+    // ==========================================
+    function createVideoBlock(videoId) {
+      const reelDiv = document.createElement('div');
+      reelDiv.className = 'reel';
+      
+      const iframeSrc = `https://www.youtube.com/embed/${videoId}?enablejsapi=1&mute=1&controls=0&rel=0&loop=1&playlist=${videoId}`;
+      const buttonClass = isMuted ? 'center-sound-btn' : 'center-sound-btn hidden';
+
+      const muteIconSVG = `
+        <svg viewBox="0 0 24 24">
+          <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>
+        </svg>`;
+
+      reelDiv.innerHTML = `
+        <iframe src="${iframeSrc}" allow="autoplay; fullscreen"></iframe>
+        <div class="${buttonClass}" onclick="enableSound()">${muteIconSVG}</div>
+        <div class="overlay">
+          <div class="reel-info">
+            <h3>@collegenz</h3>
+          </div>
+        </div>
+      `;
+
+      container.appendChild(reelDiv);
+      playObserver.observe(reelDiv);
+    }
+
+    function loadMoreVideos(amount) {
+      for (let i = 0; i < amount; i++) {
+        createVideoBlock(getNextVideoID());
+      }
+      const lastVideo = container.lastElementChild;
+      if (lastVideo) {
+        infiniteObserver.disconnect(); 
+        infiniteObserver.observe(lastVideo); 
+      }
+    }
+
+    // --- START THE APP ---
+    shuffleDeck();       
+    loadMoreVideos(4);   
+
+  </script>
+</body>
+</html>

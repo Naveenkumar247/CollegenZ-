@@ -1,3 +1,6 @@
+const DEFAULT_PROFILE_SVG = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='18' fill='%23e0e0e0' stroke='%23ffffff' stroke-width='2'/%3E%3CclipPath id='c'%3E%3Ccircle cx='20' cy='20' r='17.5'/%3E%3C/clipPath%3E%3Cg clip-path='url(%23c)' fill='%23f5f5f5'%3E%3Ccircle cx='20' cy='14' r='6.5'/%3E%3Cpath d='M7 34c0-8 6.5-12 13-12s13 4 13 12'/%3E%3C/g%3E%3C/svg%3E";
+
+
 console.log("🔥 SCRIPT LOADED");
 
 /* ================= INIT ================= */
@@ -59,7 +62,7 @@ document.getElementById("storyUsername").textContent =
 story.userId?.username || "User";
 
 document.getElementById("storyUserPic").src =
-story.picture || "/uploads/profilepic.jpg";
+story.picture || "DEFAULT_PROFILE_SVG";
 
 document.getElementById("storyViewer").style.display = "flex";
 }
@@ -81,7 +84,7 @@ async function loadUser() {
       document.getElementById("navUsername").textContent = CURRENT_USER.username || "";
       document.getElementById("navEmail").textContent = CURRENT_USER.email || "";
       document.getElementById("navProfilePic").src =
-        CURRENT_USER.picture || "/uploads/profilepic.jpg";
+        CURRENT_USER.picture || "DEFAULT_PROFILE_SVG";
     }
   } catch {
     console.log("No user");
@@ -109,7 +112,8 @@ featured.forEach((p, i) => {
 
   // 1. Extract the data safely
   const img = Array.isArray(p.imageurl) ? p.imageurl[0] : (p.imageurl || '');
-  const userPic = p.userId?.picture || p.picture || "/uploads/profilepic.jpg";
+  const userPic = p.userId?.picture || p.picture || DEFAULT_PROFILE_SVG;
+
   const userName = p.userId?.username || "User";
   
   // Grab the text/data of the post (fallback to "Featured" if empty)
@@ -287,7 +291,8 @@ postContainer.insertAdjacentHTML("beforeend",`
 
 <div class="ig-user">
 
-<img src="${p.picture || "/uploads/profilepic.jpg"}" class="ig-avatar">
+<img src="${p.picture || p.userId?.picture || DEFAULT_PROFILE_SVG}" class="ig-avatar">
+
 
 <strong
 class="open-profile"
@@ -560,7 +565,7 @@ document.addEventListener("click", async e => {
     const isMe = CURRENT_USER && CURRENT_USER._id === u._id;
 
     document.getElementById("profileData").innerHTML=`
-      <img src="${u.picture||'/uploads/profilepic.jpg'}"
+      <img src="${u.picture||'DEFAULT_PROFILE_SVG'}"
            style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:2px solid #228B22;"><br>
 
       <strong>${u.username}</strong><br>
@@ -607,7 +612,7 @@ function showStory() {
   // 1. Update UI Content
   document.getElementById("storyImage").src = images[CURRENT_SLIDE];
   document.getElementById("storyUsername").textContent = story.userId?.username || "User";
-  document.getElementById("storyUserPic").src = story.picture || "/uploads/profilepic.jpg";
+  document.getElementById("storyUserPic").src = story.picture || "DEFAULT_PROFILE_SVG";
   document.getElementById("storyLikes").textContent = story.likes || 0;
   document.getElementById("storyShares").textContent = story.shares || 0;
   
@@ -691,7 +696,7 @@ featured.forEach((p, i) => {
 
   // 1. Extract the data safely from the database
   const img = Array.isArray(p.imageurl) ? p.imageurl[0] : (p.imageurl || '');
-  const userPic = p.userId?.picture || p.picture || "/uploads/profilepic.jpg";
+  const userPic = p.userId?.picture || p.picture || "DEFAULT_PROFILE_SVG";
   const username = p.userId?.username || "User"; 
 
   // 2. Build the split layout (Avatar on top, Name on bottom)
