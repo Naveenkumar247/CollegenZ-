@@ -798,3 +798,57 @@ async function sendFriendRequest(targetId, btn) {
     btn.disabled = false;
   }
 }
+
+
+// 1. Function to update the DOM element safely
+function updateGlobalChatBadge(count) {
+  const badge = document.getElementById('global-chat-badge');
+  if (!badge) return; // Exit if the badge isn't on this page
+
+  if (count > 0) {
+    badge.textContent = count > 99 ? '99+' : count; // Cap it at 99+ for UI cleanliness
+    badge.style.display = 'flex'; // Show the badge
+  } else {
+    badge.style.display = 'none'; // Hide the badge if 0
+  }
+}
+
+// 2. Fetch the initial count from the database on page load
+async function fetchTotalUnreadCount() {
+  try {
+    const response = await fetch('/api/messages/unread-total');
+    if (!response.ok) return;
+    
+    const data = await response.json();
+    updateGlobalChatBadge(data.unreadTotal);
+  } catch (error) {
+    console.error("Failed to fetch global unread count:", error);
+  }
+}
+
+// Run on page load
+document.addEventListener('DOMContentLoaded', () => {
+  fetchTotalUnreadCount();
+
+  // 3. Hook into your existing Socket.io setup (Moved inside DOMContentLoaded)
+  // We wait for the DOM to load to ensure your Socket variable has had time to initialize
+  if (typeof socket !== 'undefined') {
+    socket.on("newMessage", (message) => {
+      // Check if we are the receiver of this new message
+      // AND we are not currently looking at the specific chat page for this user
+      
+      const currentUrl = window.location.pathname;
+      const isCurrentlyInChatWithSender = currentUrl.includes(`/chat/${message.sender}`);
+
+      if (!isCurrentlyInChatWithSender) {
+        const badge = document.getElementById('global-chat-badge');
+        if (badge) {
+          let currentCount = parseInt(badge.textContent || "0");
+          if (isNaN(currentCount)) currentCount = 99; 
+          
+          updateGlobalChatBadge(currentCount + 1);
+        }
+      }
+    });
+  }
+});

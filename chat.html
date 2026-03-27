@@ -312,6 +312,48 @@ body {
     box.scrollTop = box.scrollHeight;
   }
 })();
+
+
+  // 1. Function to send the mark-read request to the backend
+  async function markMessagesAsRead(friendId) {
+    try {
+      const response = await fetch('/api/messages/mark-read', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ friendId: friendId }) 
+      });
+      
+      const data = await response.json();
+      if(data.success) {
+         console.log("✅ Messages successfully marked as read in database");
+      }
+    } catch (error) {
+      console.error("❌ Failed to mark messages as read:", error);
+    }
+  }
+
+  // 2. Trigger the function automatically when the chat page loads
+  document.addEventListener('DOMContentLoaded', () => {
+      
+      // SMART ID EXTRACTOR: Looks specifically for a 24-character hex string in the URL.
+      // This bypasses URL structure issues and guarantees it won't grab the word "messages"
+      const urlMatch = window.location.href.match(/[a-fA-F0-9]{24}/);
+      
+      if (urlMatch) {
+          const currentFriendId = urlMatch[0];
+          console.log("👉 Found Friend ID in URL:", currentFriendId);
+          
+          // Call the function with the guaranteed valid ID
+          markMessagesAsRead(currentFriendId);
+      } else {
+          console.error("❌ Could not find a valid 24-character MongoDB User ID in the URL");
+      }
+  });
+
+
+
 </script>
 </body>
 </html>
