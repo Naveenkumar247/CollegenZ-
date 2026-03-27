@@ -3,14 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CollegenZ</title>
+    <title>CollegenZ - Desktop Site</title>
     <style>
         /* --- Color Palette --- */
         :root {
             --primary-green: #157e28; 
             --light-green: #eaf5eb; 
             --text-dark: #333333;
-            --bg-color: #f0f2f5;
+            --text-muted: #5f6368;
+            --bg-color: #f4f6f8;
             --card-bg: #ffffff;
         }
 
@@ -23,76 +24,81 @@
 
         body {
             background-color: var(--bg-color);
-            display: flex;
-            justify-content: center;
+            color: var(--text-dark);
             min-height: 100vh;
-        }
-
-        /* Simulates mobile screen wrapper */
-        .mobile-container {
-            width: 100%;
-            max-width: 420px;
-            background-color: var(--bg-color);
-            box-shadow: 0 0 15px rgba(0,0,0,0.1);
             display: flex;
             flex-direction: column;
-            min-height: 100vh;
         }
 
-        /* --- Header & Navigation --- */
+        /* --- Desktop Header & Navigation --- */
         .header {
             background-color: var(--primary-green);
-            padding: 20px 0 0 0;
-            text-align: center;
-            color: white;
+            padding: 0 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 80px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
             position: sticky;
             top: 0;
-            z-index: 10;
+            z-index: 100;
         }
 
         .logo {
-            font-size: 28px;
-            font-weight: 600;
-            margin-bottom: 20px;
+            font-size: 32px;
+            font-weight: 700;
+            color: #ffffff;
             letter-spacing: 0.5px;
         }
 
         .tabs-nav {
             display: flex;
-            justify-content: space-around;
-            padding: 0 10px;
+            gap: 40px;
+            height: 100%;
         }
 
         .tab-btn {
             background: transparent;
             border: none;
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 15px;
-            font-weight: 500;
-            padding: 10px 5px;
+            color: rgba(255, 255, 255, 0.75);
+            font-size: 16px;
+            font-weight: 600;
             cursor: pointer;
-            border-bottom: 3px solid transparent;
+            padding: 0 10px;
+            height: 100%;
+            border-bottom: 4px solid transparent;
             transition: all 0.3s ease;
+        }
+
+        .tab-btn:hover {
+            color: #ffffff;
         }
 
         .tab-btn.active {
             color: #ffffff;
-            border-bottom: 3px solid #ffffff; 
+            border-bottom: 4px solid #ffffff; 
         }
 
-        /* --- Content Area --- */
+        /* --- Main Content Area --- */
+        .main-wrapper {
+            flex-grow: 1;
+            padding: 50px 5%;
+            display: flex;
+            justify-content: center;
+        }
+
         .main-content {
             background-color: var(--card-bg);
-            flex-grow: 1;
-            margin: 15px;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-            padding: 25px 20px;
+            width: 100%;
+            max-width: 1200px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+            padding: 50px;
         }
 
         .content-section {
             display: none; 
-            animation: fadeIn 0.4s ease;
+            animation: fadeIn 0.5s ease;
         }
 
         .content-section.active-content {
@@ -101,124 +107,185 @@
 
         .content-section h2 {
             color: var(--primary-green);
-            font-size: 20px;
-            margin-bottom: 15px;
-            padding-left: 10px;
-            border-left: 4px solid var(--primary-green);
+            font-size: 32px;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--light-green);
         }
         
         .content-section p {
-            color: var(--text-dark);
-            line-height: 1.6;
-            margin-bottom: 15px;
-            font-size: 15px;
+            line-height: 1.8;
+            margin-bottom: 20px;
+            font-size: 18px;
+            color: #4a4a4a;
         }
 
-        /* --- Chrome Style News Feed Styling --- */
+        /* --- Desktop Grid News Feed --- */
         #news-container {
-            display: flex;
-            flex-direction: column;
-            gap: 25px; /* Space between news cards */
-            margin-top: 10px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 30px;
+            margin-top: 20px;
         }
 
         .news-card {
             display: flex;
             flex-direction: column;
             text-decoration: none;
-            border-bottom: 1px solid #eaeaea;
-            padding-bottom: 20px;
+            border: 1px solid #eaeaea;
+            border-radius: 12px;
+            overflow: hidden;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            background: var(--card-bg);
         }
 
-        .news-card:last-child {
-            border-bottom: none;
-            padding-bottom: 0;
+        .news-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.08);
         }
 
         .news-image {
             width: 100%;
-            height: 190px;
+            height: 200px;
             object-fit: cover;
-            border-radius: 12px;
-            margin-bottom: 12px;
             background-color: #e0e0e0;
+        }
+
+        .news-content {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
         }
 
         .news-title {
             font-size: 18px;
-            font-weight: 500;
+            font-weight: 600;
             color: var(--text-dark);
-            line-height: 1.3;
-            margin-bottom: 10px;
+            line-height: 1.4;
+            margin-bottom: 15px;
         }
 
         .news-meta {
-            font-size: 13px;
-            color: #70757a; /* Chrome grey color */
+            margin-top: auto;
+            font-size: 14px;
+            color: var(--text-muted);
             display: flex;
+            justify-content: space-between;
             align-items: center;
-            gap: 6px;
+            border-top: 1px solid #f0f0f0;
+            padding-top: 15px;
         }
 
         .news-source {
             font-weight: 600;
-            color: #3c4043;
+            color: var(--primary-green);
             text-transform: capitalize;
         }
 
+        /* --- About & Contact Layout Enhancements --- */
+        .about-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 50px;
+            align-items: start;
+        }
+
+        .contact-grid {
+            display: flex;
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        .contact-card {
+            background: var(--light-green);
+            padding: 30px;
+            border-radius: 12px;
+            flex: 1;
+            border-left: 5px solid var(--primary-green);
+        }
+
+        .contact-card h3 {
+            color: var(--primary-green);
+            margin-bottom: 10px;
+            font-size: 20px;
+        }
+
         .loader {
+            grid-column: 1 / -1;
             text-align: center;
-            color: #777;
+            color: var(--text-muted);
             font-style: italic;
-            padding: 20px 0;
+            padding: 40px 0;
+            font-size: 18px;
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(5px); }
+            from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
+        /* --- Responsive fallback for smaller screens --- */
+        @media (max-width: 768px) {
+            .header { flex-direction: column; height: auto; padding: 20px; gap: 15px; }
+            .tabs-nav { gap: 20px; }
+            .tab-btn { padding: 10px 0; border-bottom-width: 3px; }
+            .about-grid { grid-template-columns: 1fr; gap: 20px; }
+            .contact-grid { flex-direction: column; }
+            .main-content { padding: 30px 20px; }
+        }
     </style>
 </head>
 <body>
 
-    <div class="mobile-container">
-        
-        <div class="header">
-            <h1 class="logo">Collegenz</h1>
-            <div class="tabs-nav">
-                <button class="tab-btn" data-target="news-section">News</button>
-                <button class="tab-btn active" data-target="about-section">About Us</button>
-                <button class="tab-btn" data-target="contact-section">Contact Us</button>
-            </div>
+    <div class="header">
+        <h1 class="logo">CollegenZ</h1>
+        <div class="tabs-nav">
+            <button class="tab-btn" data-target="news-section">News Feed</button>
+            <button class="tab-btn active" data-target="about-section">About Us</button>
+            <button class="tab-btn" data-target="contact-section">Contact Us</button>
         </div>
+    </div>
 
+    <div class="main-wrapper">
         <div class="main-content">
             
-            <!-- NEWS SECTION -->
             <div id="news-section" class="content-section">
                 <h2>Campus & Tech News</h2>
                 <div id="news-container">
-                    <!-- News cards will be injected here via JavaScript -->
+                    </div>
+            </div>
+
+            <div id="about-section" class="content-section active-content">
+                <div class="about-grid">
+                    <div>
+                        <h2>About Us</h2>
+                        <p>Welcome to <strong>CollegenZ</strong> — a student-driven platform built to connect learners, opportunities, and ideas. Our goal is to make college communities smarter by sharing information, internships, and creative projects through a single hub.</p>
+                        <p>We believe in empowering students through collaboration and digital innovation. CollegenZ is constantly evolving to bring you better networking, verified opportunities, and a creative space to showcase your talents.</p>
+                    </div>
+                    <div>
+                        <h2>Our Mission</h2>
+                        <p style="background: var(--light-green); padding: 25px; border-radius: 12px; font-weight: 500;">
+                            Built by students. For students. Because your college life deserves its own dedicated, noise-free space.
+                        </p>
+                    </div>
                 </div>
             </div>
 
-            <!-- ABOUT SECTION -->
-            <div id="about-section" class="content-section active-content">
-                <h2>About Us</h2>
-                <p>Welcome to <strong>Collegenz</strong> — a student-driven platform built to connect learners, opportunities, and ideas. Our goal is to make college communities smarter by sharing information, internships, and creative projects through a single hub.</p>
-                <p>We believe in empowering students through collaboration and digital innovation. Collegenz is constantly evolving to bring you better networking, verified opportunities, and a creative space to showcase your talents.</p>
-                
-                <h2 style="margin-top: 30px;">Our Mission</h2>
-                <p>Built by students. For students. Because your college life deserves its own dedicated, noise-free space.</p>
-            </div>
-
-            <!-- CONTACT SECTION -->
             <div id="contact-section" class="content-section">
-                <h2>Contact Us</h2>
+                <h2>Get in Touch</h2>
                 <p>Have questions or want to collaborate with us? We'd love to hear from you.</p>
-                <p><strong>Email:</strong><br>naveenkumar@collegenz.in</p>
-                <p><strong>Website:</strong><br>www.collegenz.in</p>
+                
+                <div class="contact-grid">
+                    <div class="contact-card">
+                        <h3>Email Us</h3>
+                        <p style="margin:0; font-size:16px;">naveenkumar@collegenz.in</p>
+                    </div>
+                    <div class="contact-card">
+                        <h3>Visit Website</h3>
+                        <p style="margin:0; font-size:16px;">www.collegenz.in</p>
+                    </div>
+                </div>
             </div>
 
         </div>
@@ -231,7 +298,6 @@
 
         tabButtons.forEach(button => {
             button.addEventListener('click', () => {
-                
                 tabButtons.forEach(btn => btn.classList.remove('active'));
                 contentSections.forEach(section => section.classList.remove('active-content'));
 
@@ -239,7 +305,6 @@
                 const targetId = button.getAttribute('data-target');
                 document.getElementById(targetId).classList.add('active-content');
 
-                // If News tab is clicked, fetch the news
                 if (targetId === 'news-section') {
                     fetchNews();
                 }
@@ -250,78 +315,68 @@
         let newsLoaded = false;
 
         async function fetchNews() {
-            // Prevent fetching again if already loaded
             if (newsLoaded) return; 
 
             const container = document.getElementById('news-container');
             container.innerHTML = '<div class="loader">Loading latest news...</div>';
 
             try {
-                // IMPORTANT: Replace this with your actual backend URL if running on different ports!
-                // Example: 'http://localhost:3000/news' or 'https://your-api.com/news'
                 const backendUrl = '/api/news'; 
-                
                 const response = await fetch(backendUrl); 
                 
-                // NEW: Catch HTTP errors (like 404 or 500) before trying to parse JSON
                 if (!response.ok) {
                     throw new Error(`Server returned status: ${response.status} - ${response.statusText}`);
                 }
 
                 const articles = await response.json();
-                
-                container.innerHTML = ''; // Clear loading text
+                container.innerHTML = ''; 
 
-                // NEW: Ensure articles is actually an array before using .forEach
                 if (!Array.isArray(articles) || articles.length === 0) {
-                    container.innerHTML = '<p>No news updates found at the moment.</p>';
-                    console.warn("Backend response was not an array:", articles);
+                    container.innerHTML = '<p style="grid-column: 1 / -1;">No news updates found at the moment.</p>';
                     return;
                 }
 
                 articles.forEach(article => {
-                    // Extract data from NewsData.io response format
                     const title = article.title || 'No Title';
                     const link = article.link || '#';
                     const source = article.source_id || 'News Source';
                     const imageUrl = article.image_url; 
                     
-                    // Format Date
                     const pubDate = new Date(article.pubDate);
                     const dateFormatted = pubDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
-                    // Create the Card HTML
                     const card = document.createElement('a');
                     card.href = link;
-                    card.target = "_blank"; // Opens news in a new tab
+                    card.target = "_blank"; 
                     card.className = "news-card";
                     
-                    // Only add image tag if image URL exists
                     let imageHTML = '';
                     if (imageUrl) {
                         imageHTML = `<img src="${imageUrl}" alt="News image" class="news-image" onerror="this.style.display='none'">`;
                     }
 
+                    // Wrapped text content in a div for better flexbox control in grid
                     card.innerHTML = `
                         ${imageHTML}
-                        <div class="news-title">${title}</div>
-                        <div class="news-meta">
-                            <span class="news-source">${source}</span> • <span>${dateFormatted}</span>
+                        <div class="news-content">
+                            <div class="news-title">${title}</div>
+                            <div class="news-meta">
+                                <span class="news-source">${source}</span> 
+                                <span>${dateFormatted}</span>
+                            </div>
                         </div>
                     `;
 
                     container.appendChild(card);
                 });
 
-                newsLoaded = true; // Mark as loaded so it doesn't refetch on every tab click
+                newsLoaded = true; 
 
             } catch (error) {
-                // NEW: This will now output the EXACT reason for failure to your console
                 console.error("Critical Error fetching news:", error);
-                container.innerHTML = `<p style="color: red; text-align: center;">Failed to load news. Reason: ${error.message}</p>`;
+                container.innerHTML = `<p style="grid-column: 1 / -1; color: #d93025; text-align: center; padding: 20px;">Failed to load news. Reason: ${error.message}</p>`;
             }
         }
     </script>
-
 </body>
 </html>
