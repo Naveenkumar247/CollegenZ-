@@ -1,81 +1,225 @@
-body{
-background:#f8f9fa;
-font-family:Poppins,sans-serif;
+/* =========================================
+   GLOBAL RESET & TYPOGRAPHY
+========================================= */
+* {
+  box-sizing: border-box; /* Crucial so inputs don't overflow the container */
 }
 
-.profile-wrapper{
-min-height:100vh;
-display:flex;
-justify-content:center;
-align-items:center;
-padding:20px;
+body {
+  background: #f4f7f6; /* A slightly softer, premium off-white */
+  font-family: 'Poppins', sans-serif;
+  margin: 0;
+  color: #333;
 }
 
-.profile-container{
-background:white;
-padding:35px 25px;
-border-radius:20px;
-box-shadow:0 6px 20px rgba(0,0,0,.1);
-max-width:420px;
-width:100%;
-text-align:center;
+/* =========================================
+   LAYOUT & CONTAINER
+========================================= */
+.profile-wrapper {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
 }
 
-.profile-img{
-width:130px;
-height:130px;
-border-radius:50%;
-border:3px solid #228B22;
-object-fit:cover;
-margin:auto;
-display:block;
+.profile-container {
+  background: white;
+  padding: 40px 30px;
+  border-radius: 24px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08); /* Deeper, softer, high-end shadow */
+  max-width: 420px;
+  width: 100%;
+  text-align: center;
 }
 
-.upload-label{
-color:#228B22;
-display:block;
-margin:10px 0;
+/* =========================================
+   PROFILE IMAGE & UPLOAD
+========================================= */
+.profile-img {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  /* Creates a modern "double ring" effect */
+  border: 4px solid #fff; 
+  box-shadow: 0 0 0 3px #228B22, 0 8px 16px rgba(0,0,0,0.1); 
+  object-fit: cover;
+  margin: 0 auto;
+  display: block;
+  transition: transform 0.3s ease;
 }
 
-.follow-stats{
-display:flex;
-justify-content:center;
-gap:40px;
-margin:20px 0;
+.upload-label {
+  display: inline-block;
+  color: #228B22;
+  margin: 15px auto 10px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 6px 16px;
+  border-radius: 20px;
+  background: #e9f5e9; /* Soft green pill background */
+  transition: all 0.2s ease;
 }
 
-.follow-stats h6{margin:0}
-.follow-stats small{color:#777}
-
-.social-links img{
-width:32px;
-margin:0 8px;
+.upload-label:hover {
+  background: #228B22;
+  color: white;
 }
 
-.btn-edit,.btn-save{
-background:#228B22;
-color:white;
-border:none;
-padding:12px;
-width:100%;
-border-radius:14px;
-margin-top:15px;
-font-size:16px;
+/* =========================================
+   USER INFO TEXT
+========================================= */
+h4 {
+  margin: 15px 0 5px;
+  font-size: 24px;
+  font-weight: 600;
+  color: #1a1a1a;
 }
 
-#editSection{
-overflow:hidden;
-max-height:0;
-transition:.4s;
+p {
+  margin: 0 0 20px;
+  color: #666;
+  font-size: 14px;
 }
 
-.edit-group{margin-bottom:12px}
-
-.edit-input{
-width:100%;
-padding:12px;
-border-radius:12px;
-border:1px solid #ddd;
+/* =========================================
+   STATS ROW
+========================================= */
+.follow-stats {
+  display: flex;
+  justify-content: space-around;
+  margin: 25px 0;
+  padding: 15px 0;
+  border-top: 1px solid #f0f0f0;
+  border-bottom: 1px solid #f0f0f0;
 }
 
-.account-row{margin-top:20px}
+.follow-stats div {
+  flex: 1;
+}
+
+.follow-stats h6 {
+  margin: 0 0 4px;
+  font-size: 20px;
+  color: #222;
+  font-weight: 600;
+}
+
+.follow-stats small {
+  color: #888;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 500;
+}
+
+/* =========================================
+   SOCIAL LINKS
+========================================= */
+.social-links {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 25px;
+}
+
+.social-links img {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.social-links a:hover img {
+  transform: translateY(-3px); /* Makes icons "float" when hovered */
+  box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+}
+
+/* =========================================
+   BUTTONS
+========================================= */
+.btn-edit, .btn-save {
+  background: #228B22;
+  color: white;
+  border: none;
+  padding: 14px;
+  width: 100%;
+  border-radius: 12px;
+  margin-top: 10px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(34, 139, 34, 0.3);
+}
+
+.btn-edit:hover, .btn-save:hover {
+  background: #1c741c;
+  box-shadow: 0 6px 20px rgba(34, 139, 34, 0.4);
+  transform: translateY(-2px);
+}
+
+/* =========================================
+   ACCOUNT TYPE BADGE
+========================================= */
+.account-row {
+  margin-top: 20px;
+}
+
+.account-row a {
+  display: inline-block;
+  background: #f0f4f8;
+  color: #555;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+/* =========================================
+   EDIT SECTION (ACCORDION & INPUTS)
+========================================= */
+#editSection {
+  overflow: hidden;
+  max-height: 0;
+  transition: max-height 0.4s ease-in-out;
+  text-align: left; /* Aligns input text properly */
+}
+
+/* Adds a bit of breathing room when the accordion opens */
+#editSection.open {
+  padding-top: 20px; 
+}
+
+.edit-group {
+  margin-bottom: 14px;
+}
+
+.edit-input {
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: 10px;
+  border: 1.5px solid #e5e7eb;
+  background: #f9fafb;
+  font-family: inherit;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  color: #333;
+}
+
+/* Modern focus ring when typing */
+.edit-input:focus {
+  outline: none;
+  border-color: #228B22;
+  background: #ffffff;
+  box-shadow: 0 0 0 4px rgba(34, 139, 34, 0.1);
+}
+
+textarea.edit-input {
+  resize: vertical;
+  min-height: 80px;
+}
