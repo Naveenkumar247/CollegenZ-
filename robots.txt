@@ -1,0 +1,17 @@
+User-agent: *
+
+# Block private user areas and actions
+Disallow: /api/
+Disallow: /admin/
+Disallow: /notifications
+Disallow: /calender
+Disallow: /friend/
+Disallow: /follow/
+Disallow: /upload
+
+# Block authentication pages (optional, but good practice)
+Disallow: /login
+Disallow: /signup
+
+# Tell search engines where your sitemap is
+Sitemap: https://www.collegenz.in/sitemap.xml

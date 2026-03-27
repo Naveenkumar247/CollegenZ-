@@ -3,7 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CollegenZ - Desktop Site</title>
+    
+    <title>CollegenZ | Campus News & Student Networking</title>
+    <meta name="description" content="CollegenZ is a student-driven platform connecting learners, opportunities, and ideas. Discover campus news, internships, and creative student projects.">
+    <meta name="keywords" content="college news, student networking, campus updates, internships, student projects, CollegenZ">
+    <meta name="author" content="CollegenZ">
+    
+    <link rel="canonical" href="https://www.collegenz.in/">
+
+    <meta property="og:title" content="CollegenZ | Campus News & Student Networking">
+    <meta property="og:description" content="Built by students. For students. Connect, collaborate, and discover opportunities on CollegenZ.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.collegenz.in/">
+    <meta property="og:image" content="https://www.collegenz.in/assets/og-image.jpg"> 
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="CollegenZ | Campus News & Student Networking">
+    <meta name="twitter:description" content="Built by students. For students. Connect, collaborate, and discover opportunities.">
+
     <style>
         /* --- Color Palette --- */
         :root {
@@ -49,6 +66,7 @@
             font-weight: 700;
             color: #ffffff;
             letter-spacing: 0.5px;
+            text-decoration: none; /* Added for anchor tag logo */
         }
 
         .tabs-nav {
@@ -238,25 +256,26 @@
 </head>
 <body>
 
-    <div class="header">
-        <h1 class="logo">CollegenZ</h1>
-        <div class="tabs-nav">
+    <header class="header">
+        <a href="/" class="logo">CollegenZ</a>
+        
+        <nav class="tabs-nav" aria-label="Main Navigation">
             <button class="tab-btn" data-target="news-section">News Feed</button>
             <button class="tab-btn active" data-target="about-section">About Us</button>
             <button class="tab-btn" data-target="contact-section">Contact Us</button>
-        </div>
-    </div>
+        </nav>
+    </header>
 
-    <div class="main-wrapper">
+    <main class="main-wrapper">
         <div class="main-content">
             
-            <div id="news-section" class="content-section">
+            <section id="news-section" class="content-section">
                 <h2>Campus & Tech News</h2>
                 <div id="news-container">
                     </div>
-            </div>
+            </section>
 
-            <div id="about-section" class="content-section active-content">
+            <section id="about-section" class="content-section active-content">
                 <div class="about-grid">
                     <div>
                         <h2>About Us</h2>
@@ -270,26 +289,30 @@
                         </p>
                     </div>
                 </div>
-            </div>
+            </section>
 
-            <div id="contact-section" class="content-section">
+            <section id="contact-section" class="content-section">
                 <h2>Get in Touch</h2>
                 <p>Have questions or want to collaborate with us? We'd love to hear from you.</p>
                 
                 <div class="contact-grid">
                     <div class="contact-card">
                         <h3>Email Us</h3>
-                        <p style="margin:0; font-size:16px;">naveenkumar@collegenz.in</p>
+                        <p style="margin:0; font-size:16px;">
+                            <a href="mailto:naveenkumar@collegenz.in" style="color: inherit; text-decoration: none;">naveenkumar@collegenz.in</a>
+                        </p>
                     </div>
                     <div class="contact-card">
                         <h3>Visit Website</h3>
-                        <p style="margin:0; font-size:16px;">www.collegenz.in</p>
+                        <p style="margin:0; font-size:16px;">
+                            <a href="https://www.collegenz.in" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: none;">www.collegenz.in</a>
+                        </p>
                     </div>
                 </div>
-            </div>
+            </section>
 
         </div>
-    </div>
+    </main>
 
     <script>
         // --- TAB TOGGLE LOGIC ---
@@ -348,14 +371,16 @@
                     const card = document.createElement('a');
                     card.href = link;
                     card.target = "_blank"; 
+                    // SEO/Security Improvement: Added rel attribute to external links
+                    card.rel = "noopener noreferrer"; 
                     card.className = "news-card";
                     
                     let imageHTML = '';
                     if (imageUrl) {
-                        imageHTML = `<img src="${imageUrl}" alt="News image" class="news-image" onerror="this.style.display='none'">`;
+                        // SEO Improvement: Descriptive alt text pulling dynamically from the title
+                        imageHTML = `<img src="${imageUrl}" alt="${title} cover image" class="news-image" onerror="this.style.display='none'">`;
                     }
 
-                    // Wrapped text content in a div for better flexbox control in grid
                     card.innerHTML = `
                         ${imageHTML}
                         <div class="news-content">
