@@ -82,6 +82,25 @@ body {
   scrollbar-width: thin;
 }
 
+/* 🔥 WHATSAPP DATE SEPARATOR STYLES */
+.date-separator {
+  display: flex;
+  justify-content: center;
+  margin: 12px 0;
+  width: 100%;
+}
+.date-separator span {
+  background: rgba(225, 245, 254, 0.95); /* WhatsApp-style light blueish grey */
+  color: #54656f;
+  font-size: 11.5px;
+  font-weight: 500;
+  padding: 5px 12px;
+  border-radius: 12px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
 .msg-row { display: flex; width: 100%; margin-bottom: 2px; }
 .msg-row.me { justify-content: flex-end; }
 .msg-row.other { justify-content: flex-start; }
@@ -163,6 +182,7 @@ body {
 }
 
 .send-btn:active { transform: scale(0.92); }
+.send-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 </style>
 </head>
 
@@ -184,7 +204,7 @@ body {
       <div class="typing" id="typingDisplay">typing...</div>
       <form class="chat-input-wrapper" id="chatForm">
         <input type="text" id="messageInput" placeholder="Type a message" autocomplete="off">
-        <button class="send-btn" type="submit"><i class="bi bi-send-fill"></i></button>
+        <button class="send-btn" type="submit" id="sendBtn"><i class="bi bi-send-fill"></i></button>
       </form>
     </div>
   </div>
@@ -197,10 +217,13 @@ body {
   const friendId = location.pathname.split("/").pop();
   const box = document.getElementById("messages");
   const input = document.getElementById("messageInput");
+  const sendBtn = document.getElementById("sendBtn");
   const typingDisplay = document.getElementById("typingDisplay");
   const statusText = document.getElementById("statusText");
 
-  // Connection UI Updates
+  // Global variable to track the last date rendered on the screen
+  let lastRenderedDate = "";
+
   socket.on('connect', () => { statusText.textContent = "Online"; });
   socket.on('disconnect', () => { statusText.textContent = "Offline"; });
 
@@ -225,26 +248,43 @@ body {
     const room = [myId, friendId].sort().join("_");
     socket.emit("joinRoom", room);
 
-    // History Loader - FIXED
+    // --- SMART HISTORY DEDUPLICATOR ---
     const historyRes = await fetch(`/api/messages/${friendId}`);
     if (historyRes.ok) {
       const history = await historyRes.json();
+      let lastText = "";
+      let lastTime = 0;
+
       history.forEach(m => {
-        // Safely extract the ID in case MongoDB sent a populated object
-        const senderId = (typeof m.sender === 'object' && m.sender !== null) ? m.sender._id : m.sender;
+        const msgTime = new Date(m.createdAt).getTime();
         
-        // Force both to be strings for an exact match
+        // Block DB duplicates within 1 second
+        if (m.text === lastText && Math.abs(msgTime - lastTime) < 1000) return;
+        
+        lastText = m.text;
+        lastTime = msgTime;
+
+        const senderId = (typeof m.sender === 'object' && m.sender !== null) ? m.sender._id : m.sender;
         addMessage(m.text, String(senderId) === String(myId), m.createdAt);
       });
     }
 
-    // Fixed: One listener, properly ignores own message using string casting
+    // --- SMART LIVE MESSAGE DEDUPLICATOR ---
+    let lastIncomingText = "";
+    let lastIncomingTime = 0;
+
     socket.on("newMessage", msg => {
-      // Safely extract the ID
       const incomingSenderId = (typeof msg.sender === 'object' && msg.sender !== null) ? msg.sender._id : msg.sender;
       
-      // Only render if the string versions of the IDs do NOT match
       if (String(incomingSenderId) !== String(myId)) {
+        const msgTime = new Date(msg.createdAt || Date.now()).getTime();
+        
+        // Block socket double-emits within 1 second
+        if (msg.text === lastIncomingText && Math.abs(msgTime - lastIncomingTime) < 1000) return;
+        
+        lastIncomingText = msg.text;
+        lastIncomingTime = msgTime;
+
         addMessage(msg.text, false, msg.createdAt);
       }
     });
@@ -261,7 +301,11 @@ body {
       const text = input.value.trim();
       if (!text) return;
 
-      // Render locally immediately (Optimistic)
+      // Prevent Double Tapping the Send Button
+      sendBtn.disabled = true;
+      setTimeout(() => sendBtn.disabled = false, 500);
+
+      // Render optimistic message locally
       addMessage(text, true);
 
       socket.emit("sendMessage", {
@@ -276,7 +320,6 @@ body {
 
     input.oninput = () => socket.emit("typing", room);
 
-    // Handle Push Registration
     if ('serviceWorker' in navigator && window.isSecureContext) {
         navigator.serviceWorker.register('/sw.js').then(reg => {
             reg.pushManager.subscribe({
@@ -297,10 +340,41 @@ body {
     statusText.textContent = "Offline";
   }
 
+  // --- WHATSAPP DATE FORMATTER ---
+  function getWhatsAppDateString(dateObj) {
+    const today = new Date();
+    const yesterday = new Date();
+    yesterday.setDate(today.getDate() - 1);
+
+    if (dateObj.toDateString() === today.toDateString()) {
+      return "Today";
+    } else if (dateObj.toDateString() === yesterday.toDateString()) {
+      return "Yesterday";
+    } else {
+      // e.g., "April 4, 2026"
+      return dateObj.toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' });
+    }
+  }
+
+  // --- ADD MESSAGE FUNCTION WITH DATE SEPARATION ---
   function addMessage(text, isMe, timeStamp = null) {
-    const time = timeStamp
-      ? new Date(timeStamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      : new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const msgDate = timeStamp ? new Date(timeStamp) : new Date();
+    const dateStringIdentifier = msgDate.toDateString(); // Used to check if day changed
+
+    // Check if we need to insert a new Date Separator Bubble
+    if (dateStringIdentifier !== lastRenderedDate) {
+      const separatorText = getWhatsAppDateString(msgDate);
+      
+      const sepDiv = document.createElement("div");
+      sepDiv.className = "date-separator";
+      sepDiv.innerHTML = `<span>${separatorText}</span>`;
+      box.appendChild(sepDiv);
+      
+      lastRenderedDate = dateStringIdentifier; // Update the tracker
+    }
+
+    // Format the timestamp for the message bubble (e.g., 06:00 PM)
+    const time = msgDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
     const row = document.createElement("div");
     row.className = `msg-row ${isMe ? "me" : "other"}`;
@@ -313,47 +387,37 @@ body {
         </div>
       </div>
     `;
+    
     box.appendChild(row);
-    box.scrollTop = box.scrollHeight;
+    box.scrollTop = box.scrollHeight; // Auto-scroll to bottom
   }
 })();
 
-  // 1. Function to send the mark-read request to the backend
+  // Mark Messages as Read Logic
   async function markMessagesAsRead(friendId) {
     try {
       const response = await fetch('/api/messages/mark-read', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ friendId: friendId }) 
       });
       
       const data = await response.json();
       if(data.success) {
-         console.log("✅ Messages successfully marked as read in database");
+         console.log("✅ Messages successfully marked as read");
       }
     } catch (error) {
       console.error("❌ Failed to mark messages as read:", error);
     }
   }
 
-  // 2. Trigger the function automatically when the chat page loads
   document.addEventListener('DOMContentLoaded', () => {
-      
-      // SMART ID EXTRACTOR: Looks specifically for a 24-character hex string in the URL.
       const urlMatch = window.location.href.match(/[a-fA-F0-9]{24}/);
-      
       if (urlMatch) {
           const currentFriendId = urlMatch[0];
-          console.log("👉 Found Friend ID in URL:", currentFriendId);
-          
           markMessagesAsRead(currentFriendId);
-      } else {
-          console.error("❌ Could not find a valid 24-character MongoDB User ID in the URL");
       }
   });
-
 </script>
 </body>
 </html>

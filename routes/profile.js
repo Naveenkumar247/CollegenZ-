@@ -3,11 +3,14 @@ const router = express.Router();
 const genz = require("../models/primary/User");
 const Post = require("../models/primary/Post"); 
 
+/* ==========================================
+   1. GET PROFILE PAGE
+========================================== */
 router.get("/profile", async (req, res) => {
   try {
     if (!req.session.userId) return res.redirect("/login");
 
-    // 1. Fetch the user details AND populate followers/following arrays with their data
+    // 1. Fetch user & populate followers/following arrays
     const user = await genz.findById(req.session.userId)
                            .populate('followers', 'name username picture _id')
                            .populate('following', 'name username picture _id')
@@ -17,6 +20,12 @@ router.get("/profile", async (req, res) => {
     const userPosts = await Post.find({ userId: req.session.userId })
                                 .sort({ createdAt: -1 }) 
                                 .lean();
+
+    // 3. Fetch User's Saved Posts 
+    let savedPosts = [];
+    if (user.savedPosts && user.savedPosts.length > 0) {
+      savedPosts = await Post.find({ _id: { $in: user.savedPosts } }).lean();
+    }
 
     res.send(`
 <!DOCTYPE html>
@@ -42,7 +51,10 @@ router.get("/profile", async (req, res) => {
   
   .cover-photo { height: 130px; background-color: var(--primary-color); position: relative; }
   .header-actions { display: flex; justify-content: space-between; padding: 15px; }
-  .back-btn { background: transparent; border: none; color: var(--background-color); font-size: 1.2rem; cursor: pointer; }
+  
+  /* 🔥 FIXED BACK BUTTON CSS */
+  .back-btn { background: transparent; border: none; color: var(--background-color); font-size: 1.4rem; cursor: pointer; text-decoration: none; display: flex; align-items: center; justify-content: center; width: 30px; height: 30px;}
+  
   .account-badge { border: 1px solid var(--background-color); color: var(--background-color); padding: 4px 12px; border-radius: 15px; font-size: 0.8rem; font-weight: 600; }
   .profile-header { padding: 0 20px; position: relative; margin-top: -40px; }
   .profile-img-container { width: 85px; height: 85px; border-radius: 50%; background: var(--background-color); border: 3px solid var(--background-color); overflow: hidden; margin-bottom: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
@@ -57,24 +69,44 @@ router.get("/profile", async (req, res) => {
   .stat-item:active { opacity: 0.6; }
   .stat-item h3 { font-size: 1.2rem; color: var(--text-main); margin-bottom: 4px; }
   .stat-item p { font-size: 0.85rem; color: var(--text-muted); }
-  .tabs { display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color); }
-  .tab-icon { font-size: 1.3rem; color: var(--text-muted); cursor: pointer; }
-  .tab-icon.active { color: var(--primary-color); }
+  
   #editSection { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; background: #fafafa; }
   #editSection.open { padding: 20px; border-bottom: 1px solid var(--border-color); }
   .edit-group { margin-bottom: 12px; }
   .edit-input { width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 0.9rem; outline-color: var(--primary-color); }
   .btn-save { width: 100%; padding: 12px; background: var(--primary-color); color: var(--background-color); border: none; font-weight: bold; font-size: 1rem; cursor: pointer; border-radius: 6px; margin-top: 10px; }
-  
+
+  /* Tabs & Content Styles */
+  .tabs { display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color); }
+  .tab-icon { font-size: 1.3rem; color: var(--text-muted); cursor: pointer; transition: color 0.2s; }
+  .tab-icon.active { color: var(--primary-color); }
+
+  .tab-content { display: none; padding: 1px 0 15px 0; animation: fadeIn 0.3s ease; }
+  .tab-content.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* Grid (Posts & Saved) */
   .grid-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; }
   .grid-item { aspect-ratio: 1; background-color: var(--border-color); overflow: hidden; }
   .grid-item img { width: 100%; height: 100%; object-fit: cover; }
-  .no-posts { grid-column: span 3; text-align: center; padding: 30px; color: var(--text-muted); }
+  .empty-state { grid-column: span 3; text-align: center; padding: 40px 20px; color: var(--text-muted); }
+
+  /* Learning Skills (Brain) */
+  .skills-container { padding: 15px; display: flex; flex-wrap: wrap; gap: 10px; }
+  .skill-chip { border: 1px solid var(--border-color); padding: 10px 16px; border-radius: 20px; font-size: 0.85rem; cursor: pointer; background: #fafafa; display: flex; flex-direction: column; align-items: center; transition: 0.2s; width: calc(50% - 5px); }
+  .skill-chip.selected { background: var(--primary-color); color: white; border-color: var(--primary-color); }
+  .skill-name { font-weight: 600; margin-bottom: 2px; text-align: center; }
+  .skill-time { font-size: 0.7rem; opacity: 0.8; }
+
+  /* Stats / Era */
+  .stats-display { text-align: center; padding: 30px 20px; }
+  .stats-circle { width: 120px; height: 120px; border-radius: 50%; border: 6px solid var(--primary-color); display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 2rem; font-weight: bold; color: var(--primary-color); }
+  .era-building { text-align: center; padding: 40px 20px; color: var(--text-muted); }
+  .era-building i { font-size: 3rem; color: #f39c12; margin-bottom: 15px; }
 
   /* Modal Styles */
   .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: flex-end; }
   .modal-content { width: 100%; max-width: 400px; background: var(--background-color); height: 75vh; border-radius: 20px 20px 0 0; padding: 20px; display: flex; flex-direction: column; box-shadow: 0 -5px 15px rgba(0,0,0,0.1); animation: slideUp 0.3s ease-out; }
-  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
   .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid var(--border-color); }
   .modal-header h3 { font-size: 1.1rem; color: var(--text-main); }
   .close-modal { font-size: 1.2rem; cursor: pointer; color: var(--text-muted); }
@@ -85,10 +117,15 @@ router.get("/profile", async (req, res) => {
   .user-list-details { overflow: hidden; }
   .user-list-details h4 { font-size: 0.95rem; margin: 0; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .user-list-details p { font-size: 0.8rem; margin: 0; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .action-btns { display: flex; gap: 8px; flex-shrink: 0; }
-  .btn-msg { background: #EAEAEA; border: none; padding: 6px 12px; border-radius: 8px; font-size: 0.8rem; font-weight: 600; cursor: pointer; color: var(--text-main); }
-  .btn-action { background: #ff4d4d; color: white; border: none; padding: 6px 12px; border-radius: 8px; font-size: 0.8rem; font-weight: 600; cursor: pointer; }
+  
+  /* 🔥 FIXED ICON BUTTON CSS */
+  .action-btns { display: flex; gap: 10px; flex-shrink: 0; align-items: center; }
+  .btn-msg { background: #EAEAEA; border: none; width: 36px; height: 36px; border-radius: 50%; font-size: 1.1rem; cursor: pointer; color: var(--text-main); display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
+  .btn-msg:active { background: #d0d0d0; }
+  .btn-action { background: #ff4d4d; color: white; border: none; width: 36px; height: 36px; border-radius: 50%; font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
+  .btn-action:active { background: #cc0000; }
   .btn-action.unfollow { background: var(--border-color); color: var(--text-main); }
+  .btn-action.unfollow:active { background: #d0d0d0; }
 </style>
 </head>
 <body>
@@ -98,7 +135,7 @@ router.get("/profile", async (req, res) => {
     
     <div class="cover-photo">
       <div class="header-actions">
-        <button type="button" class="back-btn"><i class="fa-solid fa-arrow-left"></i></button>
+        <a href="/" class="back-btn"><i class="fa-solid fa-arrow-left"></i></a>
         <div class="account-badge">${(user.accountType || "public").charAt(0).toUpperCase() + (user.accountType || "public").slice(1)}</div>
       </div>
     </div>
@@ -135,25 +172,57 @@ router.get("/profile", async (req, res) => {
     </div>
 
     <div class="tabs">
-      <i class="fa-solid fa-table-cells tab-icon active"></i> 
-      <i class="fa-solid fa-brain tab-icon"></i>             
-      <i class="fa-solid fa-arrow-trend-up tab-icon"></i>    
-      <i class="fa-solid fa-coins tab-icon"></i>             
-      <i class="fa-regular fa-bookmark tab-icon"></i>        
+      <i class="fa-solid fa-table-cells tab-icon active" onclick="switchTab('posts', this)"></i> 
+      <i class="fa-solid fa-brain tab-icon" onclick="switchTab('learning', this)"></i>             
+      <i class="fa-solid fa-arrow-trend-up tab-icon" onclick="switchTab('stats', this)"></i>    
+      <i class="fa-solid fa-coins tab-icon" onclick="switchTab('era', this)"></i>             
+      <i class="fa-regular fa-bookmark tab-icon" onclick="switchTab('saved', this)"></i>        
     </div>
 
-    <div class="grid-container">
-      ${userPosts.length > 0 
-        ? userPosts.map(post => {
-            const imgSrc = Array.isArray(post.imageurl) ? post.imageurl[0] : (post.imageurl || '');
-            return `
-            <div class="grid-item">
-              <img src="${imgSrc}" alt="User post" style="width:100%; height:100%; object-fit:cover;">
-            </div>
-            `;
-          }).join('')
-        : '<div class="no-posts">No posts yet.</div>'
-      }
+    <div id="tab-posts" class="tab-content active">
+      <div class="grid-container">
+        ${userPosts.length > 0 
+          ? userPosts.map(post => {
+              const imgSrc = Array.isArray(post.imageurl) ? post.imageurl[0] : (post.imageurl || '');
+              return '<div class="grid-item"><img src="' + imgSrc + '" alt="User post"></div>';
+            }).join('')
+          : '<div class="empty-state">No posts yet.</div>'
+        }
+      </div>
+    </div>
+
+    <div id="tab-learning" class="tab-content">
+      <div class="skills-container" id="skillsList">
+        </div>
+    </div>
+
+    <div id="tab-stats" class="tab-content">
+      <div class="stats-display">
+        ${(user.points && user.points > 0) 
+          ? '<div class="stats-circle">' + user.points + '</div><h3>Active Learner</h3><p>Points earned over time.</p>' 
+          : '<div class="empty-state"><i class="fa-solid fa-chart-line" style="font-size:3rem; margin-bottom:15px;"></i><br>Not started yet.<br><small style="display:block; margin-top:8px;">Complete learning paths to earn points!</small></div>'
+        }
+      </div>
+    </div>
+
+    <div id="tab-era" class="tab-content">
+      <div class="era-building">
+        <i class="fa-solid fa-person-digging"></i>
+        <h3>CollegenZ Era</h3>
+        <p style="margin-top:10px;">The internal digital currency system is currently being built. Check back soon!</p>
+      </div>
+    </div>
+
+    <div id="tab-saved" class="tab-content">
+      <div class="grid-container">
+        ${savedPosts.length > 0 
+          ? savedPosts.map(post => {
+              const imgSrc = Array.isArray(post.imageurl) ? post.imageurl[0] : (post.imageurl || '');
+              return '<div class="grid-item"><img src="' + imgSrc + '" alt="Saved post"></div>';
+            }).join('')
+          : '<div class="empty-state">No saved posts yet.</div>'
+        }
+      </div>
     </div>
   </form>
 
@@ -171,7 +240,62 @@ router.get("/profile", async (req, res) => {
 </div>
 
 <script>
-// Safely inject backend data into frontend variables
+/* =========================================
+   1. TAB SWITCHING LOGIC
+========================================= */
+function switchTab(tabId, element) {
+  document.querySelectorAll('.tab-icon').forEach(icon => icon.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+  
+  element.classList.add('active');
+  document.getElementById('tab-' + tabId).classList.add('active');
+}
+
+/* =========================================
+   2. LEARNING SKILLS LOGIC
+========================================= */
+const availableSkills = [
+  { id: 'web-dev', name: 'Web Development', time: '3 Months' },
+  { id: 'ui-ux', name: 'UI/UX Design', time: '2 Months' },
+  { id: 'python', name: 'Python Basics', time: '1 Month' },
+  { id: 'data-science', name: 'Data Science', time: '6 Months' },
+  { id: 'marketing', name: 'Digital Marketing', time: '2 Months' },
+  { id: 'ai-prompt', name: 'AI Prompt Eng.', time: '2 Weeks' }
+];
+
+const userSavedSkills = ${JSON.stringify(user.learningPaths || [])};
+
+function renderSkills() {
+  const container = document.getElementById('skillsList');
+  container.innerHTML = availableSkills.map(function(skill) {
+    const isSelected = userSavedSkills.includes(skill.id) ? 'selected' : '';
+    return '<div class="skill-chip ' + isSelected + '" onclick="toggleSkill(\\'' + skill.id + '\\', this)">' +
+             '<span class="skill-name">' + skill.name + '</span>' +
+             '<span class="skill-time">' + skill.time + '</span>' +
+           '</div>';
+  }).join('');
+}
+
+async function toggleSkill(skillId, element) {
+  const isCurrentlySelected = element.classList.contains('selected');
+  element.classList.toggle('selected'); 
+
+  try {
+    await axios.post('/api/profile/learningpath', {
+      skillId: skillId,
+      action: isCurrentlySelected ? 'remove' : 'add'
+    });
+  } catch (error) {
+    console.error("Error saving skill", error);
+    alert("Failed to save learning path. Try again.");
+    element.classList.toggle('selected');
+  }
+}
+renderSkills();
+
+/* =========================================
+   3. CONNECTIONS MODAL LOGIC (🔥 FIXED ICONS)
+========================================= */
 const followersData = ${JSON.stringify(user.followers || [])};
 const followingData = ${JSON.stringify(user.following || [])};
 
@@ -190,15 +314,15 @@ function openConnectionsModal(type) {
     return;
   }
 
-  // Using standard string concatenation here to prevent Node.js from breaking your res.send string literal
   listContainer.innerHTML = data.map(function(u) {
     var imgSrc = u.picture || '/uploads/profilepic.jpg';
     var userName = u.name || 'User';
     var userHandle = u.username ? '@' + u.username : '';
     
+    // 🔥 Replaced Text with clean FontAwesome Icons
     var actionButton = type === 'following' 
-      ? '<button class="btn-action unfollow" onclick="handleAction(\\'' + u._id + '\\', \\'unfollow\\')">Unfollow</button>'
-      : '<button class="btn-action" onclick="handleAction(\\'' + u._id + '\\', \\'remove\\')">Remove</button>';
+      ? '<button class="btn-action unfollow" onclick="handleAction(\\'' + u._id + '\\', \\'unfollow\\')" title="Unfollow"><i class="fa-solid fa-user-minus"></i></button>'
+      : '<button class="btn-action" onclick="handleAction(\\'' + u._id + '\\', \\'remove\\')" title="Remove Follower"><i class="fa-solid fa-user-xmark"></i></button>';
 
     return '<div class="user-list-item" id="user-row-' + u._id + '">' +
              '<div class="user-list-info" onclick="window.location.href=\\'/profile/' + u._id + '\\'">' +
@@ -209,7 +333,7 @@ function openConnectionsModal(type) {
                '</div>' +
              '</div>' +
              '<div class="action-btns">' +
-               '<button class="btn-msg" onclick="window.location.href=\\'/chat/' + u._id + '\\'">Message</button>' +
+               '<button class="btn-msg" onclick="window.location.href=\\'/chat/' + u._id + '\\'" title="Message"><i class="fa-regular fa-comment-dots"></i></button>' +
                actionButton +
              '</div>' +
            '</div>';
@@ -225,12 +349,11 @@ function closeModal(e, force) {
 async function handleAction(userId, actionType) {
   try {
     if (actionType === 'unfollow') {
-      await axios.post('/follow/' + userId); // Assumes your follow route base is /follow
+      await axios.post('/follow/' + userId); 
     } else if (actionType === 'remove') {
-      await axios.post('/followers/remove/' + userId); // Change to match your exact remove route base
+      await axios.post('/followers/remove/' + userId); 
     }
     
-    // Visually remove from list immediately
     var row = document.getElementById('user-row-' + userId);
     if(row) row.remove();
     
@@ -239,8 +362,6 @@ async function handleAction(userId, actionType) {
     alert('Action failed. Please try again.');
   }
 }
-
-// ... your other existing JS functions (previewProfile, toggleEdit, etc.) ...
 </script>
 
 </body>
@@ -249,6 +370,38 @@ async function handleAction(userId, actionType) {
   } catch (err) {
     console.error(err);
     res.status(500).send("Profile error");
+  }
+});
+
+
+/* ==========================================
+   2. API POST ROUTE: SAVE LEARNING PATH
+========================================== */
+router.post("/api/profile/learningpath", async (req, res) => {
+  try {
+    if (!req.session.userId) return res.status(401).json({ error: "Not logged in" });
+
+    const { skillId, action } = req.body;
+    const user = await genz.findById(req.session.userId);
+
+    if (!user.learningPaths) {
+      user.learningPaths = [];
+    }
+
+    if (action === 'add') {
+      if (!user.learningPaths.includes(skillId)) {
+        user.learningPaths.push(skillId);
+      }
+    } else if (action === 'remove') {
+      user.learningPaths.pull(skillId);
+    }
+
+    await user.save();
+    res.json({ success: true });
+
+  } catch (err) {
+    console.error("Save Skill Error:", err);
+    res.status(500).json({ error: "Server error" });
   }
 });
 
