@@ -175,22 +175,22 @@ ${images.length>1?`
 });
 
 /* CAPTION */
-
 let caption="";
 
 if(p.postType==="general"){
 
-const short=p.data?.slice(0,120)||"";
-const rest=p.data?.slice(120)||"";
+  const short=p.data?.slice(0,120)||"";
+  const rest=p.data?.slice(120)||"";
 
-caption=`
-<span>${short}</span>
-${rest?`
-<span id="more-${p._id}" style="display:none;">${rest}</span>
-<span class="see-more" onclick="toggleCaption('${p._id}')">… more</span>
-`:""}
-`;
+  caption=`
+  <span>${short}</span>
+  ${rest?`
+  <span id="more-${p._id}" style="display:none;">${rest}</span>
+  <span id="toggle-btn-${p._id}" class="see-more" onclick="toggleCaption('${p._id}')" style="cursor:pointer; font-weight:500;">… more</span>
+  `:""}
+  `;
 }
+
 
 /* EVENT */
 else if(p.postType==="event"){
@@ -536,53 +536,48 @@ const btn=document.querySelector(`[onclick="toggleDetails('${id}')"]`);
 if(btn) btn.remove();
 }
 
-function toggleCaption(id){
+function toggleCaption(id) {
+  const more = document.getElementById("more-" + id);
+  // Find the button using the same selector you used
+  const btn = document.querySelector(`[onclick="toggleCaption('${id}')"]`);
 
-const more=document.getElementById("more-"+id);
-if(!more) return;
+  if (!more || !btn) return;
 
-more.style.display="inline";
-
-const btn=document.querySelector(`[onclick="toggleCaption('${id}')"]`);
-if(btn) btn.remove();
-
+  // Check if the text is currently hidden
+  if (more.style.display === "none" || more.style.display === "") {
+    more.style.display = "inline"; // Show the extra text
+    btn.innerHTML = " see less";   // Change button text
+  } else {
+    more.style.display = "none";   // Hide the extra text
+    btn.innerHTML = "… more";      // Change button text back
+  }
 }
-/* ================= MINI PROFILE POPUP ================= */
-document.addEventListener("click", async e => {
+
+
+//MINI PROFILE
+/* ================= REDIRECT TO FULL PROFILE ================= */
+document.addEventListener("click", e => {
   const user = e.target.closest(".open-profile");
-  if(!user) return;
+
+  if (!user) return;
+  
+  e.preventDefault(); // ADD THIS LINE HERE
 
   const userId = user.dataset.user;
+  // ... rest of your code
 
-  document.getElementById("profilePopup").style.display="flex";
-  document.getElementById("profileData").innerHTML="Loading...";
+  console.log("Clicked User ID:", userId); // Check if this prints a valid ID!
 
-  try {
-    const res = await fetch(`/api/user/${userId}`);
-    const u = await res.json();
-
-    // Check if it's our own profile so we don't try to add ourselves
-    const isMe = CURRENT_USER && CURRENT_USER._id === u._id;
-
-    document.getElementById("profileData").innerHTML=`
-      <img src="${u.picture||'DEFAULT_PROFILE_SVG'}"
-           style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:2px solid #228B22;"><br>
-
-      <strong>${u.username}</strong><br>
-      <small>${u.email||""}</small><br><br>
-
-      <p>${u.bio||"No bio"}</p>
-
-      ${!isMe ? `
-        <button class="btn btn-success btn-sm" onclick="sendFriendRequest('${u._id}', this)">
-          Add Friend
-        </button>
-      ` : `<span class="badge bg-secondary">This is you</span>`}
-    `;
-  } catch(err) {
-    document.getElementById("profileData").innerHTML="Failed to load";
+  if (!userId || userId === "undefined") {
+    alert("Error: User ID is missing in the HTML");
+    return;
   }
+  
+  // Navigate directly to the user's full profile page
+  window.location.href = `/profile/${userId}`;
 });
+
+
 
 /* CLOSE POPUP */
 document.querySelector(".close-popup").onclick=()=>{
