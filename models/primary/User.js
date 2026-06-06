@@ -57,4 +57,36 @@ website: { type: String, default: null },
 });
 
 
+zrole: {
+    type: String,
+    enum: ["user", "intern", "mentor"],
+    default: "user"
+  },
+
+  // ========================================================
+  // RESTRUCTURED TO ARRAY FOR PARALLEL INTERNSHIPS
+  // ========================================================
+  internshipProfiles: [
+    {
+      companyName: { type: String, default: "CodeAlpha" },
+      status: { type: String, enum: ["ACTIVE", "INACTIVE"], default: "ACTIVE" },
+      startDate: { type: String, default: "09.06.2026" },
+      endDate: { type: String, default: "09.07.2026" },
+      deadlineDate: { type: String, default: "09.08.2026" },
+      progress: { type: Number, default: 50 },
+      
+      // Specific to Intern context
+      noOfTask: { type: Number, default: 4 },
+      noOfCompletedTask: { type: Number, default: 2 },
+      noOfPendingTask: { type: Number, default: 2 },
+      nameOfMentor: { type: String, default: "Amir" },
+
+      // Specific to Mentor context
+      noOfStudents: { type: Number, default: 44 },
+      noOfTaskAssigned: { type: Number, default: 2 },
+      noOfTaskPending: { type: Number, default: 2 }
+    }
+  ]
+});
+
 module.exports = primaryDB.model("logins", userSchema);
