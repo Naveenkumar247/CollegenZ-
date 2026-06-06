@@ -6,14 +6,22 @@ const genz = require("../models/primary/User");
 const Session = require("../models/primary/Session");
 const { hashPassword } = require("../utils/password");
 
-const { sendLoginAlert } = require("../services/mailService"); // ✅ ADD
+const { sendLoginAlert } = require("../services/mailService");
+
+// Enforce strict target routing isolation based on exact origin parameters
+const getStrictRedirectTarget = (origin) => {
+  if (origin === "internship") {
+    return "/internship-login"; // Strictly forces internship routing checkpoint
+  }
+  return "/"; // Strictly forces standard platform home page route
+};
 
 /* ======================
    SIGNUP
 ====================== */
 router.post("/signup", async (req, res) => {
   try {
-    const { name, username, email, password, college, dream } = req.body;
+    const { name, username, email, password, college, dream, origin } = req.body;
 
     const lowerEmail = email.toLowerCase();
     const exists = await genz.findOne({ email: lowerEmail });
@@ -44,7 +52,8 @@ router.post("/signup", async (req, res) => {
       expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
     });
 
-    res.json({ success: true, redirectUrl: "/" });
+    // Enforce strict redirect boundary on sign up
+    res.json({ success: true, redirectUrl: getStrictRedirectTarget(origin) });
 
   } catch (err) {
     console.error("Signup error:", err);
@@ -57,6 +66,8 @@ router.post("/signup", async (req, res) => {
    LOGIN
 ====================== */
 router.post("/login", (req, res, next) => {
+  // Read target platform flag explicitly sent from the specific login page form
+  const { origin } = req.body; 
 
   passport.authenticate("local", async (err, user, info) => {
 
@@ -79,10 +90,7 @@ router.post("/login", (req, res, next) => {
       /* ======================
          LOGIN ALERT EMAIL
       ====================== */
-
-      const ip =
-        req.headers["x-forwarded-for"] || req.socket.remoteAddress;
-
+      const ip = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
       const device = req.headers["user-agent"];
 
       sendLoginAlert({
@@ -94,12 +102,12 @@ router.post("/login", (req, res, next) => {
         console.error("Login alert failed:", err)
       );
 
-      res.json({ success: true, redirectUrl: "/" });
+      // Return the strictly bounded URL context back to the frontend AJAX processor
+      res.json({ success: true, redirectUrl: getStrictRedirectTarget(origin) });
 
     });
 
   })(req, res, next);
-
 });
 
 
@@ -107,9 +115,18 @@ router.post("/login", (req, res, next) => {
    GOOGLE AUTH
 ====================== */
 
+// Intercept standard Google trigger to preserve the strict origin environment state
 router.get(
   "/auth/google",
-  passport.authenticate("google", { scope: ["profile", "email"] })
+  (req, res, next) => {
+    // Read context query (?origin=internship) or default strictly to general platform tracking
+    const origin = req.query.origin === "internship" ? "internship" : "general";
+    
+    passport.authenticate("google", { 
+      scope: ["profile", "email"],
+      state: origin // Send to Google security handshake ecosystem
+    })(req, res, next);
+  }
 );
 
 
@@ -120,9 +137,7 @@ router.get(
 
     req.session.userId = req.user._id;
 
-    const ip =
-      req.headers["x-forwarded-for"] || req.socket.remoteAddress;
-
+    const ip = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
     const device = req.headers["user-agent"];
 
     sendLoginAlert({
@@ -132,7 +147,11 @@ router.get(
       device
     }).catch(console.error);
 
-    res.redirect("/");
+    // Retrieve original authorization context string returned from Google
+    const origin = req.query.state === "internship" ? "internship" : "general";
+
+    // Perform strict separation mapping redirect
+    res.redirect(getStrictRedirectTarget(origin));
   }
 );
 
