@@ -45,6 +45,8 @@ const chatFriendsRouter = require("./routes/chatfriends");
 const webpush = require('web-push');
 const publicVapidKey = process.env.VAPID_PUBLIC_KEY;
 const privateVapidKey = process.env.VAPID_PRIVATE_KEY;
+const dashboardRoutes = require('./routes/dashboard');
+
 
 webpush.setVapidDetails(
   'mailto:naveenkumar@collegenz..in', // Required identifier
@@ -134,6 +136,8 @@ app.use("/", chatFriendsRouter);
 app.use("/api", newsRoutes);
 require("./services/autoDelete");
 require("./services/eventReminder");
+app.use('/api/dashboard', dashboardRoutes);
+
 
 // --------------------
 // SERVER START
@@ -404,6 +408,8 @@ app.get("/api/config", (req, res) => {
 });
 
 
+
+  
 
 app.get("/friends", (req, res) => {
   // IMPORTANT: Adjust the path below based on where you saved chatfriends.html!
