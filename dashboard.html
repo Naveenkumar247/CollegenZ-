@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CollegenZ - Internship Dashboard</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    /* Smooth transition for sliding/switching parallel cards */
+    .fade-transition {
+      transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+    }
+    /* Dynamic blur background fixes */
+    .glass-card {
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.05) 100%);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-gradient-to-tr from-slate-900 via-indigo-950 to-slate-900 text-white flex flex-col items-center justify-center p-4 font-sans">
+
+  <!-- ========================================== -->
+  <!-- MOBILE SYSTEM FRAME WRAPPER CONTAINER -->
+  <!-- ========================================== -->
+  <div class="w-full max-w-sm bg-slate-950/40 border border-white/10 rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col h-[760px] relative backdrop-blur-2xl">
+    
+    <!-- Loading Spinner Overlay -->
+    <div id="loadingScreen" class="absolute inset-0 bg-slate-950 z-50 flex flex-col items-center justify-center gap-3">
+      <i data-lucide="loader-2" class="animate-spin text-indigo-500 w-10 h-10"></i>
+      <p class="text-sm text-slate-400">Fetching Internship Portals...</p>
+    </div>
+
+    <!-- Error State Overlay -->
+    <div id="errorScreen" class="absolute inset-0 bg-slate-950 z-50 hidden flex-col items-center justify-center px-6 text-center gap-4">
+      <i data-lucide="alert-circle" class="text-rose-500 w-12 h-12"></i>
+      <p id="errorMessage" class="text-sm text-slate-400">Failed to load dashboards.</p>
+    </div>
+
+    <!-- Top Navigation Header Component -->
+    <header class="px-6 pt-6 pb-3 flex justify-between items-center border-b border-white/5">
+      <h1 id="appLogoTitle" class="text-xl font-bold tracking-tight text-indigo-400">ZIntern</h1>
+      <div class="flex items-center gap-4 text-slate-300">
+        <button class="hover:text-white transition cursor-pointer">
+          <i data-lucide="bell" class="w-5 h-5"></i>
+        </button>
+        <img 
+          id="userAvatar"
+          src="https://collegenz.in/uploads/profilepic.jpg" 
+          alt="Profile" 
+          class="w-7 h-7 rounded-full object-cover border border-white/20"
+        />
+      </div>
+    </header>
+
+    <!-- Mid Header Title Bar + Tracker Progress Indicator -->
+    <div class="px-6 py-2 flex justify-between items-center">
+      <div>
+        <h2 id="dashboardRoleTitle" class="text-lg font-medium text-slate-200">Intern Dashboard</h2>
+        <p id="parallelTrackCount" class="text-[11px] text-indigo-300 font-semibold mt-0.5">Active Tracks: 1 of 1</p>
+      </div>
+      <button class="text-slate-400 hover:text-white cursor-pointer">
+        <i data-lucide="more-vertical" class="w-[18px] h-[18px]"></i>
+      </button>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- DYNAMIC MAIN BODY DISPLAY CONTAINER -->
+    <!-- ========================================== -->
+    <main class="flex-1 px-5 overflow-y-auto flex flex-col justify-center">
+      
+      <div class="w-full relative">
+        
+        <!-- Glassmorphic Dashboard Metric Card -->
+        <div id="metricDisplayCard" class="w-full glass-card border border-white/15 rounded-2xl p-5 shadow-2xl fade-transition">
+          
+          <!-- Company & Badge Row -->
+          <div class="flex justify-between items-center mb-4">
+            <h3 id="companyNameText" class="text-lg font-bold tracking-wide text-white">CodeAlpha</h3>
+            <span id="statusBadge" class="text-[10px] font-bold tracking-widest px-2.5 py-0.5 rounded-full border bg-emerald-500/20 text-emerald-400 border-emerald-500/30">
+              STATUS : ACTIVE
+            </span>
+          </div>
+
+          <!-- Fields Grid Content Mapping Box -->
+          <div id="cardFieldsContainer" class="space-y-2.5 text-sm font-medium text-slate-300">
+            <!-- Programmatic JavaScript insertion points render content metrics here -->
+          </div>
+
+        </div>
+
+        <!-- Carousel Pagination Control Toggles -->
+        <div id="carouselControls" class="flex justify-center gap-6 mt-4 items-center hidden">
+          <button id="prevBtn" class="p-1.5 rounded-full bg-white/5 border border-white/10 text-slate-300 hover:text-white hover:bg-white/10 transition cursor-pointer">
+            <i data-lucide="chevron-left" class="w-[18px] h-[18px]"></i>
+          </button>
+          
+          <!-- Bullet Pagination Dots Tracker -->
+          <div id="dotIndicators" class="flex gap-1.5"></div>
+
+          <button id="nextBtn" class="p-1.5 rounded-full bg-white/5 border border-white/10 text-slate-300 hover:text-white hover:bg-white/10 transition cursor-pointer">
+            <i data-lucide="chevron-right" class="w-[18px] h-[18px]"></i>
+          </button>
+        </div>
+
+      </div>
+
+    </main>
+
+    <!-- Socialize Branding Footnote Section -->
+    <div class="text-center py-2 text-[11px] tracking-wide text-slate-400 bg-slate-950/20 border-t border-white/5">
+      Socialize with our <span class="font-extrabold text-white tracking-normal">CollegenZ</span>
+    </div>
+
+    <!-- Sticky Bottom Navigation Tray Layout Elements -->
+    <nav class="bg-slate-950/80 border-t border-white/10 grid grid-cols-4 pb-4 pt-2 text-center relative z-10 backdrop-blur-lg">
+      <button class="flex flex-col items-center justify-center gap-0.5 text-indigo-400 font-bold transition cursor-pointer">
+        <i data-lucide="bar-chart-2" class="w-5 h-5"></i>
+        <span class="text-[10px]">Dashboard</span>
+      </button>
+      
+      <button class="flex flex-col items-center justify-center gap-0.5 text-slate-400 hover:text-white transition cursor-pointer">
+        <i data-lucide="message-circle" class="w-5 h-5"></i>
+        <span class="text-[10px]">Chat</span>
+      </button>
+      
+      <button class="flex flex-col items-center justify-center gap-0.5 text-slate-400 hover:text-white transition cursor-pointer">
+        <i data-lucide="file-text" class="w-5 h-5"></i>
+        <span class="text-[10px]">Task</span>
+      </button>
+      
+      <button class="flex flex-col items-center justify-center gap-0.5 text-slate-400 hover:text-white transition cursor-pointer">
+        <i data-lucide="video" class="w-5 h-5"></i>
+        <span class="text-[10px] leading-tight">Meeting/<br/>Webinar</span>
+      </button>
+    </nav>
+
+  </div>
+
+  <!-- ========================================== -->
+  <!-- CLIENT DYNAMIC DATA FETCHING HANDLER ENGINE -->
+  <!-- ========================================== -->
+  <script>
+    // Configuration Setup - Replace with a valid database user ID string to pull real data
+    const TARGET_USER_ID = "65f123456789abcdef012345"; 
+    const BACKEND_API_URL = `/api/dashboard/${TARGET_USER_ID}`;
+
+    let appState = {
+      zrole: "intern",
+      metricsList: [],
+      activeIndex: 0
+    };
+
+    // Initialize Lucide Icons Vector System
+    function updateIcons() {
+      lucide.createIcons();
+    }
+
+    // Main Fetch Execution Routine
+    async function fetchDashboardData() {
+      try {
+        const response = await fetch(BACKEND_API_URL);
+        if (!response.ok) throw new Error("Could not fetch profile properties from DB server.");
+        
+        const data = await response.json();
+        
+        // Handle User restriction checking rules
+        if (!data.metricsList || data.metricsList.length === 0 || data.zrole === 'user') {
+          showError("Access Blocked. No parallel internship tracks configured on this account identity.");
+          return;
+        }
+
+        appState.zrole = data.zrole;
+        appState.metricsList = data.metricsList;
+        appState.activeIndex = 0;
+
+        // Populate User Top Layout Metadata
+        document.getElementById('userAvatar').src = data.picture || "https://collegenz.in/uploads/profilepic.jpg";
+        document.getElementById('appLogoTitle').innerText = data.zrole === 'intern' ? 'ZIntern' : 'ZMentor';
+        document.getElementById('dashboardRoleTitle').innerText = data.zrole === 'intern' ? 'Intern Dashboard' : 'Mentor Dashboard';
+
+        // Hide overlay loaders
+        document.getElementById('loadingScreen').classList.add('hidden');
+        renderActiveCard();
+        
+      } catch (err) {
+        console.error(err);
+        showError("Backend connection error. Please make sure your Express API backend is running.");
+      }
+    }
+
+    function showError(msg) {
+      document.getElementById('loadingScreen').classList.add('hidden');
+      const errScreen = document.getElementById('errorScreen');
+      document.getElementById('errorMessage').innerText = msg;
+      errScreen.classList.remove('hidden');
+      updateIcons();
+    }
+
+    // Dynamic Fields Template Layout Core Processing Logic
+    function renderActiveCard() {
+      const current = appState.metricsList[appState.activeIndex];
+      const isIntern = appState.zrole === 'intern';
+      
+      // Update basic strings
+      document.getElementById('companyNameText').innerText = current.companyName || "CodeAlpha";
+      document.getElementById('parallelTrackCount').innerText = `Active Tracks: ${appState.activeIndex + 1} of ${appState.metricsList.length}`;
+      
+      // Adjust Status Badge Layout
+      const badge = document.getElementById('statusBadge');
+      badge.innerText = `STATUS : ${current.status || 'ACTIVE'}`;
+      if (current.status === 'ACTIVE') {
+        badge.className = "text-[10px] font-bold tracking-widest px-2.5 py-0.5 rounded-full border bg-emerald-500/20 text-emerald-400 border-emerald-500/30";
+      } else {
+        badge.className = "text-[10px] font-bold tracking-widest px-2.5 py-0.5 rounded-full border bg-rose-500/20 text-rose-400 border-rose-500/30";
+      }
+
+      // Generate context HTML structure strictly according to drawing schema attributes
+      let fieldsHTML = `
+        <div class="flex justify-between items-center">
+          <span>Start Date :</span>
+          <span class="text-slate-100">${current.startDate} 🕒</span>
+        </div>
+        <div class="flex justify-between items-center">
+          <span>End Date :</span>
+          <span class="text-slate-100">${current.endDate} 🕒</span>
+        </div>
+      `;
+
+      if (isIntern) {
+        fieldsHTML += `
+          <div class="flex justify-between">
+            <span>No. of Task :</span>
+            <span class="text-indigo-400 font-semibold">${current.noOfTask}</span>
+          </div>
+          <div class="flex justify-between">
+            <span>No. of Completed task :</span>
+            <span class="text-emerald-400 font-semibold">${current.noOfCompletedTask}</span>
+          </div>
+          <div class="flex justify-between">
+            <span>No. of Pending task :</span>
+            <span class="text-amber-400 font-semibold">${current.noOfPendingTask}</span>
+          </div>
+          <div class="flex justify-between">
+            <span>Deadline Date :</span>
+            <span class="text-slate-100">${current.deadlineDate}</span>
+          </div>
+          <div class="flex justify-between border-t border-white/5 pt-2 mt-2">
+            <span>Name of Mentor :</span>
+            <span class="text-indigo-300 underline underline-offset-4 font-semibold">${current.nameOfMentor}</span>
+          </div>
+        `;
+      } else {
+        fieldsHTML += `
+          <div class="flex justify-between text-indigo-300">
+            <span>No. of Students :</span>
+            <span class="font-bold">${current.noOfStudents}</span>
+          </div>
+          <div class="flex justify-between">
+            <span>No. of Task :</span>
+            <span class="text-slate-100">${current.noOfTask}</span>
+          </div>
+          <div class="flex justify-between">
+            <span>No. of Task Assigned :</span>
+            <span class="text-indigo-400 font-semibold">${current.noOfTaskAssigned}</span>
+          </div>
+          <div class="flex justify-between">
+            <span>No. of Task Pending :</span>
+            <span class="text-amber-400 font-semibold">${current.noOfTaskPending}</span>
+          </div>
+          <div class="flex justify-between">
+            <span>Deadline Date :</span>
+            <span class="text-slate-100">${current.deadlineDate}</span>
+          </div>
+        `;
+      }
+
+      // Add the graphic canvas progress bar metric node fill
+      fieldsHTML += `
+        <div class="pt-4">
+          <div class="w-full bg-slate-950/60 rounded-full h-2.5 overflow-hidden border border-white/5">
+            <div 
+              class="bg-gradient-to-r from-indigo-500 to-purple-500 h-full rounded-full transition-all duration-500"
+              style="width: ${current.progress || 0}%"
+            ></div>
+          </div>
+        </div>
+      `;
+
+      document.getElementById('cardFieldsContainer').innerHTML = fieldsHTML;
+
+      // Handle Carousel Setup Conditions
+      setupCarouselControls();
+      updateIcons();
+    }
+
+    function setupCarouselControls() {
+      const controls = document.getElementById('carouselControls');
+      const dotsContainer = document.getElementById('dotIndicators');
+      
+      if (appState.metricsList.length <= 1) {
+        controls.classList.add('hidden');
+        return;
+      }
+
+      controls.classList.remove('hidden');
+      
+      // Paint indicators dynamically
+      dotsContainer.innerHTML = appState.metricsList.map((_, idx) => `
+        <span class="h-1.5 rounded-full transition-all duration-300 ${idx === appState.activeIndex ? 'w-4 bg-indigo-500' : 'w-1.5 bg-slate-600'}"></span>
+      `).join('');
+    }
+
+    // Attach Interactivity Slider Listeners
+    document.getElementById('nextBtn').addEventListener('click', () => {
+      animateCardChange(() => {
+        appState.activeIndex = (appState.activeIndex + 1) % appState.metricsList.length;
+      });
+    });
+
+    document.getElementById('prevBtn').addEventListener('click', () => {
+      animateCardChange(() => {
+        appState.activeIndex = (appState.activeIndex - 1 + appState.metricsList.length) % appState.metricsList.length;
+      });
+    });
+
+    function animateCardChange(indexUpdateCallback) {
+      const card = document.getElementById('metricDisplayCard');
+      card.style.opacity = '0';
+      card.style.transform = 'translateY(8px)';
+      
+      setTimeout(() => {
+        indexUpdateCallback();
+        renderActiveCard();
+        card.style.opacity = '1';
+        card.style.transform = 'translateY(0)';
+      }, 150);
+    }
+
+    // Trigger Initial Execution Routine on Window load events
+    window.addEventListener('DOMContentLoaded', () => {
+      updateIcons();
+      fetchDashboardData();
+    });
+  </script>
+</body>
+</html>
+
