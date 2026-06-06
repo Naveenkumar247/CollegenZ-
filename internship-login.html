@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CollegenZ - Internship Portal Gateway</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="min-h-screen bg-gradient-to-tr from-slate-900 via-indigo-950 to-slate-900 text-white flex flex-col items-center justify-center p-4 font-sans">
+
+  <div class="w-full max-w-sm bg-slate-950/40 border border-white/10 rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col h-[760px] justify-between p-6 relative backdrop-blur-2xl">
+    
+    <div class="text-center pt-8">
+      <h1 class="text-3xl font-black tracking-tight text-indigo-400">CollegenZ</h1>
+      <p class="text-xs text-slate-400 tracking-widest uppercase mt-1">Internship Ecosystem</p>
+    </div>
+
+    <div class="bg-white/5 border border-white/10 rounded-2xl p-6 text-center shadow-xl backdrop-blur-md my-auto">
+      <div id="statusContainer" class="space-y-4">
+        <div class="flex justify-center">
+          <i data-lucide="shield-check" class="text-indigo-400 w-12 h-12 animate-pulse"></i>
+        </div>
+        <h2 class="text-lg font-bold">Verifying Portal Access</h2>
+        <p class="text-xs text-slate-400 px-4">Reading your security token credentials to load the correct workspace management view...</p>
+      </div>
+
+      <button id="actionBtn" class="hidden mt-6 w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-semibold text-sm tracking-wide shadow-lg cursor-pointer transition-all">
+        Return to Common Auth
+      </button>
+    </div>
+
+    <div class="text-center text-[11px] tracking-wide text-slate-400 pb-4">
+      Powered by <span class="font-extrabold text-white">CollegenZ Workspace</span>
+    </div>
+
+  </div>
+
+  <script>
+    // Automatically trigger checking once common authentication processes exit
+    async function authorizedGatewayRedirect() {
+      lucide.createIcons();
+      const statusContainer = document.getElementById('statusContainer');
+      const actionBtn = document.getElementById('actionBtn');
+
+      try {
+        // Fetch session authentication validation from the gateway route
+        const response = await fetch('/api/dashboard/gateway');
+        
+        if (!response.ok) {
+          throw new Error("No active session tokens discovered.");
+        }
+
+        const data = await response.json();
+
+        if (data.zrole === 'user') {
+          // User doesn't have an intern or mentor profile attached
+          statusContainer.innerHTML = `
+            <i data-lucide="lock" class="text-rose-400 w-12 h-12 mx-auto mb-2"></i>
+            <h2 class="text-lg font-bold text-rose-400">Access Denied</h2>
+            <p class="text-xs text-slate-400">This account is currently configured as a standard user. You need an assigned Intern or Mentor role to view this workspace.</p>
+          `;
+          actionBtn.innerText = "Request Workspace Access";
+          actionBtn.classList.remove('hidden');
+          lucide.createIcons();
+          return;
+        }
+
+        // Success: Redirect smoothly to their dashboard path
+        statusContainer.innerHTML = `
+          <i data-lucide="loader-2" class="text-emerald-400 w-12 h-12 animate-spin mx-auto mb-2"></i>
+          <h2 class="text-lg font-bold text-emerald-400">Access Granted!</h2>
+          <p class="text-xs text-slate-400">Redirecting to your active dashboard tracks...</p>
+        `;
+        lucide.createIcons();
+
+        setTimeout(() => {
+          window.location.href = data.redirectUrl;
+        }, 1200);
+
+      } catch (err) {
+        statusContainer.innerHTML = `
+          <i data-lucide="alert-triangle" class="text-amber-400 w-12 h-12 mx-auto mb-2"></i>
+          <h2 class="text-lg font-bold text-amber-400">Session Expired</h2>
+          <p class="text-xs text-slate-400">We couldn't verify an active login session. Please complete the main authentication process first.</p>
+        `;
+        actionBtn.classList.remove('hidden');
+        actionBtn.addEventListener('click', () => {
+          window.location.href = '/login'; // Points to your primary common authentication endpoint
+        });
+        lucide.createIcons();
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', authorizedGatewayRedirect);
+  </script>
+</body>
+</html>
