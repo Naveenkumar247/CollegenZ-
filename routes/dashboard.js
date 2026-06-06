@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const User = require('../../models/User'); // Path to your logins schema file
+const User = require('../../models/primary/User'); // Path to your logins schema file
 
 // @route   GET /api/dashboard/:id
 // @desc    GET all parallel dashboards for a specific user or mentor
