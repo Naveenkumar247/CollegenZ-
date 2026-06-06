@@ -54,7 +54,7 @@ friendRequestsReceived: [{ type: mongoose.Schema.Types.ObjectId, ref: "logins" }
 linkedin: { type: String, default: null },
 youtube: { type: String, default: null },
 website: { type: String, default: null },
-});
+
 
 
 zrole: {
