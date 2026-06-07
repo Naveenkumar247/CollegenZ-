@@ -3,37 +3,39 @@ const router = express.Router();
 const User = require("../models/primary/User");
 
 // GET dashboard metrics handler
-router.get("/:id", async (req, res) => {
+router.get('/:id', async (req, res) => {
   try {
     let targetId;
 
-    if (req.params.id === "me") {
-      // If no valid user session is discovered, respond with an explicit 401 status code
+    if (req.params.id === 'me') {
+      // If the user isn't logged in, Passport sets req.user to undefined
       if (!req.user) {
-        return res.status(401).json({ message: "Unauthorized active session token." });
+        return res.status(401).json({ success: false, message: "Unauthorized session." });
       }
-      targetId = req.user._id;
+      targetId = req.user._id; // Use logged-in user's ID securely
     } else {
-      targetId = req.params.id;
+      targetId = req.params.id; // Fallback for specific lookups
     }
 
-    const user = await User.findById(targetId).select("name email zrole internshipProfiles picture");
+    // Now it's safe to query Mongoose
+    const user = await User.findById(targetId).select('name email zrole internshipProfiles picture');
     
     if (!user) {
-      return res.status(404).json({ message: "Profile track tracking records missing." });
+      return res.status(404).json({ success: false, message: "Profile track not found." });
     }
 
     return res.status(200).json({
       name: user.name,
       email: user.email,
-      zrole: user.zrole,
+      zrole: user.zrole, 
       picture: user.picture,
       metricsList: user.internshipProfiles
     });
   } catch (error) {
-    // This catches Mongoose validation crashes (e.g. trying to cast "me" as a regular ObjectId)
-    return res.status(500).json({ error: error.message });
+    console.error("Dashboard route error:", error);
+    return res.status(500).json({ success: false, error: error.message });
   }
 });
+
 
 module.exports = router;
