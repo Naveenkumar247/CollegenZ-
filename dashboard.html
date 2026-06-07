@@ -3,16 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CollegenZ - Internship Dashboard</title>
+  <title>CollegenZ - Internship Hub Dashboard</title>
   <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <style>
-    /* Smooth transitions for carousel card switches */
-    .fade-transition {
-      transition: opacity 0.25s ease-in-out, transform 0.25s ease-in-out;
+    /* Clean CSS carousel transitions */
+    .carousel-track {
+      display: flex;
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      will-change: transform;
     }
     
-    /* Custom scrollbar hiding for clean workspace view */
     .no-scrollbar::-webkit-scrollbar {
       display: none;
     }
@@ -20,33 +21,30 @@
       -ms-overflow-style: none;
       scrollbar-width: none;
     }
-
-    /* Glassmorphism that pulls background vibrancy forward */
-    .glass-card {
-      background: linear-gradient(135deg, rgba(255, 255, 255, 0.07) 0%, rgba(255, 255, 255, 0.02) 100%);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-    }
   </style>
 </head>
-<body class="min-h-screen bg-[#f4f6f9] text-slate-800 flex flex-col items-center justify-center p-0 sm:p-4 font-sans antialiased selection:bg-indigo-500 selection:text-white">
+<body class="min-h-screen bg-[#f4f6f9] text-slate-800 flex flex-col items-center justify-center p-0 sm:p-4 font-sans antialiased selection:bg-[#228B22] selection:text-white">
 
-  <div class="w-full max-w-md bg-white border border-slate-200/80 sm:rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col h-screen sm:h-[820px] relative">
+  <!-- Core App Container Window Structure matching 1000146956.jpg layout framework -->
+  <div class="w-full max-w-md bg-white border border-slate-200 sm:rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col h-screen sm:h-[820px] relative">
     
+    <!-- Loader Screen Cover Layer -->
     <div id="loadingScreen" class="absolute inset-0 bg-white z-50 flex flex-col items-center justify-center gap-3">
-      <i data-lucide="loader-2" class="animate-spin text-emerald-500 w-10 h-10"></i>
+      <i data-lucide="loader-2" class="animate-spin text-[#228B22] w-10 h-10"></i>
       <p class="text-sm text-slate-500 font-medium tracking-wide">Syncing Workspace Profiles...</p>
     </div>
 
+    <!-- Error Screen Cover Layer -->
     <div id="errorScreen" class="absolute inset-0 bg-white z-50 hidden flex flex-col items-center justify-center px-6 text-center gap-4">
       <i data-lucide="alert-circle" class="text-rose-500 w-12 h-12"></i>
-      <p id="errorMessage" class="text-sm text-slate-600 font-medium">Failed to establish connection context.</p>
+      <p id="errorMessage" class="text-sm text-slate-600 font-medium">Failed to connect to data cluster.</p>
     </div>
 
-    <header class="px-5 pt-5 pb-4 flex justify-between items-center bg-[#228B22] text-white shadow-sm shrink-0">
+    <!-- Green Top Header Area (Perfect matching copy from reference image 1000146957.jpg) -->
+    <header class="px-5 pt-5 pb-4 flex justify-between items-center bg-[#228B22] text-white shadow-md shrink-0">
       <div class="flex flex-col">
-        <h1 id="appLogoTitle" class="text-2xl font-black tracking-tight flex items-center gap-1.5">CollegenZ</h1>
-        <span id="userEmailBadge" class="text-[10px] text-emerald-100/80 max-w-[200px] truncate font-medium mt-0.5">session: active_user</span>
+        <h1 class="text-2xl font-black tracking-tight flex items-center gap-1.5">CollegenZ</h1>
+        <span id="userEmailBadge" class="text-[10px] text-emerald-100/90 max-w-[200px] truncate font-medium mt-0.5">session: active_user</span>
       </div>
       <div class="flex items-center gap-3.5">
         <button class="hover:opacity-80 transition cursor-pointer p-1 relative">
@@ -56,67 +54,65 @@
         <img 
           id="userAvatar"
           src="https://collegenz.in/uploads/profilepic.jpg" 
-          alt="Profile Identity Container" 
+          alt="Avatar" 
           class="w-9 h-9 rounded-full object-cover border-2 border-white/20 shadow-sm"
         />
       </div>
     </header>
 
-    <div class="px-5 py-3.5 flex justify-between items-center bg-slate-50 border-b border-slate-100 shrink-0">
+    <!-- Subheader Strip Track Row -->
+    <div class="px-5 py-3.5 flex justify-between items-center bg-white border-b border-slate-100 shrink-0">
       <div>
-        <h2 id="dashboardRoleTitle" class="text-sm font-bold text-slate-700 uppercase tracking-wider">Intern Dashboard</h2>
-        <p id="parallelTrackCount" class="text-xs text-indigo-600 font-semibold mt-0.5">Active Tracks: 0 of 0</p>
+        <h2 id="dashboardRoleTitle" class="text-xs font-bold text-slate-400 uppercase tracking-wider">Intern Workspace</h2>
+        <p id="parallelTrackCount" class="text-sm font-black text-slate-800 mt-0.5">Active Tracks: 0 of 0</p>
       </div>
-      <button class="text-slate-400 hover:text-slate-600 transition cursor-pointer p-1">
-        <i data-lucide="sliders-horizontal" class="w-4.5 h-4.5"></i>
+      
+      <!-- Mentor Context Action Button Trigger logic -->
+      <button id="mentorActionBtn" class="hidden bg-[#228B22] hover:bg-emerald-700 text-white text-xs font-bold px-3 py-1.5 rounded-xl transition cursor-pointer flex items-center gap-1 shadow-sm">
+        <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+        <span>Add Intern</span>
       </button>
     </div>
 
-    <main class="flex-1 px-4 py-5 overflow-y-auto no-scrollbar flex flex-col justify-center bg-gradient-to-b from-indigo-950 via-slate-900 to-indigo-950 relative">
+    <!-- Active Carousel Window Container Workspace -->
+    <main class="flex-1 px-4 py-6 overflow-y-auto no-scrollbar flex flex-col justify-center bg-slate-50 relative">
       
-      <div id="swipeArena" class="w-full relative touch-pan-y cursor-grab active:cursor-grabbing">
-        
-        <div id="metricDisplayCard" class="w-full glass-card border border-white/10 rounded-3xl p-6 shadow-2xl fade-transition transform translate-x-0 opacity-100">
-          
-          <div class="flex justify-between items-center mb-5 border-b border-white/5 pb-3.5">
-            <h3 id="companyNameText" class="text-lg font-extrabold tracking-wide text-white">Loading Tracks...</h3>
-            <span id="statusBadge" class="text-[9px] font-black tracking-widest px-3 py-1 rounded-full border">
-              STATUS
-            </span>
-          </div>
-
-          <div id="cardFieldsContainer" class="space-y-3.5 text-sm font-medium text-slate-200">
-            </div>
+      <!-- Swipe/Touch Interactive Arena Area viewport -->
+      <div id="swipeArena" class="w-full overflow-hidden rounded-3xl relative">
+        <div id="carouselTrack" class="carousel-track">
+          <!-- Dynamic Glass / Plain white contrast panels rendering loops go inside here -->
         </div>
-
       </div>
 
-      <div id="carouselControls" class="flex justify-between items-center mt-6 px-2">
-        <button id="prevBtn" class="p-2.5 rounded-xl bg-white/5 border border-white/10 text-slate-300 hover:text-white hover:bg-white/10 transition cursor-pointer shadow-md">
+      <!-- Carousel Button Progress Dot Row Indicators -->
+      <div id="carouselControls" class="flex justify-between items-center mt-6 px-2 hidden">
+        <button id="prevBtn" class="p-2.5 rounded-xl bg-white border border-slate-200/80 text-slate-600 hover:bg-slate-50 transition cursor-pointer shadow-sm">
           <i data-lucide="chevron-left" class="w-5 h-5"></i>
         </button>
         
         <div id="dotIndicators" class="flex gap-2 items-center"></div>
 
-        <button id="nextBtn" class="p-2.5 rounded-xl bg-white/5 border border-white/10 text-slate-300 hover:text-white hover:bg-white/10 transition cursor-pointer shadow-md">
+        <button id="nextBtn" class="p-2.5 rounded-xl bg-white border border-slate-200/80 text-slate-600 hover:bg-slate-50 transition cursor-pointer shadow-sm">
           <i data-lucide="chevron-right" class="w-5 h-5"></i>
         </button>
       </div>
 
     </main>
 
-    <div class="text-center py-2 text-[11px] font-medium tracking-wide text-slate-400 bg-slate-50 border-t border-slate-100 shrink-0">
+    <!-- App Identity Text Segment -->
+    <div class="text-center py-2.5 text-[11px] font-medium tracking-wide text-slate-400 bg-white border-t border-slate-100 shrink-0">
       Socialize with our <span class="font-extrabold text-[#228B22]">CollegenZ</span>
     </div>
 
-    <nav class="bg-slate-950 text-white grid grid-cols-4 pb-6 pt-3 text-center relative z-10 shadow-xl shrink-0">
+    <!-- Dark Clean Bottom Base Navigation (Clean Match to 1000146956.jpg specs) -->
+    <nav class="bg-[#090d16] text-white grid grid-cols-4 pb-6 pt-3.5 text-center relative z-10 shadow-xl shrink-0">
       <button class="flex flex-col items-center justify-center gap-1.5 text-emerald-400 font-bold transition cursor-pointer">
         <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
         <span class="text-[10px] tracking-wide">Dashboard</span>
       </button>
       
       <button class="flex flex-col items-center justify-center gap-1.5 text-slate-400 hover:text-white transition cursor-pointer" onclick="window.location.href='/messages'">
-        <i data-lucide="message-square-code" class="w-5 h-5"></i>
+        <i data-lucide="message-square" class="w-5 h-5"></i>
         <span class="text-[10px] tracking-wide">Chat</span>
       </button>
       
@@ -133,15 +129,74 @@
 
   </div>
 
+  <!-- ======================================================== -->
+  <!-- MENTOR MODAL SYSTEM: ADD INTERN TO DIRECTORY OVERLAY     -->
+  <!-- ======================================================== -->
+  <div id="addInternModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white w-full max-w-sm rounded-3xl shadow-2xl border border-slate-100 overflow-hidden transform scale-95 transition-transform duration-300">
+      <header class="bg-[#228B22] text-white p-4 flex justify-between items-center">
+        <h3 class="font-bold text-lg flex items-center gap-2">
+          <i data-lucide="user-plus" class="w-5 h-5"></i>
+          <span>Assign Internship Track</span>
+        </h3>
+        <button id="closeModalBtn" class="text-white/80 hover:text-white cursor-pointer p-1">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </header>
+      
+      <form id="addInternForm" class="p-5 space-y-3 max-h-[550px] overflow-y-auto no-scrollbar">
+        <div>
+          <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Target Account Email</label>
+          <input type="email" id="internEmail" required class="w-full border border-slate-200 bg-slate-50 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#228B22]" placeholder="intern@example.com">
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Company Host Name</label>
+          <input type="text" id="compName" required class="w-full border border-slate-200 bg-slate-50 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#228B22]" placeholder="e.g. CodeAlpha">
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Start Date</label>
+            <input type="text" id="sDate" required class="w-full border border-slate-200 bg-slate-50 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-[#228B22]" placeholder="DD.MM.YYYY">
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">End Date</label>
+            <input type="text" id="eDate" required class="w-full border border-slate-200 bg-slate-50 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-[#228B22]" placeholder="DD.MM.YYYY">
+          </div>
+        </div>
+        <div class="grid grid-cols-3 gap-2">
+          <div>
+            <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Total Tasks</label>
+            <input type="number" id="totTask" value="4" class="w-full border border-slate-200 bg-slate-50 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#228B22]">
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Assigned</label>
+            <input type="number" id="asgnTask" value="2" class="w-full border border-slate-200 bg-slate-50 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#228B22]">
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Pending</label>
+            <input type="number" id="pendTask" value="2" class="w-full border border-slate-200 bg-slate-50 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#228B22]">
+          </div>
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Mentor Identifier Name</label>
+          <input type="text" id="mentName" required class="w-full border border-slate-200 bg-slate-50 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#228B22]" placeholder="e.g. Amir">
+        </div>
+        
+        <button type="submit" class="w-full mt-2 py-2.5 bg-[#228B22] hover:bg-emerald-700 text-white rounded-xl font-bold text-sm tracking-wide shadow-md transition-all cursor-pointer">
+          Deploy Track Profile
+        </button>
+      </form>
+    </div>
+  </div>
+
   <script>
-    // App Architecture State
+    // Application Global View State
     let appState = {
       zrole: 'intern',
       metricsList: [],
       activeIndex: 0
     };
 
-    // Grab authenticated metadata variables safely
     const urlParams = new URLSearchParams(window.location.search);
     let targetUserId = urlParams.get('id') || localStorage.getItem('userId');
 
@@ -158,18 +213,27 @@
     async function fetchDashboardData() {
       try {
         const response = await fetch(BACKEND_API_URL);
-        if (!response.ok) throw new Error("Could not parse payload from API server.");
+        if (!response.ok) throw new Error("Fault response returned by API connection.");
         
         const resData = await response.json();
         const data = resData.data || resData;
 
-        // Apply metadata info cleanly
+        // Apply metadata text layouts safely
         document.getElementById('userAvatar').src = data.picture || "https://collegenz.in/uploads/profilepic.jpg";
         document.getElementById('userEmailBadge').innerText = data.email || "session: active_user";
         
-        // Setup empty onboarding placeholder logic or parse arrays 
+        appState.zrole = data.zrole || 'intern';
+        
+        // Show/Hide Mentor Logic controls dynamically
+        if (appState.zrole === 'mentor') {
+          document.getElementById('mentorActionBtn').classList.remove('hidden');
+          document.getElementById('dashboardRoleTitle').innerText = "Mentor Workspace";
+        } else {
+          document.getElementById('dashboardRoleTitle').innerText = "Intern Workspace";
+        }
+
+        // Parse list profile array options safely
         if (!data.metricsList || data.metricsList.length === 0) {
-          appState.zrole = 'intern';
           appState.metricsList = [{
             companyName: "CollegenZ Workspace",
             status: "PENDING SETUP",
@@ -180,24 +244,20 @@
             noOfTask: 0,
             noOfCompletedTask: 0,
             noOfPendingTask: 0,
-            nameOfMentor: "System Admin"
+            nameOfMentor: "System Admin",
+            noOfStudents: 0, noOfTaskAssigned: 0, noOfTaskPending: 0
           }];
         } else {
-          appState.zrole = data.zrole || 'intern';
           appState.metricsList = data.metricsList;
         }
 
         appState.activeIndex = 0;
-
-        // Sync contextual header branding layouts
-        document.getElementById('dashboardRoleTitle').innerText = appState.zrole === 'intern' ? 'Intern Dashboard' : 'Mentor Dashboard';
-
         document.getElementById('loadingScreen').classList.add('hidden');
-        renderActiveCard();
+        renderCarouselTracks();
         
       } catch (err) {
         console.error(err);
-        showError("Backend connection error. Verify dashboard api setups.");
+        showError("Backend connection error. Verify dashboard metrics structure.");
       }
     }
 
@@ -209,179 +269,137 @@
       updateIcons();
     }
 
-    function renderActiveCard() {
-      if (appState.metricsList.length === 0) return;
-      
-      const current = appState.metricsList[appState.activeIndex];
+    function renderCarouselTracks() {
+      const track = document.getElementById('carouselTrack');
       const isIntern = appState.zrole === 'intern';
       
-      document.getElementById('companyNameText').innerText = current.companyName;
       document.getElementById('parallelTrackCount').innerText = `Active Tracks: ${appState.activeIndex + 1} of ${appState.metricsList.length}`;
-      
-      const badge = document.getElementById('statusBadge');
-      badge.innerText = `STATUS : ${current.status}`;
-      
-      if (current.status === 'ACTIVE') {
-        badge.className = "text-[9px] font-black tracking-widest px-2.5 py-0.5 rounded-full border bg-emerald-500/20 text-emerald-400 border-emerald-500/30";
-      } else {
-        badge.className = "text-[9px] font-black tracking-widest px-2.5 py-0.5 rounded-full border bg-amber-500/20 text-amber-300 border-amber-500/30";
-      }
 
-      let fieldsHTML = `
-        <div class="flex justify-between items-center border-b border-white/[0.04] pb-2">
-          <span class="text-slate-400 font-normal">Start Date :</span>
-          <span class="text-white font-medium">${current.startDate}</span>
-        </div>
-        <div class="flex justify-between items-center border-b border-white/[0.04] pb-2">
-          <span class="text-slate-400 font-normal">End Date :</span>
-          <span class="text-white font-medium">${current.endDate}</span>
-        </div>
-      `;
+      track.innerHTML = appState.metricsList.map((current) => {
+        const badgeClass = current.status === 'ACTIVE' 
+          ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" 
+          : "bg-amber-500/10 text-amber-600 border-amber-500/20";
 
-      if (isIntern) {
-        fieldsHTML += `
-          <div class="flex justify-between items-center">
-            <span class="text-slate-400 font-normal">No. of Tasks :</span>
-            <span class="text-indigo-400 font-bold text-base">${current.noOfTask}</span>
+        let contextualFields = `
+          <div class="flex justify-between items-center border-b border-slate-100 pb-2">
+            <span class="text-slate-400 font-medium text-xs">Start Date :</span>
+            <span class="text-slate-700 font-bold text-xs">${current.startDate}</span>
           </div>
-          <div class="flex justify-between items-center">
-            <span class="text-slate-400 font-normal">Completed Tasks :</span>
-            <span class="text-emerald-400 font-bold text-base">${current.noOfCompletedTask}</span>
-          </div>
-          <div class="flex justify-between items-center">
-            <span class="text-slate-400 font-normal">Pending Tasks :</span>
-            <span class="text-amber-400 font-bold text-base">${current.noOfPendingTask}</span>
-          </div>
-          <div class="flex justify-between items-center border-b border-white/[0.04] pb-2">
-            <span class="text-slate-400 font-normal">Deadline Date :</span>
-            <span class="text-white font-medium">${current.deadlineDate}</span>
-          </div>
-          <div class="flex justify-between items-center border-t border-white/10 pt-3 mt-2">
-            <span class="text-slate-400 font-normal">Assigned Mentor :</span>
-            <span class="text-indigo-300 underline underline-offset-4 font-extrabold tracking-wide">${current.nameOfMentor}</span>
+          <div class="flex justify-between items-center border-b border-slate-100 pb-2">
+            <span class="text-slate-400 font-medium text-xs">End Date :</span>
+            <span class="text-slate-700 font-bold text-xs">${current.endDate}</span>
           </div>
         `;
-      } else {
-        fieldsHTML += `
-          <div class="flex justify-between items-center text-indigo-300">
-            <span class="font-normal">Total Students :</span>
-            <span class="font-extrabold text-lg text-white">${current.noOfStudents}</span>
-          </div>
-          <div class="flex justify-between items-center">
-            <span class="text-slate-400 font-normal">Total Tasks :</span>
-            <span class="text-white font-medium">${current.noOfTask}</span>
-          </div>
-          <div class="flex justify-between items-center">
-            <span class="text-slate-400 font-normal">Tasks Assigned :</span>
-            <span class="text-indigo-400 font-bold text-base">${current.noOfTaskAssigned}</span>
-          </div>
-          <div class="flex justify-between items-center border-b border-white/[0.04] pb-2">
-            <span class="text-slate-400 font-normal">Tasks Pending :</span>
-            <span class="text-amber-400 font-bold text-base">${current.noOfTaskPending}</span>
-          </div>
-          <div class="flex justify-between items-center">
-            <span class="text-slate-400 font-normal">Deadline Date :</span>
-            <span class="text-white font-medium">${current.deadlineDate}</span>
+
+        if (isIntern) {
+          contextualFields += `
+            <div class="flex justify-between items-center">
+              <span class="text-slate-500 font-medium text-xs">No. of Tasks :</span>
+              <span class="text-indigo-600 font-black text-sm">${current.noOfTask}</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-slate-500 font-medium text-xs">Completed Tasks :</span>
+              <span class="text-emerald-600 font-black text-sm">${current.noOfCompletedTask}</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-slate-500 font-medium text-xs">Pending Tasks :</span>
+              <span class="text-amber-500 font-black text-sm">${current.noOfPendingTask}</span>
+            </div>
+            <div class="flex justify-between items-center border-b border-slate-100 pb-2">
+              <span class="text-slate-400 font-medium text-xs">Deadline Date :</span>
+              <span class="text-slate-700 font-bold text-xs">${current.deadlineDate || 'N/A'}</span>
+            </div>
+            <div class="flex justify-between items-center pt-2">
+              <span class="text-slate-400 font-medium text-xs">Assigned Mentor :</span>
+              <span class="text-slate-800 font-extrabold tracking-wide text-xs underline decoration-[#228B22] underline-offset-4">${current.nameOfMentor}</span>
+            </div>
+          `;
+        } else {
+          contextualFields += `
+            <div class="flex justify-between items-center text-indigo-600">
+              <span class="font-medium text-xs">Total Students :</span>
+              <span class="font-black text-sm">${current.noOfStudents || 0}</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-slate-500 font-medium text-xs">Total Track Tasks :</span>
+              <span class="text-slate-700 font-bold text-sm">${current.noOfTask || 0}</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-slate-500 font-medium text-xs">Tasks Assigned :</span>
+              <span class="text-indigo-600 font-bold text-sm">${current.noOfTaskAssigned || 0}</span>
+            </div>
+            <div class="flex justify-between items-center border-b border-slate-100 pb-2">
+              <span class="text-slate-500 font-medium text-xs">Tasks Pending :</span>
+              <span class="text-amber-600 font-bold text-sm">${current.noOfTaskPending || 0}</span>
+            </div>
+          `;
+        }
+
+        return `
+          <div class="w-full shrink-0 px-1">
+            <div class="bg-white border border-slate-100 rounded-3xl p-5 shadow-lg flex flex-col gap-4">
+              <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                <h3 class="text-base font-black text-slate-800 tracking-wide">${current.companyName}</h3>
+                <span class="text-[9px] font-black tracking-widest px-2.5 py-0.5 rounded-full border ${badgeClass}">
+                  ${current.status}
+                </span>
+              </div>
+              <div class="space-y-2.5">
+                ${contextualFields}
+              </div>
+              <div class="pt-2">
+                <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+                  <div class="bg-gradient-to-r from-emerald-500 to-[#228B22] h-full rounded-full" style="width: ${current.progress || 0}%"></div>
+                </div>
+              </div>
+            </div>
           </div>
         `;
-      }
+      }).join('');
 
-      fieldsHTML += `
-        <div class="pt-2">
-          <div class="w-full bg-black/40 rounded-full h-2.5 overflow-hidden border border-white/5">
-            <div 
-              class="bg-gradient-to-r from-emerald-500 to-teal-400 h-full rounded-full transition-all duration-500"
-              style="width: ${current.progress}%"
-            ></div>
-          </div>
-        </div>
-      `;
-
-      document.getElementById('cardFieldsContainer').innerHTML = fieldsHTML;
-      setupCarouselControls();
-      updateIcons();
+      updateCarouselPosition();
+      setupCarouselIndicators();
     }
 
-    function setupCarouselControls() {
+    function updateCarouselPosition() {
+      const track = document.getElementById('carouselTrack');
+      track.style.transform = `translateX(-${appState.activeIndex * 100}%)`;
+      document.getElementById('parallelTrackCount').innerText = `Active Tracks: ${appState.activeIndex + 1} of ${appState.metricsList.length}`;
+    }
+
+    function setupCarouselIndicators() {
       const controls = document.getElementById('carouselControls');
       const dotsContainer = document.getElementById('dotIndicators');
       
       if (appState.metricsList.length <= 1) {
-        controls.classList.add('invisible'); // Keep spatial distribution height matching metrics
+        controls.classList.add('hidden');
         return;
       }
 
-      controls.classList.remove('invisible');
+      controls.classList.remove('hidden');
       dotsContainer.innerHTML = appState.metricsList.map((_, idx) => `
-        <span class="h-2 rounded-full transition-all duration-300 ${idx === appState.activeIndex ? 'w-5 bg-emerald-500' : 'w-2 bg-slate-600'}"></span>
+        <span class="h-1.5 rounded-full transition-all duration-300 ${idx === appState.activeIndex ? 'w-4 bg-[#228B22]' : 'w-1.5 bg-slate-300'}"></span>
       `).join('');
     }
 
-    // Carousel Navigation Trigger Logic
-    function handleNextCard() {
-      if (appState.metricsList.length <= 1) return;
-      animateCardChange('next', () => {
-        appState.activeIndex = (appState.activeIndex + 1) % appState.metricsList.length;
-      });
-    }
+    // Navigation triggers
+    document.getElementById('nextBtn').addEventListener('click', () => {
+      if (appState.activeIndex < appState.metricsList.length - 1) {
+        appState.activeIndex++;
+        updateCarouselPosition();
+        setupCarouselIndicators();
+      }
+    });
 
-    function handlePrevCard() {
-      if (appState.metricsList.length <= 1) return;
-      animateCardChange('prev', () => {
-        appState.activeIndex = (appState.activeIndex - 1 + appState.metricsList.length) % appState.metricsList.length;
-      });
-    }
+    document.getElementById('prevBtn').addEventListener('click', () => {
+      if (appState.activeIndex > 0) {
+        appState.activeIndex--;
+        updateCarouselPosition();
+        setupCarouselIndicators();
+      }
+    });
 
-    document.getElementById('nextBtn').addEventListener('click', handleNextCard);
-    document.getElementById('prevBtn').addEventListener('click', handlePrevCard);
-
-    // Structural slide animation logic
-    function animateCardChange(direction, indexUpdateCallback) {
-      const card = document.getElementById('metricDisplayCard');
-      const slideOut = direction === 'next' ? '-translate-x-12' : 'translate-x-12';
-      
-      card.classList.remove('translate-x-0', 'opacity-100');
-      card.classList.add(slideOut, 'opacity-0');
-      
-      setTimeout(() => {
-        indexUpdateCallback();
-        renderActiveCard();
-        card.classList.remove(slideOut, 'opacity-0');
-        card.classList.add('translate-x-0', 'opacity-100');
-      }, 200);
-    }
-
-    // ----------------------------------------------------
-    // MOBILE SWIPE DETECTOR IMPLEMENTATION
-    // ----------------------------------------------------
+    // Mobile swipe triggers
     let touchStartX = 0;
     let touchEndX = 0;
-    const swipeArena = document.getElementById('swipeArena');
-
-    swipeArena.addEventListener('touchstart', (e) => {
-      touchStartX = e.changedTouches[0].screenX;
-    }, { passive: true });
-
-    swipeArena.addEventListener('touchend', (e) => {
-      touchEndX = e.changedTouches[0].screenX;
-      handleSwipeGesture();
-    }, { passive: true });
-
-    function handleSwipeGesture() {
-      const swipeThreshold = 50; // Required swipe distance in pixels
-      if (touchStartX - touchEndX > swipeThreshold) {
-        // Swiped Left -> Load Next Content Profile
-        handleNextCard();
-      } else if (touchEndX - touchStartX > swipeThreshold) {
-        // Swiped Right -> Load Previous Profile Track
-        handlePrevCard();
-      }
-    }
-
-    window.addEventListener('DOMContentLoaded', () => {
-      updateIcons();
-      fetchDashboardData();
-    });
-  </script>
-</body>
-</html>
+    const swipeArena = document.getElementById('swipeArena')
