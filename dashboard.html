@@ -7,127 +7,141 @@
   <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <style>
-    /* Smooth transition for sliding/switching parallel cards */
+    /* Smooth transitions for carousel card switches */
     .fade-transition {
-      transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
+      transition: opacity 0.25s ease-in-out, transform 0.25s ease-in-out;
     }
-    /* Dynamic blur background fixes */
+    
+    /* Custom scrollbar hiding for clean workspace view */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    /* Glassmorphism that pulls background vibrancy forward */
     .glass-card {
-      background: linear-gradient(180deg, rgba(255, 255, 255, 0.10) 0%, rgba(255, 255, 255, 0.03) 100%);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.07) 0%, rgba(255, 255, 255, 0.02) 100%);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
     }
   </style>
 </head>
-<body class="min-h-screen bg-gradient-to-tr from-slate-900 via-indigo-950 to-slate-900 text-white flex flex-col items-center justify-center p-4 font-sans antialiased">
+<body class="min-h-screen bg-[#f4f6f9] text-slate-800 flex flex-col items-center justify-center p-0 sm:p-4 font-sans antialiased selection:bg-indigo-500 selection:text-white">
 
-  <div class="w-full max-w-sm bg-slate-950/40 border border-white/10 rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col h-[780px] relative backdrop-blur-2xl">
+  <div class="w-full max-w-md bg-white border border-slate-200/80 sm:rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col h-screen sm:h-[820px] relative">
     
-    <div id="loadingScreen" class="absolute inset-0 bg-slate-950/95 z-50 flex flex-col items-center justify-center gap-3 rounded-[2.5rem]">
-      <i data-lucide="loader-2" class="animate-spin text-indigo-500 w-10 h-10"></i>
-      <p class="text-sm text-slate-400 font-medium">Fetching Internship Portals...</p>
+    <div id="loadingScreen" class="absolute inset-0 bg-white z-50 flex flex-col items-center justify-center gap-3">
+      <i data-lucide="loader-2" class="animate-spin text-emerald-500 w-10 h-10"></i>
+      <p class="text-sm text-slate-500 font-medium tracking-wide">Syncing Workspace Profiles...</p>
     </div>
 
-    <div id="errorScreen" class="absolute inset-0 bg-slate-950/95 z-50 hidden flex flex-col items-center justify-center px-6 text-center gap-4 rounded-[2.5rem]">
+    <div id="errorScreen" class="absolute inset-0 bg-white z-50 hidden flex flex-col items-center justify-center px-6 text-center gap-4">
       <i data-lucide="alert-circle" class="text-rose-500 w-12 h-12"></i>
-      <p id="errorMessage" class="text-sm text-slate-300 font-medium">Failed to load dashboards.</p>
+      <p id="errorMessage" class="text-sm text-slate-600 font-medium">Failed to establish connection context.</p>
     </div>
 
-    <header class="px-6 pt-6 pb-3 flex justify-between items-center border-b border-white/5">
+    <header class="px-5 pt-5 pb-4 flex justify-between items-center bg-[#228B22] text-white shadow-sm shrink-0">
       <div class="flex flex-col">
-        <h1 id="appLogoTitle" class="text-xl font-bold tracking-tight text-indigo-400">ZIntern</h1>
-        <span id="userEmailBadge" class="text-[9px] text-slate-400 max-w-[180px] truncate mt-0.5">Loading account session...</span>
+        <h1 id="appLogoTitle" class="text-2xl font-black tracking-tight flex items-center gap-1.5">CollegenZ</h1>
+        <span id="userEmailBadge" class="text-[10px] text-emerald-100/80 max-w-[200px] truncate font-medium mt-0.5">session: active_user</span>
       </div>
-      <div class="flex items-center gap-4 text-slate-300">
-        <button class="hover:text-white transition cursor-pointer p-1">
-          <i data-lucide="bell" class="w-5 h-5"></i>
+      <div class="flex items-center gap-3.5">
+        <button class="hover:opacity-80 transition cursor-pointer p-1 relative">
+          <i data-lucide="bell" class="w-5.5 h-5.5"></i>
+          <span class="absolute top-1 right-1 w-2 h-2 bg-rose-500 rounded-full"></span>
         </button>
         <img 
           id="userAvatar"
           src="https://collegenz.in/uploads/profilepic.jpg" 
-          alt="Profile" 
-          class="w-8 h-8 rounded-full object-cover border border-white/20 shadow-md"
+          alt="Profile Identity Container" 
+          class="w-9 h-9 rounded-full object-cover border-2 border-white/20 shadow-sm"
         />
       </div>
     </header>
 
-    <div class="px-6 py-3 flex justify-between items-center bg-white/[0.01]">
+    <div class="px-5 py-3.5 flex justify-between items-center bg-slate-50 border-b border-slate-100 shrink-0">
       <div>
-        <h2 id="dashboardRoleTitle" class="text-base font-semibold text-slate-200">Intern Dashboard</h2>
-        <p id="parallelTrackCount" class="text-[11px] text-indigo-300 font-medium mt-0.5">Active Tracks: 0 of 0</p>
+        <h2 id="dashboardRoleTitle" class="text-sm font-bold text-slate-700 uppercase tracking-wider">Intern Dashboard</h2>
+        <p id="parallelTrackCount" class="text-xs text-indigo-600 font-semibold mt-0.5">Active Tracks: 0 of 0</p>
       </div>
-      <button class="text-slate-400 hover:text-white cursor-pointer p-1">
-        <i data-lucide="more-vertical" class="w-5 h-5"></i>
+      <button class="text-slate-400 hover:text-slate-600 transition cursor-pointer p-1">
+        <i data-lucide="sliders-horizontal" class="w-4.5 h-4.5"></i>
       </button>
     </div>
 
-    <main class="flex-1 px-5 py-4 overflow-y-auto flex flex-col justify-start">
-      <div class="w-full relative mt-2">
+    <main class="flex-1 px-4 py-5 overflow-y-auto no-scrollbar flex flex-col justify-center bg-gradient-to-b from-indigo-950 via-slate-900 to-indigo-950 relative">
+      
+      <div id="swipeArena" class="w-full relative touch-pan-y cursor-grab active:cursor-grabbing">
         
-        <div id="metricDisplayCard" class="w-full glass-card border border-white/15 rounded-2xl p-5 shadow-2xl fade-transition">
-          <div class="flex justify-between items-center mb-4 border-b border-white/5 pb-3">
-            <h3 id="companyNameText" class="text-base font-bold tracking-wide text-white">Loading...</h3>
-            <span id="statusBadge" class="text-[9px] font-bold tracking-widest px-2.5 py-0.5 rounded-full border bg-emerald-500/20 text-emerald-400 border-emerald-500/30">
-              STATUS : ACTIVE
+        <div id="metricDisplayCard" class="w-full glass-card border border-white/10 rounded-3xl p-6 shadow-2xl fade-transition transform translate-x-0 opacity-100">
+          
+          <div class="flex justify-between items-center mb-5 border-b border-white/5 pb-3.5">
+            <h3 id="companyNameText" class="text-lg font-extrabold tracking-wide text-white">Loading Tracks...</h3>
+            <span id="statusBadge" class="text-[9px] font-black tracking-widest px-3 py-1 rounded-full border">
+              STATUS
             </span>
           </div>
 
-          <div id="cardFieldsContainer" class="space-y-3 text-sm font-medium text-slate-300">
+          <div id="cardFieldsContainer" class="space-y-3.5 text-sm font-medium text-slate-200">
             </div>
         </div>
 
-        <div id="carouselControls" class="flex justify-center gap-6 mt-5 items-center hidden">
-          <button id="prevBtn" class="p-2 rounded-full bg-white/5 border border-white/10 text-slate-300 hover:text-white hover:bg-white/10 transition cursor-pointer shadow-md">
-            <i data-lucide="chevron-left" class="w-4.5 h-4.5"></i>
-          </button>
-          
-          <div id="dotIndicators" class="flex gap-1.5 items-center"></div>
-
-          <button id="nextBtn" class="p-2 rounded-full bg-white/5 border border-white/10 text-slate-300 hover:text-white hover:bg-white/10 transition cursor-pointer shadow-md">
-            <i data-lucide="chevron-right" class="w-4.5 h-4.5"></i>
-          </button>
-        </div>
-
       </div>
+
+      <div id="carouselControls" class="flex justify-between items-center mt-6 px-2">
+        <button id="prevBtn" class="p-2.5 rounded-xl bg-white/5 border border-white/10 text-slate-300 hover:text-white hover:bg-white/10 transition cursor-pointer shadow-md">
+          <i data-lucide="chevron-left" class="w-5 h-5"></i>
+        </button>
+        
+        <div id="dotIndicators" class="flex gap-2 items-center"></div>
+
+        <button id="nextBtn" class="p-2.5 rounded-xl bg-white/5 border border-white/10 text-slate-300 hover:text-white hover:bg-white/10 transition cursor-pointer shadow-md">
+          <i data-lucide="chevron-right" class="w-5 h-5"></i>
+        </button>
+      </div>
+
     </main>
 
-    <div class="text-center py-2.5 text-[11px] tracking-wide text-slate-400 bg-slate-950/20 border-t border-white/5">
-      Socialize with our <span class="font-extrabold text-white tracking-normal">CollegenZ</span>
+    <div class="text-center py-2 text-[11px] font-medium tracking-wide text-slate-400 bg-slate-50 border-t border-slate-100 shrink-0">
+      Socialize with our <span class="font-extrabold text-[#228B22]">CollegenZ</span>
     </div>
 
-    <nav class="bg-slate-950/80 border-t border-white/10 grid grid-cols-4 pb-5 pt-2.5 text-center relative z-10 backdrop-blur-lg">
-      <button class="flex flex-col items-center justify-center gap-1 text-indigo-400 font-bold transition cursor-pointer">
-        <i data-lucide="bar-chart-2" class="w-5 h-5"></i>
-        <span class="text-[10px]">Dashboard</span>
+    <nav class="bg-slate-950 text-white grid grid-cols-4 pb-6 pt-3 text-center relative z-10 shadow-xl shrink-0">
+      <button class="flex flex-col items-center justify-center gap-1.5 text-emerald-400 font-bold transition cursor-pointer">
+        <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
+        <span class="text-[10px] tracking-wide">Dashboard</span>
       </button>
       
-      <button class="flex flex-col items-center justify-center gap-1 text-slate-400 hover:text-white transition cursor-pointer" onclick="window.location.href='/messages'">
-        <i data-lucide="message-circle" class="w-5 h-5"></i>
-        <span class="text-[10px]">Chat</span>
+      <button class="flex flex-col items-center justify-center gap-1.5 text-slate-400 hover:text-white transition cursor-pointer" onclick="window.location.href='/messages'">
+        <i data-lucide="message-square-code" class="w-5 h-5"></i>
+        <span class="text-[10px] tracking-wide">Chat</span>
       </button>
       
-      <button class="flex flex-col items-center justify-center gap-1 text-slate-400 hover:text-white transition cursor-pointer">
-        <i data-lucide="file-text" class="w-5 h-5"></i>
-        <span class="text-[10px]">Task</span>
+      <button class="flex flex-col items-center justify-center gap-1.5 text-slate-400 hover:text-white transition cursor-pointer">
+        <i data-lucide="check-square" class="w-5 h-5"></i>
+        <span class="text-[10px] tracking-wide">Tasks</span>
       </button>
       
-      <button class="flex flex-col items-center justify-center gap-1 text-slate-400 hover:text-white transition cursor-pointer">
+      <button class="flex flex-col items-center justify-center gap-1.5 text-slate-400 hover:text-white transition cursor-pointer">
         <i data-lucide="video" class="w-5 h-5"></i>
-        <span class="text-[10px] leading-tight">Meeting/<br/>Webinar</span>
+        <span class="text-[10px] tracking-wide leading-tight">Meetings</span>
       </button>
     </nav>
 
   </div>
 
   <script>
-    // 1. Initialize Application State Object
+    // App Architecture State
     let appState = {
       zrole: 'intern',
       metricsList: [],
       activeIndex: 0
     };
 
-    // 2. Capture the correct user identifier token context
+    // Grab authenticated metadata variables safely
     const urlParams = new URLSearchParams(window.location.search);
     let targetUserId = urlParams.get('id') || localStorage.getItem('userId');
 
@@ -144,16 +158,16 @@
     async function fetchDashboardData() {
       try {
         const response = await fetch(BACKEND_API_URL);
-        if (!response.ok) throw new Error("Could not fetch profile properties from DB server.");
+        if (!response.ok) throw new Error("Could not parse payload from API server.");
         
         const resData = await response.json();
         const data = resData.data || resData;
 
-        // Apply metadata info safely
+        // Apply metadata info cleanly
         document.getElementById('userAvatar').src = data.picture || "https://collegenz.in/uploads/profilepic.jpg";
         document.getElementById('userEmailBadge').innerText = data.email || "session: active_user";
         
-        // Dynamic structural fallback system instead of hard blocking errors 
+        // Setup empty onboarding placeholder logic or parse arrays 
         if (!data.metricsList || data.metricsList.length === 0) {
           appState.zrole = 'intern';
           appState.metricsList = [{
@@ -162,7 +176,7 @@
             startDate: "Awaiting approval",
             endDate: "Awaiting approval",
             deadlineDate: "N/A",
-            progress: 10,
+            progress: 15,
             noOfTask: 0,
             noOfCompletedTask: 0,
             noOfPendingTask: 0,
@@ -175,17 +189,15 @@
 
         appState.activeIndex = 0;
 
-        // Header role text updates
-        document.getElementById('appLogoTitle').innerText = appState.zrole === 'intern' ? 'ZIntern' : 'ZMentor';
+        // Sync contextual header branding layouts
         document.getElementById('dashboardRoleTitle').innerText = appState.zrole === 'intern' ? 'Intern Dashboard' : 'Mentor Dashboard';
 
-        // Dismiss rendering loader layout layer
         document.getElementById('loadingScreen').classList.add('hidden');
         renderActiveCard();
         
       } catch (err) {
-        console.error("🔥 UI Data Fetch Catch Stack Error:", err);
-        showError("Backend connection error. Verify that your Express API route mounts on /api/dashboard/:id");
+        console.error(err);
+        showError("Backend connection error. Verify dashboard api setups.");
       }
     }
 
@@ -210,75 +222,75 @@
       badge.innerText = `STATUS : ${current.status}`;
       
       if (current.status === 'ACTIVE') {
-        badge.className = "text-[9px] font-bold tracking-widest px-2.5 py-0.5 rounded-full border bg-emerald-500/15 text-emerald-400 border-emerald-500/30";
+        badge.className = "text-[9px] font-black tracking-widest px-2.5 py-0.5 rounded-full border bg-emerald-500/20 text-emerald-400 border-emerald-500/30";
       } else {
-        badge.className = "text-[9px] font-bold tracking-widest px-2.5 py-0.5 rounded-full border bg-amber-500/15 text-amber-400 border-amber-500/30";
+        badge.className = "text-[9px] font-black tracking-widest px-2.5 py-0.5 rounded-full border bg-amber-500/20 text-amber-300 border-amber-500/30";
       }
 
       let fieldsHTML = `
-        <div class="flex justify-between items-center border-b border-white/[0.02] pb-1.5">
+        <div class="flex justify-between items-center border-b border-white/[0.04] pb-2">
           <span class="text-slate-400 font-normal">Start Date :</span>
-          <span class="text-slate-100">${current.startDate} 🕒</span>
+          <span class="text-white font-medium">${current.startDate}</span>
         </div>
-        <div class="flex justify-between items-center border-b border-white/[0.02] pb-1.5">
+        <div class="flex justify-between items-center border-b border-white/[0.04] pb-2">
           <span class="text-slate-400 font-normal">End Date :</span>
-          <span class="text-slate-100">${current.endDate} 🕒</span>
+          <span class="text-white font-medium">${current.endDate}</span>
         </div>
       `;
 
       if (isIntern) {
         fieldsHTML += `
           <div class="flex justify-between items-center">
-            <span class="text-slate-400 font-normal">No. of Task :</span>
-            <span class="text-indigo-400 font-semibold text-base">${current.noOfTask}</span>
+            <span class="text-slate-400 font-normal">No. of Tasks :</span>
+            <span class="text-indigo-400 font-bold text-base">${current.noOfTask}</span>
           </div>
           <div class="flex justify-between items-center">
-            <span class="text-slate-400 font-normal">No. of Completed task :</span>
-            <span class="text-emerald-400 font-semibold text-base">${current.noOfCompletedTask}</span>
+            <span class="text-slate-400 font-normal">Completed Tasks :</span>
+            <span class="text-emerald-400 font-bold text-base">${current.noOfCompletedTask}</span>
           </div>
           <div class="flex justify-between items-center">
-            <span class="text-slate-400 font-normal">No. of Pending task :</span>
-            <span class="text-amber-400 font-semibold text-base">${current.noOfPendingTask}</span>
+            <span class="text-slate-400 font-normal">Pending Tasks :</span>
+            <span class="text-amber-400 font-bold text-base">${current.noOfPendingTask}</span>
           </div>
-          <div class="flex justify-between items-center border-b border-white/[0.02] pb-1.5">
+          <div class="flex justify-between items-center border-b border-white/[0.04] pb-2">
             <span class="text-slate-400 font-normal">Deadline Date :</span>
-            <span class="text-slate-100">${current.deadlineDate}</span>
+            <span class="text-white font-medium">${current.deadlineDate}</span>
           </div>
-          <div class="flex justify-between items-center border-t border-white/10 pt-2.5 mt-2">
-            <span class="text-slate-400 font-normal">Name of Mentor :</span>
-            <span class="text-indigo-300 underline underline-offset-4 font-bold tracking-wide">${current.nameOfMentor}</span>
+          <div class="flex justify-between items-center border-t border-white/10 pt-3 mt-2">
+            <span class="text-slate-400 font-normal">Assigned Mentor :</span>
+            <span class="text-indigo-300 underline underline-offset-4 font-extrabold tracking-wide">${current.nameOfMentor}</span>
           </div>
         `;
       } else {
         fieldsHTML += `
           <div class="flex justify-between items-center text-indigo-300">
-            <span class="font-normal">No. of Students :</span>
-            <span class="font-bold text-lg">${current.noOfStudents}</span>
+            <span class="font-normal">Total Students :</span>
+            <span class="font-extrabold text-lg text-white">${current.noOfStudents}</span>
           </div>
           <div class="flex justify-between items-center">
-            <span class="text-slate-400 font-normal">No. of Task :</span>
-            <span class="text-slate-100 font-medium">${current.noOfTask}</span>
+            <span class="text-slate-400 font-normal">Total Tasks :</span>
+            <span class="text-white font-medium">${current.noOfTask}</span>
           </div>
           <div class="flex justify-between items-center">
-            <span class="text-slate-400 font-normal">No. of Task Assigned :</span>
-            <span class="text-indigo-400 font-semibold text-base">${current.noOfTaskAssigned}</span>
+            <span class="text-slate-400 font-normal">Tasks Assigned :</span>
+            <span class="text-indigo-400 font-bold text-base">${current.noOfTaskAssigned}</span>
           </div>
-          <div class="flex justify-between items-center border-b border-white/[0.02] pb-1.5">
-            <span class="text-slate-400 font-normal">No. of Task Pending :</span>
-            <span class="text-amber-400 font-semibold text-base">${current.noOfTaskPending}</span>
+          <div class="flex justify-between items-center border-b border-white/[0.04] pb-2">
+            <span class="text-slate-400 font-normal">Tasks Pending :</span>
+            <span class="text-amber-400 font-bold text-base">${current.noOfTaskPending}</span>
           </div>
           <div class="flex justify-between items-center">
             <span class="text-slate-400 font-normal">Deadline Date :</span>
-            <span class="text-slate-100">${current.deadlineDate}</span>
+            <span class="text-white font-medium">${current.deadlineDate}</span>
           </div>
         `;
       }
 
       fieldsHTML += `
-        <div class="pt-3">
-          <div class="w-full bg-slate-950/60 rounded-full h-2 overflow-hidden border border-white/5">
+        <div class="pt-2">
+          <div class="w-full bg-black/40 rounded-full h-2.5 overflow-hidden border border-white/5">
             <div 
-              class="bg-gradient-to-r from-indigo-500 to-purple-500 h-full rounded-full transition-all duration-500"
+              class="bg-gradient-to-r from-emerald-500 to-teal-400 h-full rounded-full transition-all duration-500"
               style="width: ${current.progress}%"
             ></div>
           </div>
@@ -295,41 +307,75 @@
       const dotsContainer = document.getElementById('dotIndicators');
       
       if (appState.metricsList.length <= 1) {
-        controls.classList.add('hidden');
+        controls.classList.add('invisible'); // Keep spatial distribution height matching metrics
         return;
       }
 
-      controls.classList.remove('hidden');
+      controls.classList.remove('invisible');
       dotsContainer.innerHTML = appState.metricsList.map((_, idx) => `
-        <span class="h-1.5 rounded-full transition-all duration-300 ${idx === appState.activeIndex ? 'w-4 bg-indigo-500' : 'w-1.5 bg-slate-600'}"></span>
+        <span class="h-2 rounded-full transition-all duration-300 ${idx === appState.activeIndex ? 'w-5 bg-emerald-500' : 'w-2 bg-slate-600'}"></span>
       `).join('');
     }
 
-    document.getElementById('nextBtn').addEventListener('click', () => {
-      if (appState.metricsList.length === 0) return;
-      animateCardChange(() => {
+    // Carousel Navigation Trigger Logic
+    function handleNextCard() {
+      if (appState.metricsList.length <= 1) return;
+      animateCardChange('next', () => {
         appState.activeIndex = (appState.activeIndex + 1) % appState.metricsList.length;
       });
-    });
+    }
 
-    document.getElementById('prevBtn').addEventListener('click', () => {
-      if (appState.metricsList.length === 0) return;
-      animateCardChange(() => {
+    function handlePrevCard() {
+      if (appState.metricsList.length <= 1) return;
+      animateCardChange('prev', () => {
         appState.activeIndex = (appState.activeIndex - 1 + appState.metricsList.length) % appState.metricsList.length;
       });
-    });
+    }
 
-    function animateCardChange(indexUpdateCallback) {
+    document.getElementById('nextBtn').addEventListener('click', handleNextCard);
+    document.getElementById('prevBtn').addEventListener('click', handlePrevCard);
+
+    // Structural slide animation logic
+    function animateCardChange(direction, indexUpdateCallback) {
       const card = document.getElementById('metricDisplayCard');
-      card.style.opacity = '0';
-      card.style.transform = 'scale(0.98)';
+      const slideOut = direction === 'next' ? '-translate-x-12' : 'translate-x-12';
+      
+      card.classList.remove('translate-x-0', 'opacity-100');
+      card.classList.add(slideOut, 'opacity-0');
       
       setTimeout(() => {
         indexUpdateCallback();
         renderActiveCard();
-        card.style.opacity = '1';
-        card.style.transform = 'scale(1)';
-      }, 150);
+        card.classList.remove(slideOut, 'opacity-0');
+        card.classList.add('translate-x-0', 'opacity-100');
+      }, 200);
+    }
+
+    // ----------------------------------------------------
+    // MOBILE SWIPE DETECTOR IMPLEMENTATION
+    // ----------------------------------------------------
+    let touchStartX = 0;
+    let touchEndX = 0;
+    const swipeArena = document.getElementById('swipeArena');
+
+    swipeArena.addEventListener('touchstart', (e) => {
+      touchStartX = e.changedTouches[0].screenX;
+    }, { passive: true });
+
+    swipeArena.addEventListener('touchend', (e) => {
+      touchEndX = e.changedTouches[0].screenX;
+      handleSwipeGesture();
+    }, { passive: true });
+
+    function handleSwipeGesture() {
+      const swipeThreshold = 50; // Required swipe distance in pixels
+      if (touchStartX - touchEndX > swipeThreshold) {
+        // Swiped Left -> Load Next Content Profile
+        handleNextCard();
+      } else if (touchEndX - touchStartX > swipeThreshold) {
+        // Swiped Right -> Load Previous Profile Track
+        handlePrevCard();
+      }
     }
 
     window.addEventListener('DOMContentLoaded', () => {
