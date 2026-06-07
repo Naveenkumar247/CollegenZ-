@@ -261,6 +261,18 @@ app.use(async (req, res, next) => {
   next();
 });
 
+
+// Updated Protected Route serving your premium glassmorphic layout
+app.get("/dashboard", (req, res) => {
+  // 1. Enforce login safety boundaries
+  if (!req.user) {
+    return res.redirect("/internship-login.html");
+  }
+  res.sendFile(path.join(__dirname, "dashboard.html"));
+});
+
+
+
 async function isFriend(req, res, next) {
   try {
     // 🔒 Check login FIRST
@@ -721,13 +733,6 @@ app.get("/posts/filter", async (req, res) => {
 });
 
 
-// Protected Route
-app.get("/dashboard", (req, res) => {
-  if (!req.user) {
-    return res.status(401).send("Unauthorized. Please log in.");
-  }
-  res.send(`Welcome ${req.user.email}`);
-});
 
 // Logout
 app.get("/logout", (req, res) => {
