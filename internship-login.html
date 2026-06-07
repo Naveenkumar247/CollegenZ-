@@ -3,96 +3,94 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CollegenZ - Internship Portal Gateway</title>
+  <title>CollegenZ - Internship Portal Login</title>
   <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
 </head>
-<body class="min-h-screen bg-gradient-to-tr from-slate-900 via-indigo-950 to-slate-900 text-white flex flex-col items-center justify-center p-4 font-sans">
+<body class="min-h-screen bg-gradient-to-tr from-slate-900 via-indigo-950 to-slate-900 text-white flex flex-col items-center justify-center p-4 font-sans antialiased">
 
-  <div class="w-full max-w-sm bg-slate-950/40 border border-white/10 rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col h-[760px] justify-between p-6 relative backdrop-blur-2xl">
+  <div class="w-full max-w-sm bg-slate-950/40 border border-white/10 rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col h-[760px] justify-between p-6 backdrop-blur-2xl">
     
-    <div class="text-center pt-8">
+    <!-- Header Title Area -->
+    <div class="text-center pt-6">
       <h1 class="text-3xl font-black tracking-tight text-indigo-400">CollegenZ</h1>
       <p class="text-xs text-slate-400 tracking-widest uppercase mt-1">Internship Ecosystem</p>
     </div>
 
-    <div class="bg-white/5 border border-white/10 rounded-2xl p-6 text-center shadow-xl backdrop-blur-md my-auto">
-      <div id="statusContainer" class="space-y-4">
-        <div class="flex justify-center">
-          <i data-lucide="shield-check" class="text-indigo-400 w-12 h-12 animate-pulse"></i>
+    <!-- Main Entry Form -->
+    <div class="bg-white/5 border border-white/10 rounded-2xl p-5 shadow-xl backdrop-blur-md my-auto">
+      <h2 class="text-lg font-bold mb-4 text-center text-slate-200">Sign In to Portal</h2>
+      
+      <div id="errorBanner" class="hidden text-xs bg-rose-500/20 text-rose-400 border border-rose-500/30 p-2.5 rounded-xl mb-3 text-center font-medium"></div>
+
+      <form id="loginForm" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Email Address</label>
+          <input type="email" id="email" required class="w-full bg-slate-950/50 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-indigo-500 transition-colors" placeholder="Enter your email">
         </div>
-        <h2 class="text-lg font-bold">Verifying Portal Access</h2>
-        <p class="text-xs text-slate-400 px-4">Reading your security token credentials to load the correct workspace management view...</p>
+        
+        <div>
+          <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Password</label>
+          <input type="password" id="password" required class="w-full bg-slate-950/50 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-indigo-500 transition-colors" placeholder="••••••••">
+        </div>
+
+        <button type="submit" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-semibold text-sm tracking-wide shadow-lg transition-all cursor-pointer flex justify-center items-center gap-2">
+          <span>Access Workspace</span>
+        </button>
+      </form>
+
+      <!-- Divider line -->
+      <div class="relative my-5 text-center">
+        <hr class="border-white/10">
+        <span class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-slate-900 px-3 text-[10px] uppercase font-bold tracking-widest text-slate-500">OR</span>
       </div>
 
-      <button id="actionBtn" class="hidden mt-6 w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-semibold text-sm tracking-wide shadow-lg cursor-pointer transition-all">
-        Return to Common Auth
-      </button>
+      <!-- Google Button -->
+      <a href="/api/auth/google?origin=internship" class="w-full py-2.5 bg-white text-slate-950 hover:bg-slate-100 rounded-xl font-bold text-xs tracking-wide shadow-md transition-all flex items-center justify-center gap-2">
+        <svg class="w-4 h-4" viewBox="0 0 24 24"><path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05"/><path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335"/></svg>
+        <span>Continue with Google</span>
+      </a>
+
+      <p class="text-xs text-center text-slate-400 mt-4">
+        New to portal? <a href="/internship-signup.html" class="text-indigo-400 font-bold hover:underline">Create Account</a>
+      </p>
     </div>
 
-    <div class="text-center text-[11px] tracking-wide text-slate-400 pb-4">
-      Powered by <span class="font-extrabold text-white">CollegenZ Workspace</span>
+    <div class="text-center text-[11px] tracking-wide text-slate-500 pb-2">
+      Powered by <span class="font-bold text-slate-400">CollegenZ Workspace</span>
     </div>
-
   </div>
 
   <script>
-    // Automatically trigger checking once common authentication processes exit
-    async function authorizedGatewayRedirect() {
-      lucide.createIcons();
-      const statusContainer = document.getElementById('statusContainer');
-      const actionBtn = document.getElementById('actionBtn');
+    document.getElementById("loginForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const banner = document.getElementById("errorBanner");
+      banner.classList.add("hidden");
 
       try {
-        // Fetch session authentication validation from the gateway route
-        const response = await fetch('/api/dashboard/gateway');
-        
-        if (!response.ok) {
-          throw new Error("No active session tokens discovered.");
-        }
+        const response = await fetch("/api/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: document.getElementById("email").value,
+            password: document.getElementById("password").value,
+            origin: "internship" // Enforces explicit redirect boundary matching instructions
+          })
+        });
 
         const data = await response.json();
-
-        if (data.zrole === 'user') {
-          // User doesn't have an intern or mentor profile attached
-          statusContainer.innerHTML = `
-            <i data-lucide="lock" class="text-rose-400 w-12 h-12 mx-auto mb-2"></i>
-            <h2 class="text-lg font-bold text-rose-400">Access Denied</h2>
-            <p class="text-xs text-slate-400">This account is currently configured as a standard user. You need an assigned Intern or Mentor role to view this workspace.</p>
-          `;
-          actionBtn.innerText = "Request Workspace Access";
-          actionBtn.classList.remove('hidden');
-          lucide.createIcons();
-          return;
-        }
-
-        // Success: Redirect smoothly to their dashboard path
-        statusContainer.innerHTML = `
-          <i data-lucide="loader-2" class="text-emerald-400 w-12 h-12 animate-spin mx-auto mb-2"></i>
-          <h2 class="text-lg font-bold text-emerald-400">Access Granted!</h2>
-          <p class="text-xs text-slate-400">Redirecting to your active dashboard tracks...</p>
-        `;
-        lucide.createIcons();
-
-        setTimeout(() => {
+        if (data.success) {
           window.location.href = data.redirectUrl;
-        }, 1200);
-
+        } else {
+          banner.innerText = data.message || "Failed authentication.";
+          banner.classList.remove("hidden");
+        }
       } catch (err) {
-        statusContainer.innerHTML = `
-          <i data-lucide="alert-triangle" class="text-amber-400 w-12 h-12 mx-auto mb-2"></i>
-          <h2 class="text-lg font-bold text-amber-400">Session Expired</h2>
-          <p class="text-xs text-slate-400">We couldn't verify an active login session. Please complete the main authentication process first.</p>
-        `;
-        actionBtn.classList.remove('hidden');
-        actionBtn.addEventListener('click', () => {
-          window.location.href = '/login'; // Points to your primary common authentication endpoint
-        });
-        lucide.createIcons();
+        banner.innerText = "Connection error. Try again.";
+        banner.classList.remove("hidden");
       }
-    }
-
-    window.addEventListener('DOMContentLoaded', authorizedGatewayRedirect);
+    });
+    window.addEventListener('DOMContentLoaded', () => lucide.createIcons());
   </script>
 </body>
 </html>
