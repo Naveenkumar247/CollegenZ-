@@ -10,7 +10,7 @@ const { sendLoginAlert } = require("../services/mailService");
 // Enforce strict routing destinations based on login origin
 const getStrictRedirectTarget = (origin, userId) => {
   if (origin === "internship") {
-    return `/dashboard.html?id=${userId}`; // Bypasses gateway, goes directly to dashboard view
+    return `/dashboard?id=${userId}`; // Bypasses gateway, goes directly to dashboard view
   }
   return "/"; // Standard platform landing page
 };
