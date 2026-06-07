@@ -19,16 +19,20 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: "*" } });
 
-// Database Models
+// --------------------
+// DATABASE MODELS
+// --------------------
 const genz = require("./models/primary/User");
 const Post = require("./models/primary/Post");
 const Notification = require("./models/primary/Notification");
 const Message = require("./models/primary/Message");
 const Certificate = require("./models/secondary/Certificate");
 
-// Routes & Middlewares
-const passportroutes = require("./config/passport");
-const currentUser = require("./middlewares/currentUser");
+// --------------------
+// ROUTE IMPORTS
+// --------------------
+const collegenzCertificateRoutes = require("./routes/collegenz.certificate.routes.js");
+const adminRoutes = require("./routes/admin.certificate.routes.js");
 const profileRoutes = require("./routes/profile.routes");
 const postActions = require("./routes/postActions");
 const postsRoute = require("./routes/posts");
@@ -38,10 +42,15 @@ const followRoutes = require("./routes/follows");
 const newsRoutes = require("./routes/news");
 const chatFriendsRouter = require("./routes/chatfriends"); 
 const dashboardRoutes = require('./routes/dashboard');
-const collegenzCertificateRoutes = require("./routes/collegenz.certificate.routes.js");
-const adminRoutes = require("./routes/admin.certificate.routes.js");
 
-// Web Push Configuration
+// --------------------
+// CUSTOM MIDDLEWARES
+// --------------------
+const currentUser = require("./middlewares/currentUser");
+
+// --------------------
+// WEB PUSH CONFIGURATION
+// --------------------
 const publicVapidKey = process.env.VAPID_PUBLIC_KEY;
 const privateVapidKey = process.env.VAPID_PRIVATE_KEY;
 
@@ -63,10 +72,15 @@ mongoose.connect(process.env.MONGO_URI, {
   .catch(err => console.error("❌ Mongo error:", err));
 
 // --------------------
-// BODY PARSER
+// BODY PARSER & HEADERS
 // --------------------
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+app.use((req, res, next) => {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  next();
+});
 
 // --------------------
 // STATIC FILES
@@ -76,7 +90,7 @@ app.use("/", express.static("assets"));
 app.use(express.static("public"));
 
 // --------------------
-// SESSION
+// SESSION CONFIGURATION
 // --------------------
 app.use(
   session({
@@ -86,7 +100,7 @@ app.use(
     saveUninitialized: false,
     store: MongoStore.create({
       mongoUrl: process.env.MONGO_URI,
-      ttl: 24 * 60 * 60, // 1 day
+      ttl: 24 * 60 * 60, 
     }),
     cookie: {
       maxAge: 24 * 60 * 60 * 1000,
@@ -99,14 +113,14 @@ app.use(
 );
 
 // --------------------
-// PASSPORT & AUTH MIDDLEWARE
+// PASSPORT & CONTEXT AUTH
 // --------------------
 require("./config/passport"); 
 app.use(passport.initialize());
 app.use(passport.session());
 app.use(currentUser);
 
-// Global user context fallback
+// Fallback session matching tracking local setup
 app.use(async (req, res, next) => {
   if (req.session?.userId) {
     res.locals.currentUser = await genz.findById(req.session.userId);
@@ -116,20 +130,26 @@ app.use(async (req, res, next) => {
   next();
 });
 
-// Custom Guard Middleware
+// Verification Guard Middleware
 async function isFriend(req, res, next) {
   try {
     if (!res.locals.currentUser) {
+      console.log("❌ No currentUser in res.locals");
       return res.status(401).send("Please login to chat");
     }
+
     const userId = res.locals.currentUser._id.toString();
     const friendId = req.params.friendId;
-    const user = await genz.findById(userId);
 
-    if (!user) return res.status(401).send("User not found");
+    const user = await genz.findById(userId);
+    if (!user) {
+      return res.status(401).send("User not found");
+    }
 
     const isFriend = user.friends.some(id => id.toString() === friendId);
-    if (!isFriend) return res.status(403).send("You can only chat with friends");
+    if (!isFriend) {
+      return res.status(403).send("You can only chat with friends");
+    }
 
     next();
   } catch (err) {
@@ -138,12 +158,22 @@ async function isFriend(req, res, next) {
   }
 }
 
+// Multer Storage Infrastructure Setup
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/');
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + '-' + file.originalname);
+  }
+});
+
 // --------------------
-// ROUTES
+// BACKEND API ROUTES
 // --------------------
 app.use("/api/posts", postsRoute);
 app.use("/posts", postActions);
-app.use("/api/dashboard", dashboardRoutes); // 💡 Mounts your dashboard backend routes
+app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/collegenz/certificate", collegenzCertificateRoutes);
 app.use("/api/admin/certificate", adminRoutes);
 
@@ -169,29 +199,30 @@ app.use("/api", newsRoutes);
 require("./services/autoDelete");
 require("./services/eventReminder");
 
-// HTML / Layout Views
+// --------------------
+// VIEW PAGES ENGINE (HTML DELIVERIES)
+// --------------------
 app.get("/home", (req, res) => res.sendFile(path.join(__dirname, "home.html")));
 app.get("/signup", (req, res) => res.sendFile(path.join(__dirname, "sign.html")));
 app.get("/login", (req, res) => res.sendFile(path.join(__dirname, "login.html")));
 app.get("/upload", (req, res) => res.sendFile(path.join(__dirname, "upload.html")));
 app.get("/shorts", (req, res) => res.sendFile(path.join(__dirname, "shorts.html")));
-app.get("/calender", (req, res) => res.sendFile(path.join(__dirname, "calender.html")));
 app.get("/roadmap", (req, res) => res.sendFile(path.join(__dirname, "roadmap.html")));
-app.get("/sitemap.xml", (req, res) => res.sendFile(path.join(__dirname, "sitemap.xml")));
-app.get("/robots.txt", (req, res) => res.sendFile(path.join(__dirname, "robots.txt")));
-app.get("/share/postId", (req, res) => res.sendFile(path.join(__dirname, "resend.html")));
 app.get("/aboutus", (req, res) => res.sendFile(path.join(__dirname, "about.html")));
 app.get("/notifications", (req, res) => res.sendFile(path.join(__dirname, "notify.html")));
 app.get("/messages", (req, res) => res.sendFile(path.join(__dirname, "chatfriends.html"))); 
 app.get("/friends", (req, res) => res.sendFile(path.join(__dirname, "chatfriends.html"))); 
-app.get('/internship-login', (req, res) => res.sendFile(path.join(__dirname, 'internship-login.html')));
-app.get('/internship-signup', (req, res) => res.sendFile(path.join(__dirname, 'internship-signup.html')));
 app.get("/admin/featured", (req, res) => res.sendFile(path.join(__dirname, "featured-submit.html")));
 app.get("/admin/certificate", (req, res) => res.sendFile(path.join(__dirname, "views", "admin.html")));
 app.get("/certificate/:code", (req, res) => res.sendFile(path.join(__dirname, "views", "collegenz-certificate.html")));
 
+app.get('/internship-login', (req, res) => res.sendFile(path.join(__dirname, 'internship-login.html')));
+app.get('/internship-signup', (req, res) => res.sendFile(path.join(__dirname, 'internship-signup.html')));
+
 app.get("/dashboard", (req, res) => {
-  if (!req.user) return res.redirect("/internship-login");
+  if (!req.user) {
+    return res.redirect("/internship-login");
+  }
   res.sendFile(path.join(__dirname, "dashboard.html"));
 });
 
@@ -200,7 +231,7 @@ app.get("/chat/:friendId", isFriend, (req, res) => {
 });
 
 // --------------------
-// ADDITIONAL APIs
+// UTILITY & METRIC ROUTING API
 // --------------------
 app.get("/api/config", (req, res) => {
   res.json({ vapidPublicKey: process.env.VAPID_PUBLIC_KEY });
@@ -324,6 +355,40 @@ app.get("/get-profile/:id", async (req, res) => {
   }
 });
 
+// Feed Filtering System Interface
+app.get("/posts/filter", async (req, res) => {
+  try {
+    const { type } = req.query;
+    let post;
+
+    if (type === "event") {
+      const events = await Post.find({ postType: "event" }).sort({ createdAt: -1 });
+      const others = await Post.find({ postType: { $ne: "event" } }).sort({ createdAt: -1 });
+      post = [...events, ...others];
+      return res.json(post);
+    }
+
+    if (type === "hiring") {
+      const hiring = await Post.find({ postType: "hiring" }).sort({ createdAt: -1 });
+      const others = await Post.find({ postType: { $ne: "hiring" } }).sort({ createdAt: -1 });
+      post = [...hiring, ...others];
+      return res.json(post);
+    }
+
+    if (type === "recent") {
+      post = await Post.find().sort({ createdAt: -1 });
+      return res.json(post);
+    }
+
+    post = await Post.find().sort({ createdAt: -1 });
+    res.json(post);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// DB Migration / Schema Patching Route
 app.get("/updateOldUsers", async (req, res) => {
   try {
     await genz.updateMany({}, {
@@ -344,30 +409,42 @@ app.get("/updateOldUsers", async (req, res) => {
   }
 });
 
-// Fixed broken route handling down here:
-app.get("/posts/filter", async (req, res) => {
-  try {
-    const { type } = req.query;
-    if (type === "event") {
-      const events = await Post.find({ postType: "event" }).sort({ createdAt: -1 });
-      return res.json(events);
-    }
-    const standardPosts = await Post.find({ postType: { $ne: "event" } }).sort({ createdAt: -1 });
-    res.json(standardPosts);
-  } catch (err) {
-    res.status(500).json({ error: "Filter query failed" });
-  }
+// Logout Router
+app.get("/logout", (req, res) => {
+  req.session.destroy(() => {
+    res.redirect("/");
+  });
 });
 
 // --------------------
-// CONSOLIDATED SOCKET.IO LIFECYCLE
+// SEO CRAWLER HANDLERS
+// --------------------
+app.use((req, res, next) => {
+  const ua = req.headers["user-agent"] || "";
+  if (ua.includes("Googlebot") || ua.match(/bot|crawl|spider|slurp|bing/i)) return next();
+  next();
+});
+
+app.get("/sitemap.xml", (req, res) => res.sendFile(path.join(__dirname, "sitemap.xml")));
+app.get("/calender", (req, res) => res.sendFile(path.join(__dirname, "calender.html")));
+
+app.get("/robots.txt", (req, res) => {
+  res.type("text/plain");
+  res.send(`User-agent: *
+Allow: /
+
+Sitemap: https://collegenz.in/sitemap.xml`);
+});
+
+// --------------------
+// INTEGRATED SOCKET.IO ENGINE
 // --------------------
 io.on("connection", (socket) => {
-  console.log("✅ New Socket Connection:", socket.id);
+  console.log("✅ User connected to socket:", socket.id);
 
   socket.on("joinRoom", (room) => {
     socket.join(room);
-    console.log(`🏠 Room Joined: ${room}`);
+    console.log("🏠 Room Joined:", room);
   });
 
   socket.on("sendMessage", async (data) => {
@@ -396,24 +473,19 @@ io.on("connection", (socket) => {
           .catch(err => console.error("❌ Push Notification Error:", err));
       }
     } catch (err) {
-      console.error("🔥 Socket Message Error:", err);
+      console.error("🔥 Error saving/sending message:", err);
     }
   });
 
   socket.on("typing", (room) => {
     socket.to(room).emit("typing");
   });
-  
-  socket.on("disconnect", () => {
-    console.log("❌ Socket disconnected:", socket.id);
-  });
 });
 
 // --------------------
-// SERVER START
+// SERVER BOOTSTRAP
 // --------------------
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
 });
-  
