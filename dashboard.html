@@ -23,16 +23,19 @@
 
   <div class="w-full max-w-sm bg-slate-950/40 border border-white/10 rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col h-[780px] relative backdrop-blur-2xl">
     
+    <!-- Loading Screen Overlay -->
     <div id="loadingScreen" class="absolute inset-0 bg-slate-950/95 z-50 flex flex-col items-center justify-center gap-3 rounded-[2.5rem]">
       <i data-lucide="loader-2" class="animate-spin text-indigo-500 w-10 h-10"></i>
       <p class="text-sm text-slate-400 font-medium">Fetching Internship Portals...</p>
     </div>
 
+    <!-- Error Screen Overlay -->
     <div id="errorScreen" class="absolute inset-0 bg-slate-950/95 z-50 hidden flex flex-col items-center justify-center px-6 text-center gap-4 rounded-[2.5rem]">
       <i data-lucide="alert-circle" class="text-rose-500 w-12 h-12"></i>
       <p id="errorMessage" class="text-sm text-slate-300 font-medium">Failed to load dashboards.</p>
     </div>
 
+    <!-- Header Section -->
     <header class="px-6 pt-6 pb-3 flex justify-between items-center border-b border-white/5">
       <div class="flex flex-col">
         <h1 id="appLogoTitle" class="text-xl font-bold tracking-tight text-indigo-400">ZIntern</h1>
@@ -51,6 +54,7 @@
       </div>
     </header>
 
+    <!-- Sub-Header Tracking Titles -->
     <div class="px-6 py-3 flex justify-between items-center bg-white/[0.01]">
       <div>
         <h2 id="dashboardRoleTitle" class="text-base font-semibold text-slate-200">Intern Dashboard</h2>
@@ -61,24 +65,25 @@
       </button>
     </div>
 
+    <!-- Main Content Area -->
     <main class="flex-1 px-5 py-4 overflow-y-auto flex flex-col justify-start">
-      
       <div class="w-full relative mt-2">
         
+        <!-- Metric Display Card -->
         <div id="metricDisplayCard" class="w-full glass-card border border-white/15 rounded-2xl p-5 shadow-2xl fade-transition">
-          
           <div class="flex justify-between items-center mb-4 border-b border-white/5 pb-3">
-            <h3 id="companyNameText" class="text-base font-bold tracking-wide text-white">CodeAlpha</h3>
+            <h3 id="companyNameText" class="text-base font-bold tracking-wide text-white">Loading...</h3>
             <span id="statusBadge" class="text-[9px] font-bold tracking-widest px-2.5 py-0.5 rounded-full border bg-emerald-500/20 text-emerald-400 border-emerald-500/30">
               STATUS : ACTIVE
             </span>
           </div>
 
           <div id="cardFieldsContainer" class="space-y-3 text-sm font-medium text-slate-300">
-            </div>
-
+            <!-- Dynamic fields get rendered here safely -->
+          </div>
         </div>
 
+        <!-- Carousel Controls Layout -->
         <div id="carouselControls" class="flex justify-center gap-6 mt-5 items-center hidden">
           <button id="prevBtn" class="p-2 rounded-full bg-white/5 border border-white/10 text-slate-300 hover:text-white hover:bg-white/10 transition cursor-pointer shadow-md">
             <i data-lucide="chevron-left" class="w-4.5 h-4.5"></i>
@@ -92,20 +97,21 @@
         </div>
 
       </div>
-
     </main>
 
+    <!-- Footer Banner -->
     <div class="text-center py-2.5 text-[11px] tracking-wide text-slate-400 bg-slate-950/20 border-t border-white/5">
       Socialize with our <span class="font-extrabold text-white tracking-normal">CollegenZ</span>
     </div>
 
+    <!-- Bottom Navigation Bar Layout -->
     <nav class="bg-slate-950/80 border-t border-white/10 grid grid-cols-4 pb-5 pt-2.5 text-center relative z-10 backdrop-blur-lg">
       <button class="flex flex-col items-center justify-center gap-1 text-indigo-400 font-bold transition cursor-pointer">
         <i data-lucide="bar-chart-2" class="w-5 h-5"></i>
         <span class="text-[10px]">Dashboard</span>
       </button>
       
-      <button class="flex flex-col items-center justify-center gap-1 text-slate-400 hover:text-white transition cursor-pointer">
+      <button class="flex flex-col items-center justify-center gap-1 text-slate-400 hover:text-white transition cursor-pointer" onclick="window.location.href='/messages'">
         <i data-lucide="message-circle" class="w-5 h-5"></i>
         <span class="text-[10px]">Chat</span>
       </button>
@@ -124,15 +130,24 @@
   </div>
 
   <script>
-    // Extract ID directly from target URL parameter string (?id=...)
-    const urlParams = new URLSearchParams(window.location.search);
-    let targetUserId = urlParams.get('id');
+    // 1. Initialize Application Reactive State Object
+    let appState = {
+      zrole: 'user',
+      metricsList: [],
+      activeIndex: 0
+    };
 
-    // Fallback Mock Token ID for localized staging environment test checking
+    // 2. Safely capture the correct user identifier context mapping parameter parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    let targetUserId = urlParams.get('id') || localStorage.getItem('userId');
+
+    // Staging workspace test fallback identifier if profile context is unpopulated
     if (!targetUserId) {
-      targetUserId = "65f123456789abcdef012345";
+      targetUserId = "65f123456789abcdef012345"; 
     }
 
+    // 3. Dynamically construct structural mounting location reference matching API specs
+    const BACKEND_API_URL = `/api/dashboard/${targetUserId}`;
 
     function updateIcons() {
       lucide.createIcons();
@@ -143,9 +158,12 @@
         const response = await fetch(BACKEND_API_URL);
         if (!response.ok) throw new Error("Could not fetch profile properties from DB server.");
         
-        const data = await response.json();
+        const resData = await response.json();
         
-        // Handle fallback parsing adjustments if profile data array payload object metrics mismatch
+        // Match response envelope shape securely (expects { success: true, data: { ... } })
+        const data = resData.data || resData;
+        
+        // Handle fallback adjustments if structural properties match profile limits
         if (!data.metricsList || data.metricsList.length === 0 || data.zrole === 'user') {
           showError("Access Blocked. No active parallel internship metrics configured on this account identity.");
           return;
@@ -155,20 +173,18 @@
         appState.metricsList = data.metricsList;
         appState.activeIndex = 0;
 
-        // Apply metadata updates safely
+        // Apply visual adjustments safely
         document.getElementById('userAvatar').src = data.picture || "https://collegenz.in/uploads/profilepic.jpg";
         document.getElementById('appLogoTitle').innerText = data.zrole === 'intern' ? 'ZIntern' : 'ZMentor';
         document.getElementById('dashboardRoleTitle').innerText = data.zrole === 'intern' ? 'Intern Dashboard' : 'Mentor Dashboard';
-        
-        // Render current logged in verification email context matching view requirements
         document.getElementById('userEmailBadge').innerText = data.email || "session: active_user";
 
-        // Hide overlay loader layer
+        // Dismiss rendering loader layout layer
         document.getElementById('loadingScreen').classList.add('hidden');
         renderActiveCard();
         
       } catch (err) {
-        console.error(err);
+        console.error("🔥 UI Data Fetch Catch Stack Error:", err);
         showError("Backend connection error. Verify that your Express API route mounts on /api/dashboard/:id");
       }
     }
@@ -182,6 +198,8 @@
     }
 
     function renderActiveCard() {
+      if (appState.metricsList.length === 0) return;
+      
       const current = appState.metricsList[appState.activeIndex];
       const isIntern = appState.zrole === 'intern';
       
@@ -199,11 +217,11 @@
       let fieldsHTML = `
         <div class="flex justify-between items-center border-b border-white/[0.02] pb-1.5">
           <span class="text-slate-400 font-normal">Start Date :</span>
-          <span class="text-slate-100">${current.startDate} 🕒</span>
+          <span class="text-slate-100">${current.startDate || 'N/A'} 🕒</span>
         </div>
         <div class="flex justify-between items-center border-b border-white/[0.02] pb-1.5">
           <span class="text-slate-400 font-normal">End Date :</span>
-          <span class="text-slate-100">${current.endDate} 🕒</span>
+          <span class="text-slate-100">${current.endDate || 'N/A'} 🕒</span>
         </div>
       `;
 
@@ -211,51 +229,50 @@
         fieldsHTML += `
           <div class="flex justify-between items-center">
             <span class="text-slate-400 font-normal">No. of Task :</span>
-            <span class="text-indigo-400 font-semibold text-base">${current.noOfTask}</span>
+            <span class="text-indigo-400 font-semibold text-base">${current.noOfTask || 0}</span>
           </div>
           <div class="flex justify-between items-center">
             <span class="text-slate-400 font-normal">No. of Completed task :</span>
-            <span class="text-emerald-400 font-semibold text-base">${current.noOfCompletedTask}</span>
+            <span class="text-emerald-400 font-semibold text-base">${current.noOfCompletedTask || 0}</span>
           </div>
           <div class="flex justify-between items-center">
             <span class="text-slate-400 font-normal">No. of Pending task :</span>
-            <span class="text-amber-400 font-semibold text-base">${current.noOfPendingTask}</span>
+            <span class="text-amber-400 font-semibold text-base">${current.noOfPendingTask || 0}</span>
           </div>
           <div class="flex justify-between items-center border-b border-white/[0.02] pb-1.5">
             <span class="text-slate-400 font-normal">Deadline Date :</span>
-            <span class="text-slate-100">${current.deadlineDate}</span>
+            <span class="text-slate-100">${current.deadlineDate || 'N/A'}</span>
           </div>
           <div class="flex justify-between items-center border-t border-white/10 pt-2.5 mt-2">
             <span class="text-slate-400 font-normal">Name of Mentor :</span>
-            <span class="text-indigo-300 underline underline-offset-4 font-bold tracking-wide">${current.nameOfMentor}</span>
+            <span class="text-indigo-300 underline underline-offset-4 font-bold tracking-wide">${current.nameOfMentor || 'Unassigned'}</span>
           </div>
         `;
       } else {
         fieldsHTML += `
           <div class="flex justify-between items-center text-indigo-300">
             <span class="font-normal">No. of Students :</span>
-            <span class="font-bold text-lg">${current.noOfStudents}</span>
+            <span class="font-bold text-lg">${current.noOfStudents || 0}</span>
           </div>
           <div class="flex justify-between items-center">
             <span class="text-slate-400 font-normal">No. of Task :</span>
-            <span class="text-slate-100 font-medium">${current.noOfTask}</span>
+            <span class="text-slate-100 font-medium">${current.noOfTask || 0}</span>
           </div>
           <div class="flex justify-between items-center">
             <span class="text-slate-400 font-normal">No. of Task Assigned :</span>
-            <span class="text-indigo-400 font-semibold text-base">${current.noOfTaskAssigned}</span>
+            <span class="text-indigo-400 font-semibold text-base">${current.noOfTaskAssigned || 0}</span>
           </div>
           <div class="flex justify-between items-center border-b border-white/[0.02] pb-1.5">
             <span class="text-slate-400 font-normal">No. of Task Pending :</span>
-            <span class="text-amber-400 font-semibold text-base">${current.noOfTaskPending}</span>
+            <span class="text-amber-400 font-semibold text-base">${current.noOfTaskPending || 0}</span>
           </div>
           <div class="flex justify-between items-center">
             <span class="text-slate-400 font-normal">Deadline Date :</span>
-            <span class="text-slate-100">${current.deadlineDate}</span>
+            <span class="text-slate-100">${current.deadlineDate || 'N/A'}</span>
           </div>
         `;
       }
 
-      // Add dynamic layout track filler
       fieldsHTML += `
         <div class="pt-3">
           <div class="w-full bg-slate-950/60 rounded-full h-2 overflow-hidden border border-white/5">
@@ -268,7 +285,6 @@
       `;
 
       document.getElementById('cardFieldsContainer').innerHTML = fieldsHTML;
-
       setupCarouselControls();
       updateIcons();
     }
@@ -289,12 +305,14 @@
     }
 
     document.getElementById('nextBtn').addEventListener('click', () => {
+      if (appState.metricsList.length === 0) return;
       animateCardChange(() => {
         appState.activeIndex = (appState.activeIndex + 1) % appState.metricsList.length;
       });
     });
 
     document.getElementById('prevBtn').addEventListener('click', () => {
+      if (appState.metricsList.length === 0) return;
       animateCardChange(() => {
         appState.activeIndex = (appState.activeIndex - 1 + appState.metricsList.length) % appState.metricsList.length;
       });
