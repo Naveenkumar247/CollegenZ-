@@ -23,19 +23,16 @@
 
   <div class="w-full max-w-sm bg-slate-950/40 border border-white/10 rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col h-[780px] relative backdrop-blur-2xl">
     
-    <!-- Loading Screen Overlay -->
     <div id="loadingScreen" class="absolute inset-0 bg-slate-950/95 z-50 flex flex-col items-center justify-center gap-3 rounded-[2.5rem]">
       <i data-lucide="loader-2" class="animate-spin text-indigo-500 w-10 h-10"></i>
       <p class="text-sm text-slate-400 font-medium">Fetching Internship Portals...</p>
     </div>
 
-    <!-- Error Screen Overlay -->
     <div id="errorScreen" class="absolute inset-0 bg-slate-950/95 z-50 hidden flex flex-col items-center justify-center px-6 text-center gap-4 rounded-[2.5rem]">
       <i data-lucide="alert-circle" class="text-rose-500 w-12 h-12"></i>
       <p id="errorMessage" class="text-sm text-slate-300 font-medium">Failed to load dashboards.</p>
     </div>
 
-    <!-- Header Section -->
     <header class="px-6 pt-6 pb-3 flex justify-between items-center border-b border-white/5">
       <div class="flex flex-col">
         <h1 id="appLogoTitle" class="text-xl font-bold tracking-tight text-indigo-400">ZIntern</h1>
@@ -54,22 +51,19 @@
       </div>
     </header>
 
-    <!-- Sub-Header Tracking Titles -->
     <div class="px-6 py-3 flex justify-between items-center bg-white/[0.01]">
       <div>
         <h2 id="dashboardRoleTitle" class="text-base font-semibold text-slate-200">Intern Dashboard</h2>
-        <p id="parallelTrackCount" class="text-[11px] text-indigo-300 font-medium mt-0.5">Active Tracks: 1 of 1</p>
+        <p id="parallelTrackCount" class="text-[11px] text-indigo-300 font-medium mt-0.5">Active Tracks: 0 of 0</p>
       </div>
       <button class="text-slate-400 hover:text-white cursor-pointer p-1">
         <i data-lucide="more-vertical" class="w-5 h-5"></i>
       </button>
     </div>
 
-    <!-- Main Content Area -->
     <main class="flex-1 px-5 py-4 overflow-y-auto flex flex-col justify-start">
       <div class="w-full relative mt-2">
         
-        <!-- Metric Display Card -->
         <div id="metricDisplayCard" class="w-full glass-card border border-white/15 rounded-2xl p-5 shadow-2xl fade-transition">
           <div class="flex justify-between items-center mb-4 border-b border-white/5 pb-3">
             <h3 id="companyNameText" class="text-base font-bold tracking-wide text-white">Loading...</h3>
@@ -79,11 +73,9 @@
           </div>
 
           <div id="cardFieldsContainer" class="space-y-3 text-sm font-medium text-slate-300">
-            <!-- Dynamic fields get rendered here safely -->
-          </div>
+            </div>
         </div>
 
-        <!-- Carousel Controls Layout -->
         <div id="carouselControls" class="flex justify-center gap-6 mt-5 items-center hidden">
           <button id="prevBtn" class="p-2 rounded-full bg-white/5 border border-white/10 text-slate-300 hover:text-white hover:bg-white/10 transition cursor-pointer shadow-md">
             <i data-lucide="chevron-left" class="w-4.5 h-4.5"></i>
@@ -99,12 +91,10 @@
       </div>
     </main>
 
-    <!-- Footer Banner -->
     <div class="text-center py-2.5 text-[11px] tracking-wide text-slate-400 bg-slate-950/20 border-t border-white/5">
       Socialize with our <span class="font-extrabold text-white tracking-normal">CollegenZ</span>
     </div>
 
-    <!-- Bottom Navigation Bar Layout -->
     <nav class="bg-slate-950/80 border-t border-white/10 grid grid-cols-4 pb-5 pt-2.5 text-center relative z-10 backdrop-blur-lg">
       <button class="flex flex-col items-center justify-center gap-1 text-indigo-400 font-bold transition cursor-pointer">
         <i data-lucide="bar-chart-2" class="w-5 h-5"></i>
@@ -130,23 +120,21 @@
   </div>
 
   <script>
-    // 1. Initialize Application Reactive State Object
+    // 1. Initialize Application State Object
     let appState = {
-      zrole: 'user',
+      zrole: 'intern',
       metricsList: [],
       activeIndex: 0
     };
 
-    // 2. Safely capture the correct user identifier context mapping parameter parameters
+    // 2. Capture the correct user identifier token context
     const urlParams = new URLSearchParams(window.location.search);
     let targetUserId = urlParams.get('id') || localStorage.getItem('userId');
 
-    // Staging workspace test fallback identifier if profile context is unpopulated
     if (!targetUserId) {
       targetUserId = "65f123456789abcdef012345"; 
     }
 
-    // 3. Dynamically construct structural mounting location reference matching API specs
     const BACKEND_API_URL = `/api/dashboard/${targetUserId}`;
 
     function updateIcons() {
@@ -159,25 +147,37 @@
         if (!response.ok) throw new Error("Could not fetch profile properties from DB server.");
         
         const resData = await response.json();
-        
-        // Match response envelope shape securely (expects { success: true, data: { ... } })
         const data = resData.data || resData;
+
+        // Apply metadata info safely
+        document.getElementById('userAvatar').src = data.picture || "https://collegenz.in/uploads/profilepic.jpg";
+        document.getElementById('userEmailBadge').innerText = data.email || "session: active_user";
         
-        // Handle fallback adjustments if structural properties match profile limits
-        if (!data.metricsList || data.metricsList.length === 0 || data.zrole === 'user') {
-          showError("Access Blocked. No active parallel internship metrics configured on this account identity.");
-          return;
+        // Dynamic structural fallback system instead of hard blocking errors 
+        if (!data.metricsList || data.metricsList.length === 0) {
+          appState.zrole = 'intern';
+          appState.metricsList = [{
+            companyName: "CollegenZ Workspace",
+            status: "PENDING SETUP",
+            startDate: "Awaiting approval",
+            endDate: "Awaiting approval",
+            deadlineDate: "N/A",
+            progress: 10,
+            noOfTask: 0,
+            noOfCompletedTask: 0,
+            noOfPendingTask: 0,
+            nameOfMentor: "System Admin"
+          }];
+        } else {
+          appState.zrole = data.zrole || 'intern';
+          appState.metricsList = data.metricsList;
         }
 
-        appState.zrole = data.zrole;
-        appState.metricsList = data.metricsList;
         appState.activeIndex = 0;
 
-        // Apply visual adjustments safely
-        document.getElementById('userAvatar').src = data.picture || "https://collegenz.in/uploads/profilepic.jpg";
-        document.getElementById('appLogoTitle').innerText = data.zrole === 'intern' ? 'ZIntern' : 'ZMentor';
-        document.getElementById('dashboardRoleTitle').innerText = data.zrole === 'intern' ? 'Intern Dashboard' : 'Mentor Dashboard';
-        document.getElementById('userEmailBadge').innerText = data.email || "session: active_user";
+        // Header role text updates
+        document.getElementById('appLogoTitle').innerText = appState.zrole === 'intern' ? 'ZIntern' : 'ZMentor';
+        document.getElementById('dashboardRoleTitle').innerText = appState.zrole === 'intern' ? 'Intern Dashboard' : 'Mentor Dashboard';
 
         // Dismiss rendering loader layout layer
         document.getElementById('loadingScreen').classList.add('hidden');
@@ -203,25 +203,26 @@
       const current = appState.metricsList[appState.activeIndex];
       const isIntern = appState.zrole === 'intern';
       
-      document.getElementById('companyNameText').innerText = current.companyName || "CodeAlpha";
+      document.getElementById('companyNameText').innerText = current.companyName;
       document.getElementById('parallelTrackCount').innerText = `Active Tracks: ${appState.activeIndex + 1} of ${appState.metricsList.length}`;
       
       const badge = document.getElementById('statusBadge');
-      badge.innerText = `STATUS : ${current.status || 'ACTIVE'}`;
+      badge.innerText = `STATUS : ${current.status}`;
+      
       if (current.status === 'ACTIVE') {
         badge.className = "text-[9px] font-bold tracking-widest px-2.5 py-0.5 rounded-full border bg-emerald-500/15 text-emerald-400 border-emerald-500/30";
       } else {
-        badge.className = "text-[9px] font-bold tracking-widest px-2.5 py-0.5 rounded-full border bg-rose-500/15 text-rose-400 border-rose-500/30";
+        badge.className = "text-[9px] font-bold tracking-widest px-2.5 py-0.5 rounded-full border bg-amber-500/15 text-amber-400 border-amber-500/30";
       }
 
       let fieldsHTML = `
         <div class="flex justify-between items-center border-b border-white/[0.02] pb-1.5">
           <span class="text-slate-400 font-normal">Start Date :</span>
-          <span class="text-slate-100">${current.startDate || 'N/A'} 🕒</span>
+          <span class="text-slate-100">${current.startDate} 🕒</span>
         </div>
         <div class="flex justify-between items-center border-b border-white/[0.02] pb-1.5">
           <span class="text-slate-400 font-normal">End Date :</span>
-          <span class="text-slate-100">${current.endDate || 'N/A'} 🕒</span>
+          <span class="text-slate-100">${current.endDate} 🕒</span>
         </div>
       `;
 
@@ -229,46 +230,46 @@
         fieldsHTML += `
           <div class="flex justify-between items-center">
             <span class="text-slate-400 font-normal">No. of Task :</span>
-            <span class="text-indigo-400 font-semibold text-base">${current.noOfTask || 0}</span>
+            <span class="text-indigo-400 font-semibold text-base">${current.noOfTask}</span>
           </div>
           <div class="flex justify-between items-center">
             <span class="text-slate-400 font-normal">No. of Completed task :</span>
-            <span class="text-emerald-400 font-semibold text-base">${current.noOfCompletedTask || 0}</span>
+            <span class="text-emerald-400 font-semibold text-base">${current.noOfCompletedTask}</span>
           </div>
           <div class="flex justify-between items-center">
             <span class="text-slate-400 font-normal">No. of Pending task :</span>
-            <span class="text-amber-400 font-semibold text-base">${current.noOfPendingTask || 0}</span>
+            <span class="text-amber-400 font-semibold text-base">${current.noOfPendingTask}</span>
           </div>
           <div class="flex justify-between items-center border-b border-white/[0.02] pb-1.5">
             <span class="text-slate-400 font-normal">Deadline Date :</span>
-            <span class="text-slate-100">${current.deadlineDate || 'N/A'}</span>
+            <span class="text-slate-100">${current.deadlineDate}</span>
           </div>
           <div class="flex justify-between items-center border-t border-white/10 pt-2.5 mt-2">
             <span class="text-slate-400 font-normal">Name of Mentor :</span>
-            <span class="text-indigo-300 underline underline-offset-4 font-bold tracking-wide">${current.nameOfMentor || 'Unassigned'}</span>
+            <span class="text-indigo-300 underline underline-offset-4 font-bold tracking-wide">${current.nameOfMentor}</span>
           </div>
         `;
       } else {
         fieldsHTML += `
           <div class="flex justify-between items-center text-indigo-300">
             <span class="font-normal">No. of Students :</span>
-            <span class="font-bold text-lg">${current.noOfStudents || 0}</span>
+            <span class="font-bold text-lg">${current.noOfStudents}</span>
           </div>
           <div class="flex justify-between items-center">
             <span class="text-slate-400 font-normal">No. of Task :</span>
-            <span class="text-slate-100 font-medium">${current.noOfTask || 0}</span>
+            <span class="text-slate-100 font-medium">${current.noOfTask}</span>
           </div>
           <div class="flex justify-between items-center">
             <span class="text-slate-400 font-normal">No. of Task Assigned :</span>
-            <span class="text-indigo-400 font-semibold text-base">${current.noOfTaskAssigned || 0}</span>
+            <span class="text-indigo-400 font-semibold text-base">${current.noOfTaskAssigned}</span>
           </div>
           <div class="flex justify-between items-center border-b border-white/[0.02] pb-1.5">
             <span class="text-slate-400 font-normal">No. of Task Pending :</span>
-            <span class="text-amber-400 font-semibold text-base">${current.noOfTaskPending || 0}</span>
+            <span class="text-amber-400 font-semibold text-base">${current.noOfTaskPending}</span>
           </div>
           <div class="flex justify-between items-center">
             <span class="text-slate-400 font-normal">Deadline Date :</span>
-            <span class="text-slate-100">${current.deadlineDate || 'N/A'}</span>
+            <span class="text-slate-100">${current.deadlineDate}</span>
           </div>
         `;
       }
@@ -278,7 +279,7 @@
           <div class="w-full bg-slate-950/60 rounded-full h-2 overflow-hidden border border-white/5">
             <div 
               class="bg-gradient-to-r from-indigo-500 to-purple-500 h-full rounded-full transition-all duration-500"
-              style="width: ${current.progress || 0}%"
+              style="width: ${current.progress}%"
             ></div>
           </div>
         </div>
