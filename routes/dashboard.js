@@ -2,26 +2,21 @@ const express = require("express");
 const router = express.Router();
 const User = require("../models/primary/User");
 
-// GET dashboard metrics handler
-router.get('/:id', async (req, res) => {
+// ==========================================
+// 1. SPECIFIC ROUTE: /api/dashboard/me
+// (Must be defined first!)
+// ==========================================
+router.get("/me", async (req, res) => {
   try {
-    let targetId;
-
-    if (req.params.id === 'me') {
-      // If the user isn't logged in, Passport sets req.user to undefined
-      if (!req.user) {
-        return res.status(401).json({ success: false, message: "Unauthorized session." });
-      }
-      targetId = req.user._id; // Use logged-in user's ID securely
-    } else {
-      targetId = req.params.id; // Fallback for specific lookups
+    // Check if Passport successfully authenticated the user session
+    if (!req.user) {
+      return res.status(401).json({ success: false, message: "Unauthorized. No active session found." });
     }
 
-    // Now it's safe to query Mongoose
-    const user = await User.findById(targetId).select('name email zrole internshipProfiles picture');
+    const user = await User.findById(req.user._id).select("name email zrole internshipProfiles picture");
     
     if (!user) {
-      return res.status(404).json({ success: false, message: "Profile track not found." });
+      return res.status(404).json({ success: false, message: "User profile records missing." });
     }
 
     return res.status(200).json({
@@ -32,10 +27,34 @@ router.get('/:id', async (req, res) => {
       metricsList: user.internshipProfiles
     });
   } catch (error) {
-    console.error("Dashboard route error:", error);
+    console.error("Error on /dashboard/me:", error);
     return res.status(500).json({ success: false, error: error.message });
   }
 });
 
+// ==========================================
+// 2. GENERIC PARAMETER ROUTE: /api/dashboard/:id
+// (Evaluates only if the request wasn't /me)
+// ==========================================
+router.get("/:id", async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id).select("name email zrole internshipProfiles picture");
+    
+    if (!user) {
+      return res.status(404).json({ success: false, message: "Requested tracking profile not found." });
+    }
+
+    return res.status(200).json({
+      name: user.name,
+      email: user.email,
+      zrole: user.zrole, 
+      picture: user.picture,
+      metricsList: user.internshipProfiles
+    });
+  } catch (error) {
+    console.error("Error on /dashboard/:id:", error);
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
 
 module.exports = router;
