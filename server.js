@@ -80,6 +80,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/uploads", express.static("uploads"));
 app.use("/", express.static("assets"));
 app.use(express.static("public"));
+
 // --------------------
 // SESSION (🔥 MUST BE BEFORE PASSPORT)
 // --------------------
@@ -96,10 +97,18 @@ app.use(
     cookie: {
       maxAge: 24 * 60 * 60 * 1000,
       httpOnly: true,
-      secure: false, // set true in production (HTTPS)
+      // 🔥 DYNAMIC SECURITY: set true automatically when live on Render/Production (HTTPS)
+      secure: process.env.NODE_ENV === "production", 
+      //  Prevents CSRF vulnerabilities while maintaining smooth cross-subdomain handshakes
+      sameSite: process.env.NODE_ENV === "production" ? "lax" : "lax",
     },
+    // 🔥 CRITICAL FOR RENDER DEPLOYMENTS:
+    // Tells Express to trust the reverse proxy headers (X-Forwarded-Proto) 
+    // so it knows the connection is securely encrypted over HTTPS.
+    proxy: true, 
   })
 );
+
 
 // --------------------
 // PASSPORT (🔥 AFTER SESSION)
