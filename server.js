@@ -243,7 +243,10 @@ app.get("/admin/featured", (req, res) => {
 app.get("/messages", (req, res) => {
   res.sendFile(path.join(__dirname, "chatfriends.html")); 
 });
-
+app.get('/internship-login', (req, res) => {
+    // This points to where your internship-login.html file is saved
+    res.sendFile(path.join(__dirname, 'internship-login.html'));
+});
 
 app.use(async (req, res, next) => {
   if (req.session?.userId) {
