@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CollegenZ - Internship Portal Registration</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="min-h-screen bg-gradient-to-tr from-slate-900 via-indigo-950 to-slate-900 text-white flex flex-col items-center justify-center p-4 font-sans antialiased">
+
+  <div class="w-full max-w-sm bg-slate-950/40 border border-white/10 rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col h-[760px] justify-between p-6 backdrop-blur-2xl">
+    
+    <div class="text-center pt-4">
+      <h1 class="text-3xl font-black tracking-tight text-indigo-400">CollegenZ</h1>
+      <p class="text-xs text-slate-400 tracking-widest uppercase mt-1">Internship Ecosystem</p>
+    </div>
+
+    <!-- Form Container -->
+    <div class="bg-white/5 border border-white/10 rounded-2xl p-5 shadow-xl backdrop-blur-md my-auto overflow-y-auto max-h-[520px]">
+      <h2 class="text-base font-bold mb-3 text-center text-slate-200">Claim Account / Sign Up</h2>
+      
+      <div id="errorBanner" class="hidden text-xs bg-rose-500/20 text-rose-400 border border-rose-500/30 p-2 rounded-xl mb-3 text-center font-medium"></div>
+
+      <form id="signupForm" class="space-y-3.5">
+        <div>
+          <label class="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Full Name</label>
+          <input type="text" id="name" required class="w-full bg-slate-950/50 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500" placeholder="Your full name">
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Email Address (Pre-added by Mentor)</label>
+          <input type="email" id="email" required class="w-full bg-slate-950/50 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500" placeholder="name@college.com">
+        </div>
+        
+        <div>
+          <label class="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Set Password</label>
+          <input type="password" id="password" required class="w-full bg-slate-950/50 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500" placeholder="••••••••">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">College</label>
+            <input type="text" id="college" class="w-full bg-slate-950/50 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500" placeholder="University">
+          </div>
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Dream Field</label>
+            <input type="text" id="dream" class="w-full bg-slate-950/50 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500" placeholder="AI Dev">
+          </div>
+        </div>
+
+        <button type="submit" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-semibold text-sm tracking-wide shadow-lg transition-all cursor-pointer mt-2">
+          Initialize Account
+        </button>
+      </form>
+
+      <p class="text-xs text-center text-slate-400 mt-3.5">
+        Already have access? <a href="/internship-login.html" class="text-indigo-400 font-bold hover:underline">Sign In</a>
+      </p>
+    </div>
+
+    <div class="text-center text-[11px] tracking-wide text-slate-500 pb-1">
+      Powered by <span class="font-bold text-slate-400">CollegenZ Workspace</span>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById("signupForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const banner = document.getElementById("errorBanner");
+      banner.classList.add("hidden");
+
+      try {
+        const response = await fetch("/api/auth/signup", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: document.getElementById("name").value,
+            email: document.getElementById("email").value,
+            password: document.getElementById("password").value,
+            college: document.getElementById("college").value,
+            dream: document.getElementById("dream").value,
+            origin: "internship"
+          })
+        });
+
+        const data = await response.json();
+        if (data.success) {
+          window.location.href = data.redirectUrl;
+        } else {
+          banner.innerText = data.message || "Failed processing registrations.";
+          banner.classList.remove("hidden");
+        }
+      } catch (err) {
+        banner.innerText = "Registration error. Verify your server fields connection.";
+        banner.classList.remove("hidden");
+      }
+    });
+    window.addEventListener('DOMContentLoaded', () => lucide.createIcons());
+  </script>
+</body>
+</html>
