@@ -397,6 +397,7 @@
       }
     });
 
+
     let touchStartX = 0;
     let touchEndX = 0;
     const swipeArena = document.getElementById('swipeArena');
@@ -408,4 +409,61 @@
       if (diff > 50 && appState.activeIndex < appState.metricsList.length - 1) {
         appState.activeIndex++;
       } else if (diff < -50 && appState.activeIndex > 0) {
-        app
+        appState.activeIndex--;
+      }
+      updateCarouselPosition();
+      setupCarouselIndicators();
+    }, { passive: true });
+
+    const modal = document.getElementById('addInternModal');
+    
+    document.getElementById('mentorActionBtn').addEventListener('click', () => {
+      modal.classList.remove('hidden');
+    });
+
+    document.getElementById('closeModalBtn').addEventListener('click', () => {
+      modal.classList.add('hidden');
+    });
+
+    document.getElementById('addInternForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const payload = {
+        email: document.getElementById('internEmail').value,
+        companyName: document.getElementById('compName').value,
+        startDate: document.getElementById('sDate').value,
+        endDate: document.getElementById('eDate').value,
+        noOfTask: parseInt(document.getElementById('totTask').value),
+        noOfTaskAssigned: parseInt(document.getElementById('asgnTask').value),
+        noOfTaskPending: parseInt(document.getElementById('pendTask').value),
+        nameOfMentor: document.getElementById('mentName').value
+      };
+
+      try {
+        const response = await fetch('/api/admin/certificate/assign-track', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if (response.ok) {
+          alert('Internship track configured and allocated successfully!');
+          modal.classList.add('hidden');
+          document.getElementById('addInternForm').reset();
+          fetchDashboardData(); 
+        } else {
+          const errData = await response.json();
+          alert(`Allocation Error: ${errData.error || 'Failed allocation structure.'}`);
+        }
+      } catch (err) {
+        alert('Server communications fault. Allocation trace dropped.');
+      }
+    });
+
+    window.addEventListener('DOMContentLoaded', () => {
+      updateIcons();
+      fetchDashboardData();
+    });
+  </script>
+</body>
+</html>
