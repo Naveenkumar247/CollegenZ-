@@ -247,6 +247,10 @@ app.get('/internship-login', (req, res) => {
     // This points to where your internship-login.html file is saved
     res.sendFile(path.join(__dirname, 'internship-login.html'));
 });
+app.get('/internship-signup', (req, res) => {
+    // This points to where your internship-login.html file is saved
+    res.sendFile(path.join(__dirname, 'internship-signup.html'));
+});
 
 app.use(async (req, res, next) => {
   if (req.session?.userId) {
