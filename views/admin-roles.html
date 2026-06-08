@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CollegenZ - Access Management Workspace</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="min-h-screen bg-[#f4f6f9] text-slate-800 flex flex-col items-center justify-center p-4 font-sans antialiased selection:bg-[#228B22] selection:text-white">
+
+  <!-- Main Administrative Card Component -->
+  <div class="w-full max-w-sm bg-white border border-slate-200 rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col h-[680px] justify-between p-6 relative">
+    
+    <!-- Top Branding Accent Header Area -->
+    <div class="text-center pt-4">
+      <div class="inline-flex p-3 bg-emerald-50 text-[#228B22] rounded-2xl mb-2">
+        <i data-lucide="shield-check" class="w-8 h-8"></i>
+      </div>
+      <h1 class="text-2xl font-black tracking-tight text-slate-800">CollegenZ Admin</h1>
+      <p class="text-[10px] text-slate-400 font-bold tracking-widest uppercase mt-0.5">Workspace Access Control</p>
+    </div>
+
+    <!-- Core Interactive Assignment Form -->
+    <div class="bg-slate-50 border border-slate-100 rounded-3xl p-5 shadow-sm my-auto">
+      <h2 class="text-sm font-black text-slate-700 uppercase tracking-wide mb-4 text-center flex items-center justify-center gap-1.5">
+        <i data-lucide="user-cog" class="w-4 h-4 text-[#228B22]"></i>
+        <span>Modify Workspace Role</span>
+      </h2>
+      
+      <!-- Status Feedback Dynamic Banners -->
+      <div id="statusBanner" class="hidden text-xs p-3 rounded-xl mb-4 text-center font-bold border"></div>
+
+      <form id="roleForm" class="space-y-4">
+        <div>
+          <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Target Account Email</label>
+          <div class="relative">
+            <input 
+              type="email" 
+              id="userEmail" 
+              required 
+              class="w-full bg-white border border-slate-200 rounded-xl pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:border-[#228B22] transition-colors" 
+              placeholder="user@example.com"
+            >
+            <i data-lucide="mail" class="w-4 h-4 text-slate-400 absolute left-3 top-3.5"></i>
+          </div>
+        </div>
+        
+        <div>
+          <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Target Access Privilege</label>
+          <div class="relative">
+            <select 
+              id="userRole" 
+              class="w-full bg-white border border-slate-200 rounded-xl pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:border-[#228B22] transition-colors appearance-none cursor-pointer"
+            >
+              <option value="mentor" selected>Mentor Workspace Access</option>
+              <option value="intern">Intern Workspace Access</option>
+            </select>
+            <i data-lucide="award" class="w-4 h-4 text-slate-400 absolute left-3 top-3.5"></i>
+            <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 absolute right-3 top-3.5 pointer-events-none"></i>
+          </div>
+        </div>
+
+        <button type="submit" class="w-full mt-2 py-3 bg-[#228B22] hover:bg-emerald-700 text-white rounded-xl font-bold text-sm tracking-wide shadow-md transition-all cursor-pointer flex justify-center items-center gap-2">
+          <i data-lucide="save" class="w-4 h-4"></i>
+          <span>Save Permissions</span>
+        </button>
+      </form>
+    </div>
+
+    <!-- Quick Actions Navigation Links -->
+    <div class="flex justify-center gap-4 text-xs font-bold text-slate-400 border-t border-slate-100 pt-3">
+      <a href="/dashboard" class="hover:text-[#228B22] flex items-center gap-1 transition">
+        <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
+        <span>Dashboard</span>
+      </a>
+      <span class="text-slate-200">|</span>
+      <a href="/logout" class="hover:text-rose-500 flex items-center gap-1 transition">
+        <span>Logout</span>
+        <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
+      </a>
+    </div>
+
+  </div>
+
+  <script>
+    document.getElementById("roleForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      
+      const banner = document.getElementById("statusBanner");
+      banner.className = "hidden text-xs p-3 rounded-xl mb-4 text-center font-bold border";
+      
+      const emailInput = document.getElementById("userEmail").value;
+      const roleInput = document.getElementById("userRole").value;
+
+      try {
+        const response = await fetch("/api/admin/certificate/update-role", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: emailInput,
+            role: roleInput
+          })
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+          banner.innerText = data.message || "Permissions updated successfully.";
+          banner.classList.add("bg-emerald-500/10", "text-emerald-600", "border-emerald-500/20");
+          banner.classList.remove("hidden");
+          document.getElementById("roleForm").reset();
+        } else {
+          banner.innerText = data.error || "Failed to update target account role permissions.";
+          banner.classList.add("bg-rose-500/10", "text-rose-600", "border-rose-500/20");
+          banner.classList.remove("hidden");
+        }
+      } catch (err) {
+        banner.innerText = "Network transmission fault. Could not reach database cluster.";
+        banner.classList.add("bg-amber-500/10", "text-amber-600", "border-amber-500/20");
+        banner.classList.remove("hidden");
+      }
+    });
+
+    window.addEventListener('DOMContentLoaded', () => {
+      if (window.lucide) {
+        window.lucide.createIcons();
+      }
+    });
+  </script>
+</body>
+</html>
