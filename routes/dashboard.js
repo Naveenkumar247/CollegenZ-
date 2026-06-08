@@ -2,121 +2,78 @@ const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
 
-// Import your existing models
+// Import your correct User model
 const User = require('../models/primary/User');
-const Post = require('../models/primary/Post');
-const Message = require('../models/primary/Message');
 
 /**
  * @route   GET /api/dashboard/:id
- * @desc    Fetch statistical metrics and tracking data for a specific user
- * @access  Protected/Internal
+ * @desc    Fetch internship workspace tracking profiles (Supports Intern & Mentor roles)
+ * @access  Protected
  */
 router.get('/:id', async (req, res) => {
     try {
         const userId = req.params.id;
 
-        // 1. Validation: Ensure it's a valid MongoDB ObjectId
+        // 1. Validation: Ensure a valid MongoDB ObjectId is processed
         if (!mongoose.Types.ObjectId.isValid(userId)) {
             return res.status(400).json({ 
                 success: false, 
-                error: "Invalid user identifier format" 
+                error: "Invalid user workspace token format" 
             });
         }
 
-        const userObjectId = new mongoose.Types.ObjectId(userId);
+        // 2. Fetch the target profile record directly from the database collection
+        const userProfile = await User.findById(userId);
 
-        // 2. Execute parallel DB operations to keep dashboard response times ultra-fast
-        const [userProfile, totalPostsCount, postsMetrics, chatMetrics] = await Promise.all([
-            // Fetch core user social metrics
-            User.findById(userId, 'name friends friendRequestsReceived friendRequestsSent accountType views'),
-
-            // Count total posts published by this user
-            Post.countDocuments({ author: userObjectId }),
-
-            // Aggregate likes across all posts created by this user
-            Post.aggregate([
-                { $match: { author: userObjectId } },
-                {
-                    $group: {
-                        _id: null,
-                        totalLikes: { $sum: { $size: { $ifNull: ["$likes", []] } } },
-                        totalShares: { $sum: { $ifNull: ["$shareCount", 0] } }
-                    }
-                }
-            ]),
-
-            // Count chat interactions for messaging activity mapping
-            Message.aggregate([
-                {
-                    $match: {
-                        $or: [
-                            { sender: userObjectId },
-                            { receiver: userObjectId }
-                        ]
-                    }
-                },
-                {
-                    $group: {
-                        _id: null,
-                        sent: {
-                            $sum: { $cond: [{ $eq: ["$sender", userObjectId] }, 1, 0] }
-                        },
-                        received: {
-                            $sum: { $cond: [{ $eq: ["$receiver", userObjectId] }, 1, 0] }
-                        }
-                    }
-                }
-            ])
-        ]);
-
-        // 3. Check if target user exists
         if (!userProfile) {
             return res.status(404).json({ 
                 success: false, 
-                error: "User analytics profile not found" 
+                error: "Workspace profile not found." 
             });
         }
 
-        // 4. Extract safe defaults from aggregation pipeline arrays
-        const postStats = postsMetrics[0] || { totalLikes: 0, totalShares: 0 };
-        const messageStats = chatMetrics[0] || { sent: 0, received: 0 };
+        // 💡 Log for active console trace debugging
+        console.log(`📡 Dispatching Workspace Data for: ${userProfile.email} | Role: "${userProfile.zrole}"`);
 
-        // 5. Structure payload neatly for your glassmorphic UI components
-        const dashboardData = {
-            profile: {
-                name: userProfile.name,
-                accountType: userProfile.accountType,
-                profileViews: userProfile.views || 0
-            },
-            networking: {
-                connectionsCount: userProfile.friends ? userProfile.friends.length : 0,
-                pendingRequestsReceived: userProfile.friendRequestsReceived ? userProfile.friendRequestsReceived.length : 0,
-                pendingRequestsSent: userProfile.friendRequestsSent ? userProfile.friendRequestsSent.length : 0
-            },
-            engagement: {
-                totalPosts: totalPostsCount,
-                totalLikesReceived: postStats.totalLikes,
-                totalSharesTriggered: postStats.totalShares
-            },
-            activity: {
-                messagesSent: messageStats.sent,
-                messagesReceived: messageStats.received,
-                totalInteractions: messageStats.sent + messageStats.received
-            }
-        };
+        // 3. Map database array definitions cleanly into the frontend metricsList blueprint
+        const formattedMetrics = (userProfile.internshipProfiles || []).map(profile => ({
+            companyName: profile.companyName || "CollegenZ Track",
+            status: profile.status || "ACTIVE",
+            startDate: profile.startDate || "N/A",
+            endDate: profile.endDate || "N/A",
+            deadlineDate: profile.deadlineDate || "N/A",
+            progress: profile.progress || 0,
+            
+            // Intern View Card Properties
+            noOfTask: profile.noOfTask || 0,
+            noOfCompletedTask: profile.noOfCompletedTask || 0,
+            noOfPendingTask: profile.noOfPendingTask || 0,
+            nameOfMentor: profile.nameOfMentor || "System Admin",
+            
+            // Mentor View Card Properties
+            noOfStudents: profile.noOfStudents || 0,
+            noOfTaskAssigned: profile.noOfTaskAssigned || 0,
+            noOfTaskPending: profile.noOfTaskPending || 0
+        }));
 
-        // Send structured JSON to feed your charts/counters
+        // 4. Return the exact dataset requested by your dashboard interface engines
         res.status(200).json({
             success: true,
-            data: dashboardData
+            data: {
+                _id: userProfile._id,
+                name: userProfile.name,
+                email: userProfile.email,
+                picture: userProfile.picture,
+                zrole: userProfile.zrole || 'intern', // Emits "mentor" or "intern" dynamically
+                metricsList: formattedMetrics // Feeds your swipe-carousel perfectly
+            }
         });
 
     } catch (err) {
-        console.error("🔥 Dashboard Aggregation Error:", err);
+        console.error("🔥 Workspace Metrics Compilation Failure:", err);
         res.status(500).json({ 
             success: false, 
-            error: "Internal dashboard database calculation error" 
+            error: "Internal dashboard calculation mistake." 
         });
     }
 });
