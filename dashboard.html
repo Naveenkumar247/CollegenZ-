@@ -25,22 +25,18 @@
 </head>
 <body class="min-h-screen bg-[#f4f6f9] text-slate-800 flex flex-col items-center justify-center p-0 sm:p-4 font-sans antialiased selection:bg-[#228B22] selection:text-white">
 
-  <!-- Core App Container Window Structure -->
   <div class="w-full max-w-md bg-white border border-slate-200 sm:rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col h-screen sm:h-[820px] relative">
     
-    <!-- Loader Screen Cover Layer -->
     <div id="loadingScreen" class="absolute inset-0 bg-white z-50 flex flex-col items-center justify-center gap-3">
       <i data-lucide="loader-2" class="animate-spin text-[#228B22] w-10 h-10"></i>
       <p class="text-sm text-slate-500 font-medium tracking-wide">Syncing Workspace Profiles...</p>
     </div>
 
-    <!-- Error Screen Cover Layer -->
     <div id="errorScreen" class="absolute inset-0 bg-white z-50 hidden flex flex-col items-center justify-center px-6 text-center gap-4">
       <i data-lucide="alert-circle" class="text-rose-500 w-12 h-12"></i>
       <p id="errorMessage" class="text-sm text-slate-600 font-medium">Failed to connect to data cluster.</p>
     </div>
 
-    <!-- Green Top Header Area -->
     <header class="px-5 pt-5 pb-4 flex justify-between items-center bg-[#228B22] text-white shadow-md shrink-0">
       <div class="flex flex-col">
         <h1 class="text-2xl font-black tracking-tight flex items-center gap-1.5">CollegenZ</h1>
@@ -60,31 +56,25 @@
       </div>
     </header>
 
-    <!-- Subheader Strip Track Row -->
     <div class="px-5 py-3.5 flex justify-between items-center bg-white border-b border-slate-100 shrink-0">
       <div>
-        <h2 id="dashboardRoleTitle" class="text-xs font-bold text-slate-400 uppercase tracking-wider">Intern Workspace</h2>
+        <h2 id="dashboardRoleTitle" class="text-xs font-bold text-slate-400 uppercase tracking-wider">Loading...</h2>
         <p id="parallelTrackCount" class="text-sm font-black text-slate-800 mt-0.5">Active Tracks: 0 of 0</p>
       </div>
       
-      <!-- Mentor Context Action Button -->
       <button id="mentorActionBtn" class="hidden bg-[#228B22] hover:bg-emerald-700 text-white text-xs font-bold px-3 py-1.5 rounded-xl transition cursor-pointer flex items-center gap-1 shadow-sm">
         <i data-lucide="plus" class="w-3.5 h-3.5"></i>
         <span>Add Intern</span>
       </button>
     </div>
 
-    <!-- Active Carousel Window Container Workspace -->
     <main class="flex-1 px-4 py-6 overflow-y-auto no-scrollbar flex flex-col justify-center bg-slate-50 relative">
       
-      <!-- Swipe/Touch Interactive Arena Area viewport -->
       <div id="swipeArena" class="w-full overflow-hidden rounded-3xl relative">
         <div id="carouselTrack" class="carousel-track">
-          <!-- Dynamic panels render here safely -->
-        </div>
+          </div>
       </div>
 
-      <!-- Carousel Button Progress Dot Row Indicators -->
       <div id="carouselControls" class="flex justify-between items-center mt-6 px-2 hidden">
         <button id="prevBtn" class="p-2.5 rounded-xl bg-white border border-slate-200/80 text-slate-600 hover:bg-slate-50 transition cursor-pointer shadow-sm">
           <i data-lucide="chevron-left" class="w-5 h-5"></i>
@@ -99,12 +89,10 @@
 
     </main>
 
-    <!-- App Identity Text Segment -->
     <div class="text-center py-2.5 text-[11px] font-medium tracking-wide text-slate-400 bg-white border-t border-slate-100 shrink-0">
       Socialize with our <span class="font-extrabold text-[#228B22]">CollegenZ</span>
     </div>
 
-    <!-- Dark Clean Bottom Base Navigation -->
     <nav class="bg-[#090d16] text-white grid grid-cols-4 pb-6 pt-3.5 text-center relative z-10 shadow-xl shrink-0">
       <button class="flex flex-col items-center justify-center gap-1.5 text-emerald-400 font-bold transition cursor-pointer">
         <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
@@ -129,7 +117,6 @@
 
   </div>
 
-  <!-- MENTOR MODAL SYSTEM -->
   <div id="addInternModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
     <div class="bg-white w-full max-w-sm rounded-3xl shadow-2xl border border-slate-100 overflow-hidden transform scale-95 transition-transform duration-300">
       <header class="bg-[#228B22] text-white p-4 flex justify-between items-center">
@@ -215,17 +202,22 @@
         if (!response.ok) throw new Error("Fault response returned by API connection.");
         
         const resData = await response.json();
+        
+        // Dynamic payload validation wrapper
         const data = resData.data || resData;
 
         document.getElementById('userAvatar').src = data.picture || "https://collegenz.in/uploads/profilepic.jpg";
         document.getElementById('userEmailBadge').innerText = data.email || "session: active_user";
         
-        appState.zrole = data.zrole || 'intern';
+        // ✅ FIXED ROLE COMPILATION PARSER
+        const assignedRole = data.zrole || resData.zrole || 'intern';
+        appState.zrole = assignedRole.toLowerCase().trim();
         
         if (appState.zrole === 'mentor') {
           document.getElementById('mentorActionBtn').classList.remove('hidden');
           document.getElementById('dashboardRoleTitle').innerText = "Mentor Workspace";
         } else {
+          document.getElementById('mentorActionBtn').classList.add('hidden');
           document.getElementById('dashboardRoleTitle').innerText = "Intern Workspace";
         }
 
@@ -271,7 +263,6 @@
       
       document.getElementById('parallelTrackCount').innerText = `Active Tracks: ${appState.activeIndex + 1} of ${appState.metricsList.length}`;
 
-      // ✅ FIXED: Appended .join('') right after map block to avoid array parsing crashes
       track.innerHTML = appState.metricsList.map((current) => {
         const badgeClass = current.status === 'ACTIVE' 
           ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" 
@@ -397,8 +388,7 @@
       }
     });
 
-
-    let touchStartX = 0;
+let touchStartX = 0;
     let touchEndX = 0;
     const swipeArena = document.getElementById('swipeArena');
 
