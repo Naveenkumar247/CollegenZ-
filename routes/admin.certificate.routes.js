@@ -1,41 +1,43 @@
-const express = require("express");
-const Certificate = require("../models/secondary/Certificate.js");
-
+// Add this to your existing routes/admin.certificate.routes.js file
+const express = require('express');
 const router = express.Router();
+const User = require('../../models/primary/User'); // Adjust path to your User model if needed
 
-/* Create or Update certificate */
-router.post("/save", async (req, res) => {
-  try {
-    const { code, name, organization, issueDate } = req.body;
+/**
+ * @route   POST /api/admin/certificate/update-role
+ * @desc    Admin endpoint to change a user's role to mentor
+ * @access  Private/Admin
+ */
+router.post('/update-role', async (req, res) => {
+    try {
+        const { email, role } = req.body;
 
-    if (!code) {
-      return res.status(400).json({ error: "code is required" });
+        if (!email) {
+            return res.status(400).json({ success: false, error: "Email address is required." });
+        }
+
+        const targetRole = role || 'mentor';
+
+        // Update the user document directly in MongoDB
+        const updatedUser = await User.findOneAndUpdate(
+            { email: email.toLowerCase().trim() },
+            { $set: { zrole: targetRole } },
+            { new: true }
+        );
+
+        if (!updatedUser) {
+            return res.status(404).json({ success: false, error: "No user found with that email address." });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: `Successfully upgraded ${updatedUser.email} to ${updatedUser.zrole}.`
+        });
+
+    } catch (err) {
+        console.error("🔥 Role Update API Error:", err);
+        return res.status(500).json({ success: false, error: "Internal server database error." });
     }
-
-    const cleanCode = code.trim();
-
-    const updateData = {};
-    if (name) updateData.name = name;
-    if (organization) updateData.organization = organization;
-    if (issueDate) updateData.issueDate = issueDate;
-
-    const cert = await Certificate.findOneAndUpdate(
-      { code: cleanCode },
-      updateData,
-      {
-        upsert: true,
-        new: true,
-        runValidators: true,
-        setDefaultsOnInsert: true
-      }
-    );
-
-    res.json({ message: "Certificate saved", cert });
-
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Server error" });
-  }
 });
 
 module.exports = router;
