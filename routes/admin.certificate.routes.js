@@ -1,7 +1,7 @@
 // Add this to your existing routes/admin.certificate.routes.js file
 const express = require('express');
 const router = express.Router();
-const User = require('../../models/primary/User'); // Adjust path to your User model if needed
+const User = require('../models/primary/User'); // Adjust path to your User model if needed
 
 /**
  * @route   POST /api/admin/certificate/update-role
