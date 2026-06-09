@@ -23,97 +23,104 @@
     }
   </style>
 </head>
-<body class="min-h-screen bg-[#f4f6f9] text-slate-800 flex flex-col items-center justify-center p-0 sm:p-4 font-sans antialiased selection:bg-[#228B22] selection:text-white">
+<body class="min-h-screen bg-[#f4f6f9] text-slate-800 font-sans antialiased selection:bg-[#228B22] selection:text-white">
 
-  <div class="w-full max-w-md bg-white border border-slate-200 sm:rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col h-screen sm:h-[820px] relative">
-    
-    <div id="loadingScreen" class="absolute inset-0 bg-white z-50 flex flex-col items-center justify-center gap-3">
-      <i data-lucide="loader-2" class="animate-spin text-[#228B22] w-10 h-10"></i>
-      <p class="text-sm text-slate-500 font-medium tracking-wide">Syncing Workspace Profiles...</p>
+  <header class="sticky top-0 z-40 w-full px-5 py-4 bg-[#228B22] text-white shadow-md flex justify-between items-center shrink-0">
+    <div class="flex flex-col">
+      <h1 class="text-2xl font-black tracking-tight flex items-center gap-1.5">CollegenZ</h1>
+      <span id="userEmailBadge" class="text-[10px] text-emerald-100/90 max-w-[200px] truncate font-medium mt-0.5">session: active_user</span>
     </div>
-
-    <div id="errorScreen" class="absolute inset-0 bg-white z-50 hidden flex flex-col items-center justify-center px-6 text-center gap-4">
-      <i data-lucide="alert-circle" class="text-rose-500 w-12 h-12"></i>
-      <p id="errorMessage" class="text-sm text-slate-600 font-medium">Failed to connect to data cluster.</p>
-    </div>
-
-    <header class="px-5 pt-5 pb-4 flex justify-between items-center bg-[#228B22] text-white shadow-md shrink-0">
-      <div class="flex flex-col">
-        <h1 class="text-2xl font-black tracking-tight flex items-center gap-1.5">CollegenZ</h1>
-        <span id="userEmailBadge" class="text-[10px] text-emerald-100/90 max-w-[200px] truncate font-medium mt-0.5">session: active_user</span>
-      </div>
-      <div class="flex items-center gap-3.5">
-        <button class="hover:opacity-80 transition cursor-pointer p-1 relative">
-          <i data-lucide="bell" class="w-5.5 h-5.5"></i>
-          <span class="absolute top-1 right-1 w-2 h-2 bg-rose-500 rounded-full"></span>
-        </button>
-        <img 
-          id="userAvatar"
-          src="https://collegenz.in/uploads/profilepic.jpg" 
-          alt="Avatar" 
-          class="w-9 h-9 rounded-full object-cover border-2 border-white/20 shadow-sm"
-        />
-      </div>
-    </header>
-
-    <div class="px-5 py-3.5 flex justify-between items-center bg-white border-b border-slate-100 shrink-0">
-      <div>
-        <h2 id="dashboardRoleTitle" class="text-xs font-bold text-slate-400 uppercase tracking-wider">Loading...</h2>
-        <p id="parallelTrackCount" class="text-sm font-black text-slate-800 mt-0.5">Active Tracks: 0 of 0</p>
-      </div>
-      
-      <button id="mentorActionBtn" class="hidden bg-[#228B22] hover:bg-emerald-700 text-white text-xs font-bold px-3 py-1.5 rounded-xl transition cursor-pointer flex items-center gap-1 shadow-sm">
-        <i data-lucide="plus" class="w-3.5 h-3.5"></i>
-        <span>Add Intern</span>
+    <div class="flex items-center gap-3.5">
+      <button class="hover:opacity-80 transition cursor-pointer p-1 relative">
+        <i data-lucide="bell" class="w-5.5 h-5.5"></i>
+        <span class="absolute top-1 right-1 w-2 h-2 bg-rose-500 rounded-full"></span>
       </button>
+      <img 
+        id="userAvatar"
+        src="https://collegenz.in/uploads/profilepic.jpg" 
+        alt="Avatar" 
+        class="w-9 h-9 rounded-full object-cover border-2 border-white/20 shadow-sm"
+      />
     </div>
+  </header>
 
-    <main class="flex-1 px-4 py-6 overflow-y-auto no-scrollbar flex flex-col justify-center bg-slate-50 relative">
+  <div class="max-w-7xl mx-auto flex flex-col md:flex-row min-h-[calc(100vh-73px)] pb-24 md:pb-0 relative">
+
+    <nav class="fixed bottom-0 left-0 right-0 z-30 bg-white border-t border-slate-200/80 shadow-[0_-4px_20px_rgba(0,0,0,0.03)] grid grid-cols-4 pt-2 pb-5 text-center
+                md:sticky md:top-[73px] md:h-[calc(100vh-73px)] md:w-64 md:border-t-0 md:border-r md:flex md:flex-col md:justify-start md:p-6 md:gap-2 md:shadow-none shrink-0 md:pb-6">
       
-      <div id="swipeArena" class="w-full overflow-hidden rounded-3xl relative">
-        <div id="carouselTrack" class="carousel-track">
-          </div>
+      <div class="hidden md:block pb-2 mb-2 border-b border-slate-100">
+        <p class="text-xs font-bold text-slate-400 uppercase tracking-widest text-left px-3">Navigation</p>
       </div>
 
-      <div id="carouselControls" class="flex justify-between items-center mt-6 px-2 hidden">
-        <button id="prevBtn" class="p-2.5 rounded-xl bg-white border border-slate-200/80 text-slate-600 hover:bg-slate-50 transition cursor-pointer shadow-sm">
-          <i data-lucide="chevron-left" class="w-5 h-5"></i>
-        </button>
-        
-        <div id="dotIndicators" class="flex gap-2 items-center"></div>
-
-        <button id="nextBtn" class="p-2.5 rounded-xl bg-white border border-slate-200/80 text-slate-600 hover:bg-slate-50 transition cursor-pointer shadow-sm">
-          <i data-lucide="chevron-right" class="w-5 h-5"></i>
-        </button>
-      </div>
-
-    </main>
-
-    <div class="text-center py-2.5 text-[11px] font-medium tracking-wide text-slate-400 bg-white border-t border-slate-100 shrink-0">
-      Socialize with our <span class="font-extrabold text-[#228B22]">CollegenZ</span>
-    </div>
-
-    <nav class="bg-[#090d16] text-white grid grid-cols-4 pb-6 pt-3.5 text-center relative z-10 shadow-xl shrink-0">
-      <button class="flex flex-col items-center justify-center gap-1.5 text-emerald-400 font-bold transition cursor-pointer">
+      <button class="flex flex-col md:flex-row items-center gap-1 md:gap-4 py-2.5 px-3 text-[#228B22] font-bold rounded-xl md:bg-emerald-50 md:w-full transition cursor-pointer md:border-l-4 md:border-[#228B22] md:rounded-l-none">
         <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
-        <span class="text-[10px] tracking-wide">Dashboard</span>
+        <span class="text-[10px] md:text-sm tracking-wide">Dashboard</span>
       </button>
       
-      <button class="flex flex-col items-center justify-center gap-1.5 text-slate-400 hover:text-white transition cursor-pointer" onclick="window.location.href='/messages'">
+      <button class="flex flex-col md:flex-row items-center gap-1 md:gap-4 py-2.5 px-3 text-slate-400 hover:text-[#228B22] hover:bg-slate-50 rounded-xl transition cursor-pointer" onclick="window.location.href='/messages'">
         <i data-lucide="message-square" class="w-5 h-5"></i>
-        <span class="text-[10px] tracking-wide">Chat</span>
+        <span class="text-[10px] md:text-sm tracking-wide">Chat</span>
       </button>
       
-      <button class="flex flex-col items-center justify-center gap-1.5 text-slate-400 hover:text-white transition cursor-pointer">
+      <button class="flex flex-col md:flex-row items-center gap-1 md:gap-4 py-2.5 px-3 text-slate-400 hover:text-[#228B22] hover:bg-slate-50 rounded-xl transition cursor-pointer">
         <i data-lucide="check-square" class="w-5 h-5"></i>
-        <span class="text-[10px] tracking-wide">Tasks</span>
+        <span class="text-[10px] md:text-sm tracking-wide">Tasks</span>
       </button>
       
-      <button class="flex flex-col items-center justify-center gap-1.5 text-slate-400 hover:text-white transition cursor-pointer">
+      <button class="flex flex-col md:flex-row items-center gap-1 md:gap-4 py-2.5 px-3 text-slate-400 hover:text-[#228B22] hover:bg-slate-50 rounded-xl transition cursor-pointer">
         <i data-lucide="video" class="w-5 h-5"></i>
-        <span class="text-[10px] tracking-wide leading-tight">Meetings</span>
+        <span class="text-[10px] md:text-sm tracking-wide leading-tight">Meetings</span>
       </button>
     </nav>
+
+    <main class="flex-1 p-4 sm:p-6 lg:p-8 bg-slate-50 grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+      
+      <section class="lg:col-span-2 space-y-6 w-full">
+        
+        <div class="w-full flex justify-between items-center bg-white p-4 rounded-2xl border border-slate-200/60 shadow-sm shrink-0">
+          <div>
+            <h2 id="dashboardRoleTitle" class="text-xs font-bold text-slate-400 uppercase tracking-wider">Loading...</h2>
+            <p id="parallelTrackCount" class="text-sm font-black text-slate-800 mt-0.5">Active Tracks: 0 of 0</p>
+          </div>
+          
+          <button id="mentorActionBtn" class="hidden bg-[#228B22] hover:bg-emerald-700 text-white text-xs font-bold px-3 py-1.5 rounded-xl transition cursor-pointer flex items-center gap-1 shadow-sm">
+            <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+            <span>Add Intern</span>
+          </button>
+        </div>
+
+        <div id="swipeArena" class="w-full overflow-hidden rounded-3xl relative">
+          <div id="carouselTrack" class="carousel-track">
+            </div>
+        </div>
+
+        <div id="carouselControls" class="w-full flex justify-between items-center mt-6 px-2 hidden">
+          <button id="prevBtn" class="p-2.5 rounded-xl bg-white border border-slate-200/80 text-slate-600 hover:bg-slate-50 transition cursor-pointer shadow-sm">
+            <i data-lucide="chevron-left" class="w-5 h-5"></i>
+          </button>
+          
+          <div id="dotIndicators" class="flex gap-2 items-center"></div>
+
+          <button id="nextBtn" class="p-2.5 rounded-xl bg-white border border-slate-200/80 text-slate-600 hover:bg-slate-50 transition cursor-pointer shadow-sm">
+            <i data-lucide="chevron-right" class="w-5 h-5"></i>
+          </button>
+        </div>
+      </section>
+
+      <aside class="hidden lg:block space-y-4 sticky top-[95px]">
+        <div class="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-sm">
+          <h3 class="text-xs font-extrabold text-slate-400 uppercase tracking-widest mb-3.5 pb-2 border-b border-slate-100">System Information</h3>
+          <p class="text-xs text-slate-500 leading-relaxed">
+            Welcome to the centralized track execution dashboard. Use the directional controls or swipe gestures to slide across multiple active metrics allocations seamlessly.
+          </p>
+        </div>
+        <div class="px-2 text-[11px] font-medium tracking-wide text-slate-400">
+          Socialize with our <span class="font-extrabold text-[#228B22]">CollegenZ</span> Hub © 2026
+        </div>
+      </aside>
+
+    </main>
 
   </div>
 
@@ -172,6 +179,16 @@
         </button>
       </form>
     </div>
+  </div>
+
+  <div id="loadingScreen" class="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center gap-3">
+    <i data-lucide="loader-2" class="animate-spin text-[#228B22] w-10 h-10"></i>
+    <p class="text-sm text-slate-500 font-medium tracking-wide">Syncing Workspace Profiles...</p>
+  </div>
+
+  <div id="errorScreen" class="fixed inset-0 bg-white z-50 hidden flex flex-col items-center justify-center px-6 text-center gap-4">
+    <i data-lucide="alert-circle" class="text-rose-500 w-12 h-12"></i>
+    <p id="errorMessage" class="text-sm text-slate-600 font-medium">Failed to connect to data cluster.</p>
   </div>
 
   <script>
@@ -388,7 +405,7 @@
       }
     });
 
-let touchStartX = 0;
+    let touchStartX = 0;
     let touchEndX = 0;
     const swipeArena = document.getElementById('swipeArena');
 
