@@ -116,7 +116,6 @@ img {
   display: inline-flex;
 }
 
-/* Hidden elements placeholder validation overrides */
 .z-logo, .search-bar { display: none !important; }
 
 /* ==========================================================================
@@ -182,7 +181,6 @@ img {
 }
 .featured-slider::-webkit-scrollbar { display: none; }
 
-/* Unified professional portrait cards */
 .story-thumb-card, .featured-card, .fb-story-card {
   width: 110px !important;
   height: 195px !important;
@@ -365,7 +363,7 @@ img {
 .post-menu { cursor: pointer; font-size: 20px; color: #222; }
 
 /* ==========================================================================
-   NAVIGATION LAYER SYSTEMS (Mobile Default Bottom Bar Configuration)
+   NAVIGATION SYSTEMS (Mobile View Default Bottom Bar)
    ========================================================================== */
 .sidebar {
   width: 100%;
@@ -375,7 +373,7 @@ img {
   top: auto;
   left: 0;
   right: 0;
-  background: #f0f0ee;
+  background: #ffffff;
   border-top: 1px solid #ddd;
   z-index: 2000;
   display: flex;
@@ -400,7 +398,7 @@ img {
 
 .nav-spacer { width: 60px; }
 
-/* Centered Floating Post Action Button Layout */
+/* Centered Floating Post Action Button */
 .post-fab {
   position: fixed;
   bottom: 25px; 
@@ -428,15 +426,7 @@ img {
 .post-fab img { display: none !important; }
 
 /* ==========================================================================
-   BADGES & INTERACTIVE POPUPS SYSTEM
-   ========================================================================== */
-.slide-count { position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.6); color: #fff; padding: 2px 8px; border-radius: 12px; font-size: 12px; font-weight: 500;}
-.event-badge, .hiring-badge { position: absolute; top: 8px; left: 8px; background: #228B22; color: #fff; padding: 4px 8px; border-radius: 10px; font-size: 12px; font-weight: 500;}
-.text-success { color: #228B22 !important; font-weight: 600; }
-.notification-badge { display: flex; align-items: center; justify-content: center; }
-
-/* ==========================================================================
-   SLIDE NAV INTERACTION MENU - COMPLETE OVERFLOW DESTRUCTION
+   SLIDE NAV SYSTEM & OVERFLOW CLIPPING (Username fix)
    ========================================================================== */
 .slide-nav { 
   position: fixed; 
@@ -449,9 +439,7 @@ img {
   padding: 20px; 
   transition: left 0.3s ease; 
   box-shadow: 2px 0 10px rgba(0,0,0,0.1); 
-  
-  /* 🛡️ CRITICAL BOUNDARY CLIPPING WALL TO STOP OVERFLOW LEAKAGE */
-  overflow: hidden !important; 
+  overflow: hidden !important; /* Locks long usernames from leaking outside */
 }
 .slide-nav.active { left: 0; }
 .slide-nav a { display: block; padding: 10px 0; color: #222; text-decoration: none; font-weight: 500; }
@@ -462,13 +450,10 @@ img {
   align-items: center; 
   gap: 12px; 
   margin-bottom: 15px; 
-  
-  /* 🛡️ ENFORCES STRUCTURAL PARENT BOUNDS OVER LONG INJECTED CONTENT STRINGS */
   min-width: 0 !important;
   width: 100%;
 }
 
-/* Enforces internal element clipping behavior rules on text node wrappers */
 .user-info > div:last-child {
   min-width: 0 !important;
   flex: 1;
@@ -476,14 +461,11 @@ img {
 
 .profile-pic { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
 
-/* Target header text identity fields explicitly */
 .user-info h6, #navUsername {
   margin: 0;
   font-family: 'Poppins', sans-serif;
   font-weight: 600;
   color: #1e293b;
-  
-  /* 🛡️ TRUNCATES EXTRA-LONG USERNAMES CLEANLY INTO AN ELLIPSIS (...) */
   white-space: nowrap !important;
   overflow: hidden !important;
   text-overflow: ellipsis !important;
@@ -500,7 +482,7 @@ img {
 .close-popup { float: right; font-size: 22px; cursor: pointer; }
 
 /* ==========================================================================
-   STORY VIEWER FRAME MODAL
+   STORY VIEWER CONTROLS
    ========================================================================== */
 .story-viewer {
   position: fixed; inset: 0; background: #000;
@@ -599,7 +581,7 @@ img {
 .story-user span#storyUsername { font-weight: 600; font-size: 16px; text-shadow: 0 1px 4px rgba(0,0,0,0.8); margin-bottom: 10px; }
 
 /* ==========================================================================
-   HIGH-END RESPONSIVE DESKTOP BREAKPOINTS (Workspace Sidebar Layout Engine)
+   TRUE HIGH-END RESPONSIVE DESKTOP LAYOUT (Transforms downbar cleanly)
    ========================================================================== */
 @media (min-width: 992px) {
   .bottom-header { 
@@ -607,14 +589,14 @@ img {
     margin: auto; 
   }
 
-  /* 🛠️ CONVERTS DOWNBAR INTO THE SPECIFIC LEFT SIDEBAR SEEN IN 1000147351.JPG */
+  /* 🛠️ TRANSFORMS RECTANGLE DOWNBAR DIRECTLY INTO THE LEFT DASHBOARD SIDEBAR */
   .sidebar {
     width: 260px;
     height: calc(100vh - 64px);
     position: fixed;
     top: 64px;
     bottom: auto;
-    left: calc(50% - 600px); /* Keeps sidebar cleanly anchored with the master layout container */
+    left: calc(50% - 600px); /* Keeps left navigation grid aligned perfectly inside wide browser screens */
     background: #ffffff;
     border-top: none;
     border-right: 1px solid var(--border-color);
@@ -625,7 +607,7 @@ img {
     z-index: 900;
   }
 
-  /* Adds the 'NAVIGATION' label at the top of the sidebar frame */
+  /* Automatically renders the 'NAVIGATION' text string wrapper above link icons */
   .sidebar::before {
     content: "NAVIGATION";
     font-size: 11px;
@@ -659,14 +641,14 @@ img {
     gap: 14px;
   }
 
-  /* Style matching for the active state indicator shown in your dashboard layout */
+  /* Highlights active indicator frame layout state rules */
   .sidebar a:first-child, .sidebar a.active-link-indicator {
     background: #f0fdf4;
     color: var(--primary-color);
     font-weight: 600;
     border-left: 3px solid var(--primary-color);
     border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-    padding-left: 13px; /* Compensate for the 3px border gap */
+    padding-left: 13px;
   }
 
   .sidebar a:hover:not(:first-child) {
@@ -674,7 +656,7 @@ img {
     color: var(--text-main);
   }
 
-  /* 🏷️ FIXED CONTENT LABELS CORRESPONDING TO WORKSPACE ROUTING IN 1000147351.JPG */
+  /* Generates content text layouts dynamically for specific icon tags to align with image 1000147351.jpg */
   .sidebar a::after {
     font-size: 13px;
     font-weight: 500;
@@ -688,7 +670,7 @@ img {
 
   .nav-spacer { display: none !important; }
 
-  /* ADJUSTS COMPACT FLOATING ACTION BUTTON UNDERNEATH NAVIGATION ROWS */
+  /* Re-positions the creation action block cleanly into the workspace sidebar list */
   .post-fab {
     position: absolute;
     bottom: auto;
@@ -714,14 +696,13 @@ img {
     margin-top: 0;
   }
 
-  /* SHIFTS CENTRAL FEED TO ALLOW PRECISE SIDEBAR SPACING */
+  /* Shifts core post modules and story lines clear of the left sidebar workspace */
   #postContainer {
     margin-left: 260px;
     padding: 30px 40px;
     max-width: 940px;
   }
 
-  /* STORIES ROW POSITION FIX */
   .featured-wrapper {
     margin-left: 260px;
     background: transparent;
@@ -744,4 +725,5 @@ img {
   #postContainer {
     padding: 0 0 70px 0;
   }
-                                            }
+     }
+       
