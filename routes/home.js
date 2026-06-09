@@ -32,7 +32,7 @@ router.get("/", async (req, res) => {
   <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <link rel="shortcut icon" href="/favicon.ico" />
-  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+  <link class="rounded-full" rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
   <link rel="manifest" href="/site.webmanifest" />
 
   <meta name="theme-color" content="#1f7a1f" />
@@ -118,60 +118,47 @@ router.get("/", async (req, res) => {
   </script>
 </head>
  
-
 <body>
 
-<!-- ================= HEADER ================= -->
 <header class="header" id="mainHeader">
-  <!-- Hidden to preserve JS -->
   <a href="/" class="top-header" id="topHeader" style="display:none;">
     <img src="Doodle.png" class="logo" alt="CollegenZ" />
   </a>
 
   <div class="bottom-header" id="bottomHeader">
-    <!-- Hidden to preserve JS -->
     <div class="z-logo" style="display:none;">Z</div>
     <div class="search-bar" style="display:none;">
       <input type="text" placeholder="Search" />
     </div>
 
-    <!-- New Sketch Header Layout -->
-    <div class="sketch-header-content">
-      <a href="/profile" aria-label="Profile">
-  
-  <div id="headerProfilePic" class="header-profile-icon" style="width: 32px; height: 32px; border-radius: 50%; overflow: hidden; display: inline-block; vertical-align: middle;">
-    
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" width="100%" height="100%">
-      <circle cx="20" cy="20" r="18" fill="#e0e0e0" stroke="#ffffff" stroke-width="2"/>
-      
-      <clipPath id="header-avatar-clip">
-        <circle cx="20" cy="20" r="17.5" />
-      </clipPath>
-      
-      <g clip-path="url(#header-avatar-clip)" fill="#f5f5f5">
-        <circle cx="20" cy="14" r="6.5" />
-        <path d="M7 34c0-8 6.5-12 13-12s13 4 13 12" />
-      </g>
-    </svg>
+    <div class="sketch-header-content" style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+      <a href="/profile" aria-label="Profile" style="display: inline-flex; align-items: center;">
+        <div id="headerProfilePic" class="header-profile-icon" style="width: 32px; height: 32px; border-radius: 50%; overflow: hidden; display: inline-block; vertical-align: middle; box-shadow: 0 2px 4px rgba(0,0,0,0.08);">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" width="100%" height="100%">
+            <circle cx="20" cy="20" r="18" fill="#e2e8f0" stroke="#ffffff" stroke-width="2"/>
+            <clipPath id="header-avatar-clip">
+              <circle cx="20" cy="20" r="17.5" />
+            </clipPath>
+            <g clip-path="url(#header-avatar-clip)" fill="#94a3b8">
+              <circle cx="20" cy="14" r="6" />
+              <path d="M9 32.5c0-5.5 5-9.5 11-9.5s11 4 11 9.5" />
+            </g>
+          </svg>
+        </div>
+      </a>
 
-  </div>
+      <h1 class="header-logo-text" style="font-family: 'Poppins', sans-serif; font-weight: 700; margin: 0;">
+        <a href="https://collegenz.in/aboutus" style="text-decoration: none; color: inherit; transition: opacity 0.2s;">CollegenZ</a>
+      </h1>
 
-</a>
-
-
-      <h1 class="header-logo-text">
-  <a href="https://collegenz.in/aboutus" style="text-decoration: none; color: inherit;">CollegenZ</a>
-</h1>
-
-      <div class="header-actions">
-        <a href="/notifications"><i class="bi bi-bell"></i></a>
-        <div class="hamburger" id="hamburger">&#9776;</div>
+      <div class="header-actions" style="display: flex; align-items: center; gap: 1rem;">
+        <a href="/notifications" style="color: inherit; font-size: 1.2rem; display: inline-flex;"><i class="bi bi-bell"></i></a>
+        <div class="hamburger" id="hamburger" style="font-size: 1.4rem; cursor: pointer; user-select: none;">&#9776;</div>
       </div>
     </div>
   </div>
 </header>
 
-<!-- Keeping Filter Bar for JS, but you can hide it via CSS if you don't want it -->
 <div id="filterBar" class="filter-bar">
   <button class="filter-btn active" data-type="all">All</button>
   <button class="filter-btn" data-type="event">Event</button>
@@ -179,145 +166,116 @@ router.get("/", async (req, res) => {
   <button class="filter-btn" data-type="general">General</button>
 </div>
 
-<!-- ================= SIDEBAR (Slide Nav) ================= -->
-
 <nav id="slideNav" class="slide-nav">
-  <div class="user-info">
-    
-    <div id="navProfilePic" class="profile-pic" style="width: 48px; height: 48px; flex-shrink: 0; border-radius: 50%; overflow: hidden;">
+  <div class="user-info" style="display: flex; align-items: center; gap: 12px; padding: 16px;">
+    <div id="navProfilePic" class="profile-pic" style="width: 48px; height: 48px; flex-shrink: 0; border-radius: 50%; overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,0.1);">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" width="100%" height="100%">
-        <circle cx="20" cy="20" r="18" fill="#e0e0e0" stroke="#ffffff" stroke-width="2"/>
+        <circle cx="20" cy="20" r="18" fill="#e2e8f0" stroke="#ffffff" stroke-width="2"/>
         <clipPath id="avatar-clip">
           <circle cx="20" cy="20" r="17.5" />
         </clipPath>
-        <g clip-path="url(#avatar-clip)" fill="#f5f5f5">
-          <circle cx="20" cy="14" r="6.5" />
-          <path d="M7 34c0-8 6.5-12 13-12s13 4 13 12" />
+        <g clip-path="url(#avatar-clip)" fill="#94a3b8">
+          <circle cx="20" cy="14" r="6" />
+          <path d="M9 32.5c0-5.5 5-9.5 11-9.5s11 4 11 9.5" />
         </g>
       </svg>
     </div>
-
-    <div>
-      <h6 id="navUsername"></h6>
-      <p id="navEmail"></p>
+    <div style="min-w-0;">
+      <h6 id="navUsername" style="margin: 0; font-family: 'Poppins', sans-serif; font-weight: 600; color: #1e293b; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"></h6>
+      <p id="navEmail" style="margin: 2px 0 0 0; font-size: 0.8rem; color: #64748b; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"></p>
     </div>
   </div>
-  <hr />
-  <a href="/login">Log In</a>
-  <a href="/logout">Log Out</a>
+  <hr style="margin: 0; border-top: 1px solid #e2e8f0;" />
+  <a href="/login" style="display: block; padding: 12px 24px; color: #334155; text-decoration: none; font-weight: 500;">Log In</a>
+  <a href="/logout" style="display: block; padding: 12px 24px; color: #ef4444; text-decoration: none; font-weight: 500;">Log Out</a>
 </nav>
-
-
-
 
 <div class="overlay" id="overlay"></div>
 
-<!-- ================= FEATURED ================= -->
 <div class="featured-wrapper">
   <h3 class="section-title">Featured post</h3>
   <div id="featuredSlider" class="featured-slider"></div>
 </div>
 
-<!-- ================= POSTS ================= -->
 <div id="postContainer"></div>
 
-<!-- ================= BOTTOM NAVIGATION & FAB ================= -->
 <div class="sidebar">
-  <div class="icon">
+  <div class="icon" style="display: flex; align-items: center; justify-content: space-around; width: 100%; position: relative;">
     
-   <a href="/" aria-label="Home">
-  <div class="nav-icon-container">
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-      <path d="M12 3L2 12h3v8h6v-6h2v6h6v-8h3L12 3z" fill="#228B22"/>
-    </svg>
+    <a href="/" aria-label="Home" style="display: inline-flex; align-items: center; justify-content: center;">
+      <div class="nav-icon-container" style="transition: transform 0.2s ease;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+          <path d="M12 3L2 12h3v8h6v-6h2v6h6v-8h3L12 3z" fill="#228B22"/>
+        </svg>
+      </div>
+    </a>
 
-    </div>
-</a>
+    <a href="/shorts" aria-label="Shorts" style="display: inline-flex; align-items: center; justify-content: center;">
+      <div class="nav-icon-container" style="transition: transform 0.2s ease;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+          <defs>
+            <mask id="reels-cutout">
+              <rect width="24" height="24" fill="white" />
+              <path d="M10 10.5v5l4.5-2.5z" fill="black" />
+              <rect x="0" y="7" width="24" height="1.5" fill="black" />
+              <path d="M7.5 2l-2.5 5h2l2.5-5z" fill="black" />
+              <path d="M14.5 2l-2.5 5h2l2.5-5z" fill="black" />
+              <path d="M21.5 2l-2.5 5h2l2.5-5z" fill="black" />
+            </mask>
+          </defs>
+          <rect x="2" y="2" width="20" height="20" rx="4" fill="#228B22" mask="url(#reels-cutout)" />
+        </svg>
+      </div>
+    </a>
 
+    <div class="nav-spacer" style="width: 48px; flex-shrink: 0;"></div> 
 
-    <a href="/shorts" aria-label="Shorts">
-  <div class="nav-icon-container">
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-      <defs>
-        <mask id="reels-cutout">
-          <rect width="24" height="24" fill="white" />
-          
-          <path d="M10 10.5v5l4.5-2.5z" fill="black" />
-          
-          <rect x="0" y="7" width="24" height="1.5" fill="black" />
-          
-          <path d="M7.5 2l-2.5 5h2l2.5-5z" fill="black" />
-          <path d="M14.5 2l-2.5 5h2l2.5-5z" fill="black" />
-          <path d="M21.5 2l-2.5 5h2l2.5-5z" fill="black" />
-        </mask>
-      </defs>
+    <a href="/friends" aria-label="Chat" style="display: inline-flex; align-items: center; justify-content: center;">
+      <div class="nav-icon-container" style="position: relative; display: inline-flex; width: 24px; height: 24px; transition: transform 0.2s ease;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+          <path d="M12 3c5.5 0 10 3.58 10 8 0 2.5-1.4 4.74-3.55 6.15.3.92 1.05 2.22 1.05 2.22s-1.7.13-3.65-.9c-1.2.35-2.5.53-3.85.53-5.5 0-10-3.58-10-8s4.5-8 10-8z" fill="#2e7d32"/>
+          <circle cx="7.5" cy="11" r="1.5" fill="#ffffff"/>
+          <circle cx="12" cy="11" r="1.5" fill="#ffffff"/>
+          <circle cx="16.5" cy="11" r="1.5" fill="#ffffff"/>
+        </svg>
+        <span id="global-chat-badge" class="notification-badge" style="display: none; position: absolute; top: -6px; right: -8px; background-color: #ff3b30; color: white; font-size: 10px; font-weight: bold; font-family: -apple-system, BlinkMacSystemFont, sans-serif; border-radius: 50%; min-width: 16px; height: 16px; align-items: center; justify-content: center; padding: 0 4px; border: 2px solid #ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.15);">0</span>
+      </div>
+    </a>
 
-      <rect x="2" y="2" width="20" height="20" rx="4" fill="#228B22" mask="url(#reels-cutout)" />
-    </svg>
-  </div>
-</a>
-
-
-    <div class="nav-spacer"></div> <a href="/friends" aria-label="Chat">
-  <div class="nav-icon-container" style="position: relative; display: inline-flex; width: 24px; height: 24px;">
-    
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-      <path d="M12 3c5.5 0 10 3.58 10 8 0 2.5-1.4 4.74-3.55 6.15.3.92 1.05 2.22 1.05 2.22s-1.7.13-3.65-.9c-1.2.35-2.5.53-3.85.53-5.5 0-10-3.58-10-8s4.5-8 10-8z" fill="#2e7d32"/>
-      <circle cx="7.5" cy="11" r="1.5" fill="#ffffff"/>
-      <circle cx="12" cy="11" r="1.5" fill="#ffffff"/>
-      <circle cx="16.5" cy="11" r="1.5" fill="#ffffff"/>
-    </svg>
-
-    <span id="global-chat-badge" class="notification-badge" style="display: none; position: absolute; top: -6px; right: -8px; background-color: #ff3b30; color: white; font-size: 10px; font-weight: bold; font-family: sans-serif; border-radius: 50%; min-width: 16px; height: 16px; align-items: center; justify-content: center; padding: 0 4px; border: 2px solid #ffffff;">0</span>
-
-  
-  </div>
-</a>
-
-
-<a href="/calender" aria-label="Calendar">
-  <div class="nav-icon-container" style="position: relative; display: inline-flex; width: 24px; height: 24px;">
-    
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-      <defs>
-        <linearGradient id="calendarGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stop-color="#6fc258" />  <stop offset="100%" stop-color="#1c6827" /> </linearGradient>
-      </defs>
-
-      <rect x="3" y="5" width="18" height="17" rx="2" ry="2" fill="url(#calendarGrad)" />
-      <rect x="6.5" y="3" width="2.5" height="4" rx="1" fill="url(#calendarGrad)" />
-      <rect x="15" y="3" width="2.5" height="4" rx="1" fill="url(#calendarGrad)" />
-
-      <rect x="5" y="9.5" width="2.5" height="2.5" fill="#ffffff" />
-      <rect x="8.5" y="9.5" width="2.5" height="2.5" fill="#ffffff" />
-      <rect x="12" y="9.5" width="2.5" height="2.5" fill="#ffffff" />
-      <rect x="15.5" y="9.5" width="2.5" height="2.5" fill="#ffffff" />
-
-      <rect x="5" y="13" width="2.5" height="2.5" fill="#ffffff" />
-      <rect x="8.5" y="13" width="2.5" height="2.5" fill="#ffffff" />
-      <rect x="12" y="13" width="2.5" height="2.5" fill="#ffffff" />
-      <rect x="15.5" y="13" width="2.5" height="2.5" fill="#ffffff" />
-
-      <rect x="5" y="16.5" width="2.5" height="2.5" fill="#ffffff" />
-      <rect x="8.5" y="16.5" width="2.5" height="2.5" fill="#ffffff" />
-      <rect x="12" y="16.5" width="6" height="2.5" fill="#ffffff" />
-    </svg>
-
-    <span class="notification-badge" style="position: absolute; top: -6px; right: -8px; background-color: #ff3b30; color: white; font-size: 10px; font-weight: bold; font-family: sans-serif; border-radius: 50%; min-width: 16px; height: 16px; display: flex; align-items: center; justify-content: center; padding: 0 4px; border: 2px solid #ffffff;">5</span>
-    
-  </div>
-</a>
-
+    <a href="/calender" aria-label="Calendar" style="display: inline-flex; align-items: center; justify-content: center;">
+      <div class="nav-icon-container" style="position: relative; display: inline-flex; width: 24px; height: 24px; transition: transform 0.2s ease;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+          <defs>
+            <linearGradient id="calendarGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="#6fc258" />  
+              <stop offset="100%" stop-color="#1c6827" /> 
+            </linearGradient>
+          </defs>
+          <rect x="3" y="5" width="18" height="17" rx="2" ry="2" fill="url(#calendarGrad)" />
+          <rect x="6.5" y="3" width="2.5" height="4" rx="1" fill="url(#calendarGrad)" />
+          <rect x="15" y="3" width="2.5" height="4" rx="1" fill="url(#calendarGrad)" />
+          <rect x="5" y="9.5" width="2.5" height="2.5" fill="#ffffff" />
+          <rect x="8.5" y="9.5" width="2.5" height="2.5" fill="#ffffff" />
+          <rect x="12" y="9.5" width="2.5" height="2.5" fill="#ffffff" />
+          <rect x="15.5" y="9.5" width="2.5" height="2.5" fill="#ffffff" />
+          <rect x="5" y="13" width="2.5" height="2.5" fill="#ffffff" />
+          <rect x="8.5" y="13" width="2.5" height="2.5" fill="#ffffff" />
+          <rect x="12" y="13" width="2.5" height="2.5" fill="#ffffff" />
+          <rect x="15.5" y="13" width="2.5" height="2.5" fill="#ffffff" />
+          <rect x="5" y="16.5" width="2.5" height="2.5" fill="#ffffff" />
+          <rect x="8.5" y="16.5" width="2.5" height="2.5" fill="#ffffff" />
+          <rect x="12" y="16.5" width="6" height="2.5" fill="#ffffff" />
+        </svg>
+        <span class="notification-badge" style="position: absolute; top: -6px; right: -8px; background-color: #ff3b30; color: white; font-size: 10px; font-weight: bold; font-family: -apple-system, BlinkMacSystemFont, sans-serif; border-radius: 50%; min-width: 16px; height: 16px; display: flex; align-items: center; justify-content: center; padding: 0 4px; border: 2px solid #ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.15);">5</span>
+      </div>
+    </a>
 
   </div>
 </div>
 
-<!-- Centered Floating Post Button -->
-<a href="/upload" class="post-fab center-fab">
-  <!-- CSS will generate the + icon to match the sketch -->
-</a>
+<a href="/upload" class="post-fab center-fab" aria-label="Create Post" style="z-index: 25; display: flex; align-items: center; justify-content: center; text-decoration: none;">
+  </a>
 
-<!-- Profile Popup & Story Viewer remain unchanged below -->
 <div id="profilePopup" class="profile-popup">
   <div class="profile-popup-content">
     <span class="close-popup">&times;</span>
@@ -363,18 +321,12 @@ router.get("/", async (req, res) => {
   </div>
 </div>
 
-
-
-     
-
-<!-- ================= SCRIPTS ================= -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="/script.js" defer></script>
 <script src="/socket.io/socket.io.js"></script>
 <script src="/share-script.js"></script>
 
 </body>
-
 </html>
 `);
   } catch (err) {
