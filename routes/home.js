@@ -46,6 +46,8 @@ router.get("/", async (req, res) => {
   <meta property="og:url" content="https://collegenz.in/" />
   <meta property="og:image" content="https://collegenz.in/logo.png" />
 
+  <meta name="theme-color" content="#228B22" />
+
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="CollegenZ – AI Powered College Platform" />
   <meta name="twitter:description" content="Explore colleges, hackathons, events and opportunities with CollegenZ." />
@@ -192,12 +194,16 @@ router.get("/", async (req, res) => {
 
 <div class="overlay" id="overlay"></div>
 
-<div class="featured-wrapper">
-  <h3 class="section-title">Featured post</h3>
-  <div id="featuredSlider" class="featured-slider"></div>
-</div>
+<div class="desktop-main-wrapper">
 
-<div id="postContainer"></div>
+  <div class="featured-wrapper">
+    <h3 class="section-title">Featured post</h3>
+    <div id="featuredSlider" class="featured-slider"></div>
+  </div>
+
+  <div id="postContainer"></div>
+
+</div>
 
 <div class="sidebar">
   <div class="icon" style="display: flex; align-items: center; justify-content: space-around; width: 100%; position: relative;">
@@ -273,8 +279,7 @@ router.get("/", async (req, res) => {
   </div>
 </div>
 
-<a href="/upload" class="post-fab center-fab" aria-label="Create Post" style="z-index: 25; display: flex; align-items: center; justify-content: center; text-decoration: none;">
-  </a>
+<a href="/upload" class="post-fab center-fab" aria-label="Create Post" style="z-index: 25; display: flex; align-items: center; justify-content: center; text-decoration: none;"></a>
 
 <div id="profilePopup" class="profile-popup">
   <div class="profile-popup-content">
@@ -336,3 +341,4 @@ router.get("/", async (req, res) => {
 });
 
 module.exports = router;
+
