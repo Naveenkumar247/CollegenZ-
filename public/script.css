@@ -103,6 +103,11 @@ img {
   flex: 1;
 }
 
+.header-logo-text a {
+  text-decoration: none;
+  color: inherit;
+}
+
 .header-actions {
   display: flex;
   gap: 15px;
@@ -156,7 +161,7 @@ img {
 }
 
 /* ==========================================================================
-   STORIES / FEATURED SLIDER CHANNELS (Maintained & Centered)
+   STORIES / FEATURED SLIDER CHANNELS
    ========================================================================== */
 .featured-wrapper {
   background: var(--card-bg);
@@ -264,7 +269,7 @@ img {
 
 /* ==========================================================================
    PRIMARY TIMELINE POST CARDS
-   ========================================================================= */
+   ========================================================================== */
 #postContainer {
   background: #ffffff;
   display: flex;
@@ -363,7 +368,7 @@ img {
 .post-menu { cursor: pointer; font-size: 20px; color: #222; }
 
 /* ==========================================================================
-   NAVIGATION SYSTEMS (Mobile Native Bottom Nav Bar)
+   NAVIGATION SYSTEMS (Mobile Native View Bottom bar)
    ========================================================================== */
 .sidebar {
   width: 100%;
@@ -398,7 +403,6 @@ img {
 
 .nav-spacer { width: 60px; }
 
-/* Centered Floating Post Action Button */
 .post-fab {
   position: fixed;
   bottom: 25px; 
@@ -426,7 +430,7 @@ img {
 .post-fab img { display: none !important; }
 
 /* ==========================================================================
-   SLIDE NAV MENU & OVERFLOW PREVENTION (Username Fix)
+   SLIDE NAV SYSTEM & OVERFLOW PREVENTION (Username Fix)
    ========================================================================== */
 .slide-nav { 
   position: fixed; 
@@ -439,7 +443,7 @@ img {
   padding: 20px; 
   transition: left 0.3s ease; 
   box-shadow: 2px 0 10px rgba(0,0,0,0.1); 
-  overflow: hidden !important;
+  overflow: hidden !important; /* Locks long usernames from leaking outside the slider */
 }
 .slide-nav.active { left: 0; }
 .slide-nav a { display: block; padding: 10px 0; color: #222; text-decoration: none; font-weight: 500; }
@@ -581,7 +585,7 @@ img {
 .story-user span#storyUsername { font-weight: 600; font-size: 16px; text-shadow: 0 1px 4px rgba(0,0,0,0.8); margin-bottom: 10px; }
 
 /* ==========================================================================
-   HIGH-END RESPONSIVE DESKTOP BREAKPOINTS (Left Sidebar Layout Engine)
+   HIGH-END RESPONSIVE DESKTOP BREAKPOINTS (Clean Workspace Matrix Grid)
    ========================================================================== */
 @media (min-width: 992px) {
   .bottom-header { 
@@ -589,14 +593,14 @@ img {
     margin: auto; 
   }
 
-  /* 🛠️ TARGETS NATIVE HOMEPAGE HTML DOM TREE AND SHIFTS BOTTOM BAR INTO DESKTOP SIDEBAR */
+  /* 🛠️ TRANSFORMS THE NATIVE BAR DIRECTLY INTO THE WORKSPACE LEFT SIDEBAR */
   .sidebar {
     width: 260px;
     height: calc(100vh - 64px);
     position: fixed;
     top: 64px;
     bottom: auto;
-    left: calc(50% - 600px); /* Grid lock sync with centered desktop content panels */
+    left: 0; 
     background: #ffffff;
     border-top: none;
     border-right: 1px solid var(--border-color);
@@ -607,7 +611,7 @@ img {
     z-index: 900;
   }
 
-  /* Renders the Section Header matching your workspace profile requirements */
+  /* Adds the structural NAVIGATION category tag inside the sidebar frame */
   .sidebar::before {
     content: "NAVIGATION";
     font-size: 11px;
@@ -629,7 +633,6 @@ img {
     width: 100%;
   }
 
-  /* Styles individual anchor tags dynamically mapping onto native script structures */
   .sidebar a {
     width: 100%;
     display: flex;
@@ -642,7 +645,7 @@ img {
     gap: 14px;
   }
 
-  /* Active background track highlight matching image 1000147351.jpg */
+  /* Active indicator track matching your preferred layout */
   .sidebar a:first-child, .sidebar a.active-link-indicator {
     background: #f0fdf4;
     color: var(--primary-color);
@@ -657,7 +660,7 @@ img {
     color: var(--text-main);
   }
 
-  /* 🏷️ GENERATES DYNAMIC SIDEBAR TEXT TO REPLACE CORRESOPNDING NATIVE DESKTOP ELEMENTS */
+  /* 🏷️ GENERATES THE SIDEBAR COGNITIVE TEXT LABELS USING SYSTEM ATTRIBUTES */
   .sidebar a::after {
     font-size: 13px;
     font-weight: 500;
@@ -671,7 +674,7 @@ img {
 
   .nav-spacer { display: none !important; }
 
-  /* COMPACT SIDEBAR ACTION LINK POSITION FOR CENTRAL '+' FAB TRIGGER */
+  /* ADJUSTS COMPACT FAB DIRECTLY BELOW NAVIGATION LINKS INSIDE THE SIDEBAR CORES */
   .post-fab {
     position: absolute;
     bottom: auto;
@@ -697,19 +700,24 @@ img {
     margin-top: 0;
   }
 
-  /* OFFSETS MAIN CONTENT TRACK SO IT SITS CLEANLY BESIDE SIDEBAR */
-  #postContainer {
+  /* 🛠️ SHIFTS BOTH STORIES AND TIMELINE FEEDS TOGETHER CLEAR OF THE FIXED SIDEBAR */
+  .desktop-main-wrapper {
     margin-left: 260px;
-    padding: 30px 40px;
-    max-width: 940px;
+    max-width: 650px; 
+    width: calc(100% - 260px);
+  }
+
+  #postContainer {
+    padding: 20px 0;
+    width: 100%;
   }
 
   .featured-wrapper {
     margin-left: 260px;
     background: transparent;
     border-bottom: none;
-    padding: 24px 40px 0px 40px;
-    max-width: 940px;
+    padding: 24px 0 0 0;
+    width: 100%;
   }
 
   .filter-bar {
@@ -726,4 +734,7 @@ img {
   #postContainer {
     padding: 0 0 70px 0;
   }
-   }
+  .desktop-main-wrapper {
+    width: 100%;
+  }
+}
