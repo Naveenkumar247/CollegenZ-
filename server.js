@@ -218,7 +218,7 @@ app.get("/certificate/:code", (req, res) => res.sendFile(path.join(__dirname, "v
 
 app.get('/internship-login', (req, res) => res.sendFile(path.join(__dirname, 'internship-login.html')));
 app.get('/internship-signup', (req, res) => res.sendFile(path.join(__dirname, 'internship-signup.html')));
-app.get('/virtualroom', (req, res) => res.sendFile(path.join(__dirname,src, 'meeting.html')));
+app.get('/virtualroom', (req, res) => res.sendFile(path.join(__dirname,'src', 'meeting.html')));
 app.get("/admin/roles", (req, res) => {
   res.sendFile(path.join(__dirname, "views", "admin-roles.html"));
 });
