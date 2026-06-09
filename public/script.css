@@ -599,7 +599,7 @@ img {
 .story-user span#storyUsername { font-weight: 600; font-size: 16px; text-shadow: 0 1px 4px rgba(0,0,0,0.8); margin-bottom: 10px; }
 
 /* ==========================================================================
-   HIGH-END RESPONSIVE DESKTOP BREAKPOINTS (Left Sidebar Layout Engine)
+   HIGH-END RESPONSIVE DESKTOP BREAKPOINTS (Workspace Sidebar Layout Engine)
    ========================================================================== */
 @media (min-width: 992px) {
   .bottom-header { 
@@ -607,94 +607,121 @@ img {
     margin: auto; 
   }
 
-  /* 🛠️ CONVERTS DYNAMIC BOTTOMBAR INTO A PERSISTENT LEFT DESKTOP SIDEBAR */
+  /* 🛠️ CONVERTS DOWNBAR INTO THE SPECIFIC LEFT SIDEBAR SEEN IN 1000147351.JPG */
   .sidebar {
     width: 260px;
     height: calc(100vh - 64px);
     position: fixed;
     top: 64px;
     bottom: auto;
-    left: calc(50% - 600px); /* Seamless grid lock sync alignment with desktop wrapper frames */
-    background: var(--card-bg);
+    left: calc(50% - 600px); /* Keeps sidebar cleanly anchored with the master layout container */
+    background: #ffffff;
     border-top: none;
     border-right: 1px solid var(--border-color);
     box-shadow: none;
     flex-direction: column;
-    padding: 30px 10px;
+    padding: 24px 16px;
     justify-content: flex-start;
     z-index: 900;
+  }
+
+  /* Adds the 'NAVIGATION' label at the top of the sidebar frame */
+  .sidebar::before {
+    content: "NAVIGATION";
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+    padding-left: 12px;
+    margin-bottom: 16px;
+    display: block;
+    width: 100%;
+    text-align: left;
   }
 
   .sidebar .icon {
     flex-direction: column;
     justify-content: flex-start;
-    gap: 12px;
+    gap: 8px;
     height: auto;
+    width: 100%;
   }
 
   .sidebar a {
     width: 100%;
     display: flex;
     align-items: center;
-    padding: 12px 20px;
-    border-radius: var(--radius-md);
+    padding: 10px 16px;
+    border-radius: var(--radius-sm);
     text-decoration: none;
     color: var(--text-muted);
     transition: var(--transition-smooth);
-    gap: 16px;
-  }
-  .sidebar a:hover {
-    background: #f8fafc;
-    color: var(--primary-color);
+    gap: 14px;
   }
 
-  /* INJECTS COMPACT SIDEBAR COMPONENT TITLES TO MATCH DASHBOARD GEOMETRY */
-  .sidebar a::after {
-    font-size: 14px;
-    font-weight: 700;
-    font-family: 'Poppins', sans-serif;
+  /* Style matching for the active state indicator shown in your dashboard layout */
+  .sidebar a:first-child, .sidebar a.active-link-indicator {
+    background: #f0fdf4;
+    color: var(--primary-color);
+    font-weight: 600;
+    border-left: 3px solid var(--primary-color);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    padding-left: 13px; /* Compensate for the 3px border gap */
   }
-  .sidebar a[aria-label="Home"]::after { content: "Home"; color: var(--primary-color); }
-  .sidebar a[aria-label="Shorts"]::after { content: "Media"; }
-  .sidebar a[aria-label="Chat"]::after { content: "Messages"; }
-  .sidebar a[aria-label="Calendar"]::after { content: "Events"; }
+
+  .sidebar a:hover:not(:first-child) {
+    background: #f8fafc;
+    color: var(--text-main);
+  }
+
+  /* 🏷️ FIXED CONTENT LABELS CORRESPONDING TO WORKSPACE ROUTING IN 1000147351.JPG */
+  .sidebar a::after {
+    font-size: 13px;
+    font-weight: 500;
+    font-family: 'Poppins', sans-serif;
+    color: inherit;
+  }
+  .sidebar a[aria-label="Home"]::after { content: "Dashboard"; }
+  .sidebar a[aria-label="Shorts"]::after { content: "Chat"; }
+  .sidebar a[aria-label="Chat"]::after { content: "Tasks"; }
+  .sidebar a[aria-label="Calendar"]::after { content: "Meetings"; }
 
   .nav-spacer { display: none !important; }
 
-  /* TRANSFORMS CENTER FAB INTO AN INTEGRATED STRUCTURAL CONTAINER BUTTON */
+  /* ADJUSTS COMPACT FLOATING ACTION BUTTON UNDERNEATH NAVIGATION ROWS */
   .post-fab {
     position: absolute;
     bottom: auto;
-    top: 260px;
-    left: 20px;
+    top: 280px;
+    left: 16px;
     transform: none;
-    width: calc(100% - 40px);
-    height: 46px;
-    border-radius: var(--radius-md);
-    font-size: 14px;
-    font-weight: 700;
+    width: calc(100% - 32px);
+    height: 42px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-weight: 600;
     gap: 8px;
     box-shadow: var(--shadow-sm);
   }
   .post-fab:hover {
-    transform: scale(1.02);
+    transform: translateY(-1px);
     box-shadow: var(--shadow-md);
     background: var(--primary-hover);
   }
   .post-fab::after {
     content: "Create Post";
-    font-weight: 700;
+    font-weight: 600;
     margin-top: 0;
   }
 
-  /* TIMELINE VIEWPORT REBALANCING (Aligns alongside desktop sidebar) */
+  /* SHIFTS CENTRAL FEED TO ALLOW PRECISE SIDEBAR SPACING */
   #postContainer {
     margin-left: 260px;
     padding: 30px 40px;
     max-width: 940px;
   }
 
-  /* STORIES CAROUSEL ZONE MOVED OUT FROM UNDER SIDEBAR BOUNDS */
+  /* STORIES ROW POSITION FIX */
   .featured-wrapper {
     margin-left: 260px;
     background: transparent;
@@ -717,5 +744,4 @@ img {
   #postContainer {
     padding: 0 0 70px 0;
   }
-   }
-     
+                                            }
