@@ -264,7 +264,7 @@ img {
 
 /* ==========================================================================
    PRIMARY TIMELINE POST CARDS
-   ========================================================================== */
+   ========================================================================= */
 #postContainer {
   background: #ffffff;
   display: flex;
@@ -363,7 +363,7 @@ img {
 .post-menu { cursor: pointer; font-size: 20px; color: #222; }
 
 /* ==========================================================================
-   NAVIGATION SYSTEMS (Mobile View Default Bottom Bar)
+   NAVIGATION SYSTEMS (Mobile Native Bottom Nav Bar)
    ========================================================================== */
 .sidebar {
   width: 100%;
@@ -426,7 +426,7 @@ img {
 .post-fab img { display: none !important; }
 
 /* ==========================================================================
-   SLIDE NAV SYSTEM & OVERFLOW CLIPPING (Username fix)
+   SLIDE NAV MENU & OVERFLOW PREVENTION (Username Fix)
    ========================================================================== */
 .slide-nav { 
   position: fixed; 
@@ -439,7 +439,7 @@ img {
   padding: 20px; 
   transition: left 0.3s ease; 
   box-shadow: 2px 0 10px rgba(0,0,0,0.1); 
-  overflow: hidden !important; /* Locks long usernames from leaking outside */
+  overflow: hidden !important;
 }
 .slide-nav.active { left: 0; }
 .slide-nav a { display: block; padding: 10px 0; color: #222; text-decoration: none; font-weight: 500; }
@@ -482,7 +482,7 @@ img {
 .close-popup { float: right; font-size: 22px; cursor: pointer; }
 
 /* ==========================================================================
-   STORY VIEWER CONTROLS
+   STORY VIEWER MODULES
    ========================================================================== */
 .story-viewer {
   position: fixed; inset: 0; background: #000;
@@ -581,7 +581,7 @@ img {
 .story-user span#storyUsername { font-weight: 600; font-size: 16px; text-shadow: 0 1px 4px rgba(0,0,0,0.8); margin-bottom: 10px; }
 
 /* ==========================================================================
-   TRUE HIGH-END RESPONSIVE DESKTOP LAYOUT (Transforms downbar cleanly)
+   HIGH-END RESPONSIVE DESKTOP BREAKPOINTS (Left Sidebar Layout Engine)
    ========================================================================== */
 @media (min-width: 992px) {
   .bottom-header { 
@@ -589,14 +589,14 @@ img {
     margin: auto; 
   }
 
-  /* 🛠️ TRANSFORMS RECTANGLE DOWNBAR DIRECTLY INTO THE LEFT DASHBOARD SIDEBAR */
+  /* 🛠️ TARGETS NATIVE HOMEPAGE HTML DOM TREE AND SHIFTS BOTTOM BAR INTO DESKTOP SIDEBAR */
   .sidebar {
     width: 260px;
     height: calc(100vh - 64px);
     position: fixed;
     top: 64px;
     bottom: auto;
-    left: calc(50% - 600px); /* Keeps left navigation grid aligned perfectly inside wide browser screens */
+    left: calc(50% - 600px); /* Grid lock sync with centered desktop content panels */
     background: #ffffff;
     border-top: none;
     border-right: 1px solid var(--border-color);
@@ -607,7 +607,7 @@ img {
     z-index: 900;
   }
 
-  /* Automatically renders the 'NAVIGATION' text string wrapper above link icons */
+  /* Renders the Section Header matching your workspace profile requirements */
   .sidebar::before {
     content: "NAVIGATION";
     font-size: 11px;
@@ -629,6 +629,7 @@ img {
     width: 100%;
   }
 
+  /* Styles individual anchor tags dynamically mapping onto native script structures */
   .sidebar a {
     width: 100%;
     display: flex;
@@ -641,14 +642,14 @@ img {
     gap: 14px;
   }
 
-  /* Highlights active indicator frame layout state rules */
+  /* Active background track highlight matching image 1000147351.jpg */
   .sidebar a:first-child, .sidebar a.active-link-indicator {
     background: #f0fdf4;
     color: var(--primary-color);
     font-weight: 600;
     border-left: 3px solid var(--primary-color);
     border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-    padding-left: 13px;
+    padding-left: 13px; 
   }
 
   .sidebar a:hover:not(:first-child) {
@@ -656,7 +657,7 @@ img {
     color: var(--text-main);
   }
 
-  /* Generates content text layouts dynamically for specific icon tags to align with image 1000147351.jpg */
+  /* 🏷️ GENERATES DYNAMIC SIDEBAR TEXT TO REPLACE CORRESOPNDING NATIVE DESKTOP ELEMENTS */
   .sidebar a::after {
     font-size: 13px;
     font-weight: 500;
@@ -670,7 +671,7 @@ img {
 
   .nav-spacer { display: none !important; }
 
-  /* Re-positions the creation action block cleanly into the workspace sidebar list */
+  /* COMPACT SIDEBAR ACTION LINK POSITION FOR CENTRAL '+' FAB TRIGGER */
   .post-fab {
     position: absolute;
     bottom: auto;
@@ -696,7 +697,7 @@ img {
     margin-top: 0;
   }
 
-  /* Shifts core post modules and story lines clear of the left sidebar workspace */
+  /* OFFSETS MAIN CONTENT TRACK SO IT SITS CLEANLY BESIDE SIDEBAR */
   #postContainer {
     margin-left: 260px;
     padding: 30px 40px;
@@ -725,5 +726,4 @@ img {
   #postContainer {
     padding: 0 0 70px 0;
   }
-     }
-       
+   }
