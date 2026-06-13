@@ -403,31 +403,10 @@ img {
 
 .nav-spacer { width: 60px; }
 
+/* Completely removed the create post button from compiling */
 .post-fab {
-  position: fixed;
-  bottom: 25px; 
-  left: 50%;
-  transform: translateX(-50%);
-  width: 55px;
-  height: 55px;
-  background: #228B22;
-  border: none; 
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4px 12px rgba(34, 139, 34, 0.4);
-  z-index: 2005;
-  text-decoration: none;
-  color: #fff;
-  font-size: 34px;
+  display: none !important;
 }
-.post-fab::after {
-  content: '+';
-  font-weight: 300;
-  margin-top: -4px;
-}
-.post-fab img { display: none !important; }
 
 /* ==========================================================================
    SLIDE NAV SYSTEM & OVERFLOW PREVENTION (Username Fix)
@@ -625,7 +604,7 @@ img {
     display: flex;
   }
 
-  /* Adds the structural NAVIGATION category tag inside the sidebar frame */
+  /* Fixed spelling to NAVIGATION */
   .sidebar::before {
     content: "NAVIGATION";
     font-size: 11px;
@@ -659,7 +638,7 @@ img {
     gap: 14px;
   }
 
-  /* Active indicator track matching your preferred layout */
+  /* Active indicator track matching your layout */
   .sidebar a:first-child, .sidebar a.active-link-indicator {
     background: #f0fdf4;
     color: var(--primary-color);
@@ -674,45 +653,19 @@ img {
     color: var(--text-main);
   }
 
-  /* 🏷️ GENERATES THE SIDEBAR COGNITIVE TEXT LABELS USING SYSTEM ATTRIBUTES */
+  /* 🏷️ RENAMED SIDEBAR LABELS VIA ATTRIBUTE INJECTION MATRIX */
   .sidebar a::after {
     font-size: 14px;
     font-weight: 500;
     font-family: 'Poppins', sans-serif;
     color: inherit;
   }
-  .sidebar a[aria-label="Home"]::after { content: "Dashboard"; }
-  .sidebar a[aria-label="Shorts"]::after { content: "Chat"; }
-  .sidebar a[aria-label="Chat"]::after { content: "Tasks"; }
-  .sidebar a[aria-label="Calendar"]::after { content: "Meetings"; }
+  .sidebar a[aria-label="Home"]::after { content: "Home"; }
+  .sidebar a[aria-label="Shorts"]::after { content: "Infobyts"; }
+  .sidebar a[aria-label="Chat"]::after { content: "Chat"; }
+  .sidebar a[aria-label="Calendar"]::after { content: "Calendar"; }
 
   .nav-spacer { display: none !important; }
-
-  /* ADJUSTS COMPACT FAB DIRECTLY BELOW NAVIGATION LINKS INSIDE THE SIDEBAR CORES */
-  .post-fab {
-    position: absolute;
-    bottom: auto;
-    top: 280px;
-    left: 16px;
-    transform: none;
-    width: calc(100% - 32px);
-    height: 42px;
-    border-radius: var(--radius-sm);
-    font-size: 13px;
-    font-weight: 600;
-    gap: 8px;
-    box-shadow: var(--shadow-sm);
-  }
-  .post-fab:hover {
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-md);
-    background: var(--primary-hover);
-  }
-  .post-fab::after {
-    content: "Create Post";
-    font-weight: 600;
-    margin-top: 0;
-  }
 
   /* 🛠️ SHIFTS MAIN WORKSPACE CONTAINERS TOGETHER OUTSIDE SIDEBAR CORE TRACK */
   .desktop-main-wrapper {
@@ -723,13 +676,15 @@ img {
     display: block;
   }
 
-  /* Keeps featured blocks organized seamlessly with secondary timelines */
+  /* Removed mobile layout overlapping background layers behind main wrappers */
   .featured-wrapper {
     margin-left: 0;
     background: transparent;
     border-bottom: none;
-    padding: 24px 0 10px 0;
+    padding: 10px 0;
     width: 100%;
+    position: relative;
+    z-index: 10;
   }
 
   .featured-slider {
@@ -742,7 +697,7 @@ img {
     background: transparent;
   }
 
-  /* Elevates separate posts into neat desktop content frames */
+  /* Elevated separate timeline item layout blocks */
   .ig-post {
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
@@ -758,4 +713,4 @@ img {
     top: 80px;
     box-shadow: var(--shadow-lg);
   }
-   }
+     }
