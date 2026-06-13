@@ -443,7 +443,7 @@ img {
   padding: 20px; 
   transition: left 0.3s ease; 
   box-shadow: 2px 0 10px rgba(0,0,0,0.1); 
-  overflow: hidden !important; /* Locks long usernames from leaking outside the slider */
+  overflow: hidden !important;
 }
 .slide-nav.active { left: 0; }
 .slide-nav a { display: block; padding: 10px 0; color: #222; text-decoration: none; font-weight: 500; }
@@ -585,12 +585,25 @@ img {
 .story-user span#storyUsername { font-weight: 600; font-size: 16px; text-shadow: 0 1px 4px rgba(0,0,0,0.8); margin-bottom: 10px; }
 
 /* ==========================================================================
+   MOBILE & RESPONSIVE CONFIGURATIONS (Fallback/Safety Bounds)
+   ========================================================================== */
+@media (max-width: 600px) {
+  #postContainer {
+    padding: 0 0 70px 0;
+  }
+  .desktop-main-wrapper {
+    width: 100%;
+  }
+}
+
+/* ==========================================================================
    HIGH-END RESPONSIVE DESKTOP BREAKPOINTS (Clean Workspace Matrix Grid)
    ========================================================================== */
 @media (min-width: 992px) {
   .bottom-header { 
-    max-width: 1200px; 
-    margin: auto; 
+    max-width: 100%; 
+    padding: 0 40px;
+    margin: 0; 
   }
 
   /* 🛠️ TRANSFORMS THE NATIVE BAR DIRECTLY INTO THE WORKSPACE LEFT SIDEBAR */
@@ -601,7 +614,7 @@ img {
     top: 64px;
     bottom: auto;
     left: 0; 
-    background: #ffffff;
+    background: var(--card-bg);
     border-top: none;
     border-right: 1px solid var(--border-color);
     box-shadow: none;
@@ -609,6 +622,7 @@ img {
     padding: 24px 16px;
     justify-content: flex-start;
     z-index: 900;
+    display: flex;
   }
 
   /* Adds the structural NAVIGATION category tag inside the sidebar frame */
@@ -637,7 +651,7 @@ img {
     width: 100%;
     display: flex;
     align-items: center;
-    padding: 10px 16px;
+    padding: 12px 16px;
     border-radius: var(--radius-sm);
     text-decoration: none;
     color: var(--text-muted);
@@ -662,7 +676,7 @@ img {
 
   /* 🏷️ GENERATES THE SIDEBAR COGNITIVE TEXT LABELS USING SYSTEM ATTRIBUTES */
   .sidebar a::after {
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 500;
     font-family: 'Poppins', sans-serif;
     color: inherit;
@@ -700,24 +714,40 @@ img {
     margin-top: 0;
   }
 
-  /* 🛠️ SHIFTS BOTH STORIES AND TIMELINE FEEDS TOGETHER CLEAR OF THE FIXED SIDEBAR */
+  /* 🛠️ SHIFTS MAIN WORKSPACE CONTAINERS TOGETHER OUTSIDE SIDEBAR CORE TRACK */
   .desktop-main-wrapper {
     margin-left: 260px;
-    max-width: 650px; 
     width: calc(100% - 260px);
+    max-width: 720px; 
+    padding: 0 30px;
+    display: block;
+  }
+
+  /* Keeps featured blocks organized seamlessly with secondary timelines */
+  .featured-wrapper {
+    margin-left: 0;
+    background: transparent;
+    border-bottom: none;
+    padding: 24px 0 10px 0;
+    width: 100%;
+  }
+
+  .featured-slider {
+    padding: 10px 0;
   }
 
   #postContainer {
-    padding: 20px 0;
+    padding: 10px 0 40px 0;
     width: 100%;
+    background: transparent;
   }
 
-  .featured-wrapper {
-    margin-left: 260px;
-    background: transparent;
-    border-bottom: none;
-    padding: 24px 0 0 0;
-    width: 100%;
+  /* Elevates separate posts into neat desktop content frames */
+  .ig-post {
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    margin-bottom: 24px;
+    box-shadow: var(--shadow-sm);
   }
 
   .filter-bar {
@@ -728,13 +758,4 @@ img {
     top: 80px;
     box-shadow: var(--shadow-lg);
   }
-}
-
-@media (max-width: 600px) {
-  #postContainer {
-    padding: 0 0 70px 0;
-  }
-  .desktop-main-wrapper {
-    width: 100%;
-  }
-}
+   }
