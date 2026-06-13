@@ -210,6 +210,7 @@ app.get("/shorts", (req, res) => res.sendFile(path.join(__dirname, "shorts.html"
 app.get("/roadmap", (req, res) => res.sendFile(path.join(__dirname, "roadmap.html")));
 app.get("/aboutus", (req, res) => res.sendFile(path.join(__dirname, "about.html")));
 app.get("/notifications", (req, res) => res.sendFile(path.join(__dirname, "notify.html")));
+app.get("/calendar", (req, res) => res.sendFile(path.join(__dirname,'src' , "calendar.html"))); 
 app.get("/messages", (req, res) => res.sendFile(path.join(__dirname,'src' , "chatfriends.html"))); 
 app.get("/friends", (req, res) => res.sendFile(path.join(__dirname,'src' , "chatfriends.html"))); 
 app.get("/admin/featured", (req, res) => res.sendFile(path.join(__dirname, "featured-submit.html")));
