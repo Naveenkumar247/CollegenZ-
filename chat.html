@@ -7,56 +7,145 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 
 <style>
+/* ==========================================================================
+   GLOBAL DESIGN SYSTEM & VARIABLES
+   ========================================================================== */
 :root {
-  --collegenz-green: #228B22;
-  --bg-page: #d1d7db;
+  --primary-color: #228B22;
+  --primary-hover: #1c6f1c;
+  --bg-color: #f4f6f9;
+  --card-bg: #ffffff;
+  --text-main: #1e293b;
+  --text-muted: #64748b;
+  --border-color: #e2e8f0;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  --shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.03);
+
+  /* Chat Token Colors */
   --bg-chat: #efeae2;
   --msg-me: #dcf8c6;
   --msg-other: #ffffff;
-  --text-dark: #111b21;
-  --text-muted: #667781;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background-color: var(--bg-page);
+  font-family: 'Poppins', 'Open Sans', system-ui, -apple-system, sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-main);
   height: 100vh;
   overflow: hidden;
 }
 
+/* ==========================================================================
+   HEADER APPLICATION HUB BAR
+   ========================================================================== */
+.header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 64px;
+  z-index: 1000;
+  background: var(--primary-color);
+  box-shadow: 0 4px 12px rgba(34, 139, 34, 0.15);
+}
+
+.bottom-header {
+  height: 64px;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 0 15px;
+}
+
+.sketch-header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.header-logo-text {
+  font-size: 22px;
+  font-weight: bold;
+  margin: 0;
+  color: #ffffff;
+  text-align: center;
+  flex: 1;
+}
+.header-logo-text a { text-decoration: none; color: inherit; }
+
+.header-actions { display: flex; gap: 15px; align-items: center; }
+.header-actions i { color: #ffffff; font-size: 24px; cursor: pointer; }
+
+/* ==========================================================================
+   NAVIGATION INFRASTRUCTURE (Universal Responsive Trackers)
+   ========================================================================== */
+.sidebar {
+  width: 100%;
+  height: 60px;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #ffffff;
+  border-top: 1px solid var(--border-color);
+  z-index: 999;
+  display: flex;
+}
+
+.sidebar .icon {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-evenly;
+  width: 100%;
+  height: 100%;
+}
+
+.sidebar a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  text-decoration: none;
+}
+.sidebar a i { font-size: 22px; }
+
+/* ==========================================================================
+   WORKSPACE CONTENT MATRIX CONTAINERS
+   ========================================================================== */
 .main-chat-container {
-  height: 100vh;
+  height: calc(100vh - 64px);
+  margin-top: 64px;
+  margin-bottom: 60px;
   width: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
+  padding: 0;
 }
 
 .chat-wrapper {
   width: 100%;
-  max-width: 100%;
-  height: 100dvh;
+  height: 100%;
   background: var(--bg-chat);
   display: flex;
   flex-direction: column;
   position: relative;
-  box-shadow: 0 12px 24px rgba(0,0,0,0.1);
 }
 
-@media (min-width: 768px) {
-  .chat-wrapper {
-    max-width: 500px;
-    height: 90vh;
-    border-radius: 12px;
-    margin: 20px;
-  }
-}
-
+/* Chat Block Component Modules */
 .chat-header {
-  background: var(--collegenz-green);
-  color: white;
+  background: #f0f2f5;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-main);
   padding: 10px 16px;
   display: flex;
   align-items: center;
@@ -65,12 +154,12 @@ body {
   flex-shrink: 0;
 }
 
-.back-btn { color: white; font-size: 24px; text-decoration: none; padding-right: 5px; }
-.chat-header img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; background: #fff; }
+.back-btn { color: var(--text-main); font-size: 24px; text-decoration: none; padding-right: 5px; }
+.chat-header img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; background: #fff; border: 1px solid var(--border-color); }
 
 .header-info { flex: 1; }
 .header-info h4 { margin: 0; font-size: 16px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
-.header-info span { font-size: 12px; opacity: 0.85; transition: opacity 0.3s; }
+.header-info span { font-size: 12px; color: var(--text-muted); }
 
 .messages {
   flex: 1;
@@ -79,26 +168,18 @@ body {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  scrollbar-width: thin;
 }
 
-/* 🔥 WHATSAPP DATE SEPARATOR STYLES */
-.date-separator {
-  display: flex;
-  justify-content: center;
-  margin: 12px 0;
-  width: 100%;
-}
+.date-separator { display: flex; justify-content: center; margin: 12px 0; width: 100%; }
 .date-separator span {
-  background: rgba(225, 245, 254, 0.95); /* WhatsApp-style light blueish grey */
+  background: rgba(225, 245, 254, 0.95);
   color: #54656f;
   font-size: 11.5px;
   font-weight: 500;
   padding: 5px 12px;
   border-radius: 12px;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+  box-shadow: var(--shadow-sm);
   text-transform: uppercase;
-  letter-spacing: 0.3px;
 }
 
 .msg-row { display: flex; width: 100%; margin-bottom: 2px; }
@@ -110,15 +191,9 @@ body {
   padding: 8px 12px;
   border-radius: 8px;
   font-size: 14.5px;
-  box-shadow: 0 1px 1px rgba(0,0,0,0.1);
+  box-shadow: 0 1px 1px rgba(0,0,0,0.08);
   position: relative;
   word-wrap: break-word;
-  animation: fadeIn 0.2s ease-out;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(5px); }
-  to { opacity: 1; transform: translateY(0); }
 }
 
 .msg-row.me .msg { background: var(--msg-me); border-top-right-radius: 2px; }
@@ -133,42 +208,36 @@ body {
   font-size: 10px;
   color: var(--text-muted);
 }
-
-.bi-check2-all { color: #34b7f1; } 
+.bi-check2-all { color: #34b7f1; }
 
 .footer-container {
   background: #f0f2f5;
   padding: 8px 12px;
+  border-top: 1px solid var(--border-color);
   flex-shrink: 0;
 }
 
 .typing {
   font-size: 13px;
-  color: var(--collegenz-green);
+  color: var(--primary-color);
   font-style: italic;
   padding: 2px 5px;
   min-height: 18px;
   visibility: hidden;
 }
 
-.chat-input-wrapper {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
+.chat-input-wrapper { display: flex; align-items: center; gap: 8px; }
 .chat-input-wrapper input {
   flex: 1;
   padding: 10px 16px;
   border-radius: 22px;
-  border: none;
+  border: 1px solid var(--border-color);
   outline: none;
   font-size: 15px;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
 }
 
 .send-btn {
-  background: var(--collegenz-green);
+  background: var(--primary-color);
   color: white;
   border: none;
   border-radius: 50%;
@@ -178,37 +247,170 @@ body {
   justify-content: center;
   align-items: center;
   cursor: pointer;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
 }
 
-.send-btn:active { transform: scale(0.92); }
-.send-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+/* ==========================================================================
+   HIGH-END RESPONSIVE DESKTOP BREAKPOINTS (Clean Workspace Layout Sync)
+   ========================================================================== */
+@media (min-width: 992px) {
+  .bottom-header { 
+    max-width: 100%; 
+    padding: 0 40px;
+    margin: 0; 
+  }
+
+  /* Sidebars step into primary screen real-estate columns */
+  .sidebar {
+    width: 260px;
+    height: calc(100vh - 64px);
+    position: fixed;
+    top: 64px;
+    bottom: auto;
+    left: 0; 
+    background: var(--card-bg);
+    border-top: none;
+    border-right: 1px solid var(--border-color);
+    box-shadow: none;
+    flex-direction: column;
+    padding: 24px 16px;
+    justify-content: flex-start;
+    z-index: 900;
+    display: flex;
+  }
+
+  .sidebar::before {
+    content: "NAVIGATION";
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+    padding-left: 12px;
+    margin-bottom: 16px;
+    display: block;
+    width: 100%;
+    text-align: left;
+  }
+
+  .sidebar .icon {
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 8px;
+    height: auto;
+    width: 100%;
+  }
+
+  .sidebar a {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 12px 16px;
+    border-radius: var(--radius-sm);
+    text-decoration: none;
+    color: var(--text-muted);
+    transition: var(--transition-smooth);
+    gap: 14px;
+  }
+
+  /* Chat active link track selection target adjustments */
+  .sidebar a[aria-label="Chat"], .sidebar a.active-link-indicator {
+    background: #f0fdf4;
+    color: var(--primary-color);
+    font-weight: 600;
+    border-left: 3px solid var(--primary-color);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    padding-left: 13px; 
+  }
+
+  .sidebar a:hover:not([aria-label="Chat"]) {
+    background: #f8fafc;
+    color: var(--text-main);
+  }
+
+  /* Workspace Nav Labels Setup Injection Matrix */
+  .sidebar a::after {
+    font-size: 14px;
+    font-weight: 500;
+    font-family: 'Poppins', sans-serif;
+    color: inherit;
+  }
+  .sidebar a[aria-label="Home"]::after { content: "Home"; }
+  .sidebar a[aria-label="Shorts"]::after { content: "Infobyts"; }
+  .sidebar a[aria-label="Chat"]::after { content: "Chat"; }
+  .sidebar a[aria-label="Calendar"]::after { content: "Calendar"; }
+
+  /* Shifts workspace frame safely past 260px fixed width sidebar */
+  .main-chat-container {
+    margin-left: 260px;
+    width: calc(100% - 260px);
+    height: calc(100vh - 64px);
+    margin-bottom: 0;
+    padding: 24px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .chat-wrapper {
+    max-width: 800px;
+    height: 100%;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+  }
+}
 </style>
 </head>
 
 <body>
-<div class="main-chat-container">
-  <div class="chat-wrapper">
-    <div class="chat-header">
-      <a href="/messages" class="back-btn"><i class="bi bi-arrow-left-short"></i></a>
-      <img src="/uploads/profilepic.jpg" id="headerAvatar" alt="Avatar">
-      <div class="header-info">
-        <h4 id="friendName">...</h4>
-        <span id="statusText">Connecting...</span>
+
+  <!-- FIXED UPPER HEADER SYSTEM LAYER -->
+  <header class="header">
+    <div class="bottom-header">
+      <div class="sketch-header-content">
+        <div class="header-actions"><i class="bi bi-list"></i></div>
+        <h1 class="header-logo-text"><a href="/">CollegenZ</a></h1>
+        <div class="header-actions">
+          <i class="bi bi-bell"></i>
+        </div>
       </div>
     </div>
+  </header>
 
-    <div class="messages" id="messages"></div>
-
-    <div class="footer-container">
-      <div class="typing" id="typingDisplay">typing...</div>
-      <form class="chat-input-wrapper" id="chatForm">
-        <input type="text" id="messageInput" placeholder="Type a message" autocomplete="off">
-        <button class="send-btn" type="submit" id="sendBtn"><i class="bi bi-send-fill"></i></button>
-      </form>
+  <!-- WORKSPACE LEFT STATIC TRACK SIDEBAR -->
+  <nav class="sidebar">
+    <div class="icon">
+      <a href="/" aria-label="Home"><i class="bi bi-house-door"></i></a>
+      <a href="/shorts" aria-label="Shorts"><i class="bi bi-play-btn"></i></a>
+      <a href="/messages" aria-label="Chat"><i class="bi bi-chat-dots"></i></a>
+      <a href="/calendar" aria-label="Calendar"><i class="bi bi-calendar3"></i></a>
     </div>
-  </div>
-</div>
+  </nav>
+
+  <!-- CHAT WINDOW LAYOUT MATRIX PORTAL CONTAINER -->
+  <main class="main-chat-container">
+    <div class="chat-wrapper">
+      <div class="chat-header">
+        <a href="/messages" class="back-btn"><i class="bi bi-arrow-left-short"></i></a>
+        <img src="/uploads/profilepic.jpg" id="headerAvatar" alt="Avatar">
+        <div class="header-info">
+          <h4 id="friendName">...</h4>
+          <span id="statusText">Connecting...</span>
+        </div>
+      </div>
+
+      <div class="messages" id="messages"></div>
+
+      <div class="footer-container">
+        <div class="typing" id="typingDisplay">typing...</div>
+        <form class="chat-input-wrapper" id="chatForm">
+          <input type="text" id="messageInput" placeholder="Type a message" autocomplete="off">
+          <button class="send-btn" type="submit" id="sendBtn"><i class="bi bi-send-fill"></i></button>
+        </form>
+      </div>
+    </div>
+  </main>
 
 <script src="/socket.io/socket.io.js"></script>
 <script>
@@ -221,7 +423,6 @@ body {
   const typingDisplay = document.getElementById("typingDisplay");
   const statusText = document.getElementById("statusText");
 
-  // Global variable to track the last date rendered on the screen
   let lastRenderedDate = "";
 
   socket.on('connect', () => { statusText.textContent = "Online"; });
@@ -248,7 +449,6 @@ body {
     const room = [myId, friendId].sort().join("_");
     socket.emit("joinRoom", room);
 
-    // --- SMART HISTORY DEDUPLICATOR ---
     const historyRes = await fetch(`/api/messages/${friendId}`);
     if (historyRes.ok) {
       const history = await historyRes.json();
@@ -257,8 +457,6 @@ body {
 
       history.forEach(m => {
         const msgTime = new Date(m.createdAt).getTime();
-        
-        // Block DB duplicates within 1 second
         if (m.text === lastText && Math.abs(msgTime - lastTime) < 1000) return;
         
         lastText = m.text;
@@ -269,17 +467,13 @@ body {
       });
     }
 
-    // --- SMART LIVE MESSAGE DEDUPLICATOR ---
     let lastIncomingText = "";
     let lastIncomingTime = 0;
 
     socket.on("newMessage", msg => {
       const incomingSenderId = (typeof msg.sender === 'object' && msg.sender !== null) ? msg.sender._id : msg.sender;
-      
       if (String(incomingSenderId) !== String(myId)) {
         const msgTime = new Date(msg.createdAt || Date.now()).getTime();
-        
-        // Block socket double-emits within 1 second
         if (msg.text === lastIncomingText && Math.abs(msgTime - lastIncomingTime) < 1000) return;
         
         lastIncomingText = msg.text;
@@ -301,11 +495,9 @@ body {
       const text = input.value.trim();
       if (!text) return;
 
-      // Prevent Double Tapping the Send Button
       sendBtn.disabled = true;
       setTimeout(() => sendBtn.disabled = false, 500);
 
-      // Render optimistic message locally
       addMessage(text, true);
 
       socket.emit("sendMessage", {
@@ -340,7 +532,6 @@ body {
     statusText.textContent = "Offline";
   }
 
-  // --- WHATSAPP DATE FORMATTER ---
   function getWhatsAppDateString(dateObj) {
     const today = new Date();
     const yesterday = new Date();
@@ -351,31 +542,24 @@ body {
     } else if (dateObj.toDateString() === yesterday.toDateString()) {
       return "Yesterday";
     } else {
-      // e.g., "April 4, 2026"
       return dateObj.toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' });
     }
   }
 
-  // --- ADD MESSAGE FUNCTION WITH DATE SEPARATION ---
   function addMessage(text, isMe, timeStamp = null) {
     const msgDate = timeStamp ? new Date(timeStamp) : new Date();
-    const dateStringIdentifier = msgDate.toDateString(); // Used to check if day changed
+    const dateStringIdentifier = msgDate.toDateString();
 
-    // Check if we need to insert a new Date Separator Bubble
     if (dateStringIdentifier !== lastRenderedDate) {
       const separatorText = getWhatsAppDateString(msgDate);
-      
       const sepDiv = document.createElement("div");
       sepDiv.className = "date-separator";
       sepDiv.innerHTML = `<span>${separatorText}</span>`;
       box.appendChild(sepDiv);
-      
-      lastRenderedDate = dateStringIdentifier; // Update the tracker
+      lastRenderedDate = dateStringIdentifier;
     }
 
-    // Format the timestamp for the message bubble (e.g., 06:00 PM)
     const time = msgDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
     const row = document.createElement("div");
     row.className = `msg-row ${isMe ? "me" : "other"}`;
     row.innerHTML = `
@@ -387,13 +571,11 @@ body {
         </div>
       </div>
     `;
-    
     box.appendChild(row);
-    box.scrollTop = box.scrollHeight; // Auto-scroll to bottom
+    box.scrollTop = box.scrollHeight;
   }
 })();
 
-  // Mark Messages as Read Logic
   async function markMessagesAsRead(friendId) {
     try {
       const response = await fetch('/api/messages/mark-read', {
@@ -401,11 +583,8 @@ body {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ friendId: friendId }) 
       });
-      
       const data = await response.json();
-      if(data.success) {
-         console.log("✅ Messages successfully marked as read");
-      }
+      if(data.success) { console.log("✅ Messages successfully marked as read"); }
     } catch (error) {
       console.error("❌ Failed to mark messages as read:", error);
     }
