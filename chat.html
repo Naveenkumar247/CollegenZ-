@@ -120,10 +120,10 @@
     .sidebar a i { font-size: 22px; }
 
     /* ==========================================================================
-       WORKSPACE CONTENT MATRIX CONTAINERS
+       WORKSPACE CONTENT MATRIX CONTAINERS (Mobile Mode Default)
        ========================================================================== */
     .main-chat-container {
-      height: calc(100vh - 124px); /* Accounts for header + mobile bottom nav heights */
+      height: calc(100vh - 124px); 
       margin-top: 64px;
       width: 100%;
       display: flex;
@@ -251,16 +251,16 @@
     }
 
     /* ==========================================================================
-       HIGH-END RESPONSIVE DESKTOP BREAKPOINTS (Clean Workspace Layout Sync)
+       HIGH-END RESPONSIVE DESKTOP BREAKPOINTS (Lowered threshold to 768px for testing compatibility)
        ========================================================================== */
-    @media (min-width: 992px) {
+    @media (min-width: 768px) {
       .bottom-header { 
         max-width: 100%; 
         padding: 0 40px;
         margin: 0; 
       }
 
-      /* Sidebars step into primary screen real-estate columns */
+      /* Transforms bottom navigation strip securely into the workspace sidebar */
       .sidebar {
         width: 260px;
         height: calc(100vh - 64px);
@@ -268,6 +268,7 @@
         top: 64px;
         bottom: auto;
         left: 0; 
+        right: auto;
         background: var(--card-bg);
         border-top: none;
         border-right: 1px solid var(--border-color);
@@ -313,7 +314,7 @@
         gap: 14px;
       }
 
-      /* Chat active link track selection target adjustments */
+      /* Chat active sidebar indicator highlighting rules */
       .sidebar a[aria-label="Chat"], .sidebar a.active-link-indicator {
         background: #f0fdf4;
         color: var(--primary-color);
@@ -328,7 +329,7 @@
         color: var(--text-main);
       }
 
-      /* Workspace Nav Labels Setup Injection Matrix */
+      /* Navigation Labels Setup Injection via Pseudo-elements */
       .sidebar a::after {
         font-size: 14px;
         font-weight: 500;
@@ -340,7 +341,7 @@
       .sidebar a[aria-label="Chat"]::after { content: "Chat"; }
       .sidebar a[aria-label="Calendar"]::after { content: "Calendar"; }
 
-      /* Fixed responsiveness issue by correctly adjusting main-chat-container on desktop monitors */
+      /* Centers the interface and avoids sidebar collisions */
       .main-chat-container {
         margin-left: 260px;
         width: calc(100% - 260px);
