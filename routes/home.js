@@ -248,7 +248,7 @@ router.get("/", async (req, res) => {
       </div>
     </a>
 
-    <a href="/calender" aria-label="Calendar" style="display: inline-flex; align-items: center; justify-content: center;">
+    <a href="/calendar" aria-label="Calendar" style="display: inline-flex; align-items: center; justify-content: center;">
       <div class="nav-icon-container" style="position: relative; display: inline-flex; width: 24px; height: 24px; transition: transform 0.2s ease;">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
           <defs>
